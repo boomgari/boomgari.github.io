@@ -20,9 +20,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap">
 <style>
 :root{--accent:#6B7A8A;--accent-soft:#8E9CA8;--bg:#F6F7F8;--card:#FFFFFF;--text:#1A1A1A;--muted:#888888;--border:#E6E8EB;--bw:0.5px;--radius:10px;--tint:#EDEFF1;--fs:15px;--fw:400;--ff:"UserFont","PingFang TC","PingFang HK","Noto Sans TC","Microsoft JhengHei","微軟正黑體","Heiti TC",sans-serif;}
-@font-face{font-family:"UserFont";src:url("user-font.ttf") format("truetype");font-weight:400;font-display:swap;}
-@font-face{font-family:"PfHk";src:url("pf-hk.ttf") format("truetype");font-weight:600;font-display:swap;}
-@font-face{font-family:"GsMedium";src:url("gs-medium.ttf") format("truetype");font-weight:500;font-display:swap;}
+/* 字体不在 CSS 里声明 @font-face —— 那会让浏览器把 11MB~16MB 的 ttf 计入首屏必需资源，
+   在手机网络下 load 事件被无限期拖住（加载条一直转、刷新键变 ×、SW 无法注册 → 无法安装到主屏幕）。
+   改由 JS 用 FontFace API 按需异步加载（见 loadFontAsync），下载完成后自动生效，全程不阻塞页面。 */
 body[data-theme="spring"]{}
 body[data-theme="summer"]{}
 body[data-theme="autumn"]{}
@@ -3662,10 +3662,43 @@ function syncFwUI(){const v=(D._meta&&D._meta.fontWeight)||400;const r=$('#fwRan
 const FONT_OPTS=[
 {id:'',name:'原字体',stack:"'UserFont','PingFang TC','PingFang HK','Noto Sans TC','Microsoft JhengHei','微軟正黑體','Heiti TC',sans-serif"},
 {id:'pf',name:'蘋方 HK',stack:"'PfHk','PingFang TC','PingFang HK','Noto Sans TC','Microsoft JhengHei','微軟正黑體','Heiti TC',sans-serif"},
-{id:'gs',name:'Google Sans',stack:"'GsMedium','PingFang TC','PingFang HK','Noto Sans TC','Microsoft JhengHei','微軟正黑體','Heiti TC',sans-serif"}];
-function applyFont(){const id=(D._meta&&D._meta.fontFamily)||'';const o=FONT_OPTS.find(f=>f.id===id)||FONT_OPTS[0];document.documentElement.style.setProperty('--ff',o.stack);}
+{id:'gs',name:'Google Sans',stack:"'GsMedium','PingFang TC','PingFang HK','Noto Sans TC','Microsoft JhengHei','微軟正黑體','Heiti TC',sans-serif"},
+{id:'sys',name:'系统字体·免下载',stack:"'PingFang TC','PingFang HK','Noto Sans TC','Microsoft JhengHei','微軟正黑體','Heiti TC',system-ui,sans-serif"}];
+/* 字体文件与体积（手机首次需后台下载，之后由 Service Worker 永久缓存，只下一次） */
+const FONT_FILES={'':{fam:'UserFont',url:'user-font.ttf',mb:11},'pf':{fam:'PfHk',url:'pf-hk.ttf',mb:16},'gs':{fam:'GsMedium',url:'gs-medium.ttf',mb:9}};
+const _fontState={};
+/* 异步加载字体：绝不阻塞首屏与 load 事件。未下载完时自动回退系统中文字体，下载完成后无缝替换。 */
+function loadFontAsync(id){
+  const f=FONT_FILES[id];
+  if(!f)return Promise.resolve(false);
+  if(typeof FontFace==='undefined'||!document.fonts)return Promise.resolve(false);
+  if(_fontState[f.fam]==='ok')return Promise.resolve(true);
+  if(_fontState[f.fam]==='loading')return Promise.resolve(false);
+  _fontState[f.fam]='loading';
+  try{
+    const face=new FontFace(f.fam,'url("'+f.url+'")',{display:'swap'});
+    return face.load().then(function(loaded){
+      document.fonts.add(loaded);_fontState[f.fam]='ok';
+      const b=document.getElementById('fontChips');if(b)renderFontChips();
+      return true;
+    }).catch(function(){_fontState[f.fam]='fail';return false;});
+  }catch(e){_fontState[f.fam]='fail';return Promise.resolve(false);}
+}
+/* 把重资源排到首屏之后再取，且带兜底计时器，确保任何情况下都不会拖住 load */
+function _afterPaint(fn){
+  if(document.readyState==='complete'){fn();return;}
+  let done=false;const go=function(){if(done)return;done=true;fn();};
+  window.addEventListener('load',go,{once:true});
+  setTimeout(go,2500);
+}
+function applyFont(){
+  const id=(D._meta&&D._meta.fontFamily)||'';
+  const o=FONT_OPTS.find(f=>f.id===id)||FONT_OPTS[0];
+  document.documentElement.style.setProperty('--ff',o.stack);
+  if(FONT_FILES[o.id])_afterPaint(function(){loadFontAsync(o.id);});
+}
 function setFont(id){if(!D._meta)D._meta={};D._meta.fontFamily=id;save();applyFont();renderFontChips();}
-function renderFontChips(){const cur=(D._meta&&D._meta.fontFamily)||'';const box=$('#fontChips');if(!box)return;box.innerHTML=FONT_OPTS.map(o=>`<button class="btn ${o.id===cur?'primary':'ghost'} sm" style="font-family:${o.stack}" onclick="setFont('${o.id}')">${o.name}</button>`).join('');}
+function renderFontChips(){const cur=(D._meta&&D._meta.fontFamily)||'';const box=$('#fontChips');if(!box)return;box.innerHTML=FONT_OPTS.map(o=>{const f=FONT_FILES[o.id];let tag='';if(f){const st=_fontState[f.fam];tag=st==='ok'?'':(st==='loading'?`<span style="opacity:.55;font-size:calc(var(--fs)*0.7)"> 下载中…</span>`:`<span style="opacity:.55;font-size:calc(var(--fs)*0.7)"> ${f.mb}MB</span>`);}return `<button class="btn ${o.id===cur?'primary':'ghost'} sm" style="font-family:${o.stack}" onclick="setFont('${o.id}')">${o.name}${tag}</button>`;}).join('');}
 function openSkin(){renderSkinGrid();renderSeasonCards();syncFsUI();syncFwUI();renderFontChips();$('#skinModal').classList.add('show');$('#skinOverlay').classList.add('show');}
 function closeSkin(){$('#skinModal').classList.remove('show');$('#skinOverlay').classList.remove('show');}
 function renderSeasonCards(){
@@ -3719,7 +3752,7 @@ function bootTheme(){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v54';
+const APP_VER='v55';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -5650,12 +5683,18 @@ init();
       });
     }).catch(function(){});
   }
-  window.addEventListener('load',function(){
-    // 本地服务模式下不注册 SW（由 server.js 实时托管，避免缓存干扰）
+  // 绝不等 window.load：大字体等资源会把 load 拖住，导致 SW 永不注册、手机无法「添加到主屏幕」。
+  function boot(){
+    if(location.protocol==='file:')return;
+    var h=location.hostname;
+    var isLocal=(h==='localhost'||h==='127.0.0.1'||/^192\.168\./.test(h)||/^10\./.test(h)||/^172\.(1[6-9]|2\d|3[01])\./.test(h));
+    if(!isLocal){registerSW();return;} // 公网（https）直接注册
+    // 仅局域网/本机才探测：本地服务模式下不注册 SW（由 server.js 实时托管，避免缓存干扰）
     fetch('/api/ping',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
       if(j&&j.server)return; registerSW();
     }).catch(function(){ registerSW(); });
-  });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
 </script>
 </body>
