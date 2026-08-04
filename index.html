@@ -1017,7 +1017,7 @@ function mergeData(local,remote,opt){
   return out;
 }
 /* 自动合并：静默完成，两端原始数据各存一份快照可回滚 */
-function autoMerge(remote,opt){
+function autoMerge(remote,opt,doRender){
   try{
     pushSnap(remote,'自动合并前·云端那份');
     pushSnap(D,'自动合并前·本机那份');
@@ -1027,7 +1027,9 @@ function autoMerge(remote,opt){
     if(!m||typeof m!=='object')return false;
     D=m;dedupGameNames();persistLocal();snapPrev();
     dirtySinceSync=true;
-    if(!/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement&&document.activeElement.tagName)||'')){
+    // 仅在用户主动点「立即同步」(doRender=true) 且当前没在输入框里打字时才重绘，
+    // 避免后台自动同步在录入/翻看时把页面刷回模块最顶端，打断正在做的事。
+    if(doRender && !/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement&&document.activeElement.tagName)||'')){
       renderNav();renderModule();renderTopDate();
     }
     renderSyncRow();
@@ -1171,14 +1173,16 @@ async function rawPut(){
 /* 单次上传：处理缺 sha(needSha) 与乐观锁冲突(conflict)，其余交给 cloudPush 收尾。
    关键修复：用同步码/链接接入的设备 sha 为 null，首次 PUT 会被 GitHub 拒(422) → 自动补一次取 sha 再传；
    若云端已被别的端改动(GitHub 409) → 拉取+合并后再传，绝不用本机默认覆盖云端。 */
-async function pushOnce(force){
-  let res=await withNetTimeout(rawPut(),20000);
+async function pushOnce(force,ms){
+  ms=ms||20000;
+  const fms=Math.min(ms,20000); // 补取 sha / 拉回云端用稍短超时，主推用 ms
+  let res=await withNetTimeout(rawPut(),ms);
   if(res&&res.needSha){
-    if(await withNetTimeout(cloudFetch(),15000)===false)return {ok:false,reason:'net'};
-    res=await withNetTimeout(rawPut(),20000);
+    if(await withNetTimeout(cloudFetch(),fms)===false)return {ok:false,reason:'net'};
+    res=await withNetTimeout(rawPut(),ms);
   }
   if(res&&res.conflict){
-    const r=await withNetTimeout(cloudFetch(),15000);
+    const r=await withNetTimeout(cloudFetch(),fms);
     if(r===false)return {ok:false,reason:'net'};
     if(r&&r._meta){
       if(!force&&!autoMerge(r)){CONFLICT=r;return {ok:false,reason:'conflict',remote:r};}
@@ -1193,15 +1197,17 @@ async function pushOnce(force){
 async function cloudPush(opt){
   opt=opt||{};
   if(!SYNC)return {ok:false,reason:'nosync'};
+  // 手动点同步时放宽超时（用户接受"慢一点"，只要最后能同步下来）；后台自动同步保持 20s 以免长时间挂起
+  const ms=opt.manual?40000:20000;
   const firstJoin=!!(!SYNC.lastSync&&!(SYNC.baseRev>0));
   if(firstJoin&&!opt.force){
     // 新接入设备：本机数据未经验证，必须先拉取并合并云端（顺带拿到 sha），绝不用本机默认去覆盖云端
-    await cloudPull();
+    await cloudPull(undefined,ms);
     return {ok:true};
   }
   try{
     const sentRev=(D._meta&&D._meta.rev)||0;   // 记下"这次实际传上去的版本"
-    const r=await pushOnce(!!opt.force);
+    const r=await pushOnce(!!opt.force,ms);
     if(!r.ok)return r;
     // 上传期间用户可能又改了（rev 变大）→ 只认 sentRev，剩下的改动仍算待上传，下一轮补传
     SYNC.baseRev=sentRev;SYNC.lastSync=Date.now();saveSync();
@@ -1213,7 +1219,7 @@ async function cloudPush(opt){
 async function pushNow(){
   if(!SYNC||!SYNC.id){toast('尚未连接云端');return;}
   toast('上传中…');
-  const r=await cloudPush();
+  const r=await cloudPush({manual:true});
   if(r.ok){toast('已上传：本机 v'+(D._meta.rev||0)+' → 云端');renderSyncModal();return;}
   if(r.reason==='conflict'){openConflict(r.remote);return;}
   if(r.reason==='unverified'){
@@ -1225,17 +1231,18 @@ async function pushNow(){
   toast('上传失败：检查网络 / 同步码是否有效');
 }
 /* 拉取：铁律——云端版本号不高于本机时，绝不覆盖本机 */
-async function cloudPull(force){
+async function cloudPull(force,ms){
   if(!SYNC||!SYNC.id)return;
+  ms=ms||15000;
   try{
-    const data=await withNetTimeout(cloudFetch(),15000);
+    const data=await withNetTimeout(cloudFetch(),ms);
     if(data===false){if(force)toast('读取云端失败：请检查网络');return;}
     if(!data||!data._meta){if(force)toast('云端暂无数据');return;}
     const rRev=data._meta.rev||0,lRev=D._meta.rev||0,base=SYNC.baseRev||0;
     if(rRev<=lRev){
       // 云端版本虽不高，但里面有本机从没见过的改动（别的端加的东西）→ 合并回来，绝不丢
       if(rRev>base){
-        if(autoMerge(data)){await cloudPush({force:true});if(force)renderSyncModal();return;}
+        if(autoMerge(data,undefined,!!force)){await cloudPush({force:true,manual:!!force});if(force)renderSyncModal();return;}
       }
       SYNC.baseRev=Math.max(base,rRev);saveSync();
       if(force){
@@ -1246,24 +1253,26 @@ async function cloudPull(force){
     }
     if(isDirty()){
       // 两端都有改动 → 自动逐条合并后回传，而不是二选一
-      if(autoMerge(data)){await cloudPush({force:true});if(force)renderSyncModal();return;}
+      if(autoMerge(data,undefined,!!force)){await cloudPush({force:true,manual:!!force});if(force)renderSyncModal();return;}
       openConflict(data);return;
     }
-    applyRemote(data);
+    applyRemote(data,!!force);
     if(force){toast('已同步：云端 v'+rRev+' → 本机');renderSyncModal();}
   }catch(e){ if(force)toast('同步失败：网络超时，稍后自动重试'); }
 }
-function applyRemote(data){
+function applyRemote(data,doRender){
   pushSnap(D,'被云端覆盖前的本机数据');
   D=data;dedupGameNames();if(!D._meta)D._meta={};
   persistLocal();snapPrev();
   if(SYNC){SYNC.baseRev=D._meta.rev||0;SYNC.lastSync=Date.now();saveSync();}
   dirtySinceSync=false;
   dailyResetCheck();
-  if(!/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement&&document.activeElement.tagName)||'')){
-    renderNav();renderModule();renderTopDate();
+  renderSyncRow();renderTopDate();
+  // 只有用户主动点「立即同步」(doRender=true) 且没在输入框打字时才重绘当前模块，
+  // 后台自动同步绝不再刷新页面，避免把正在录入/翻看的界面刷回模块最顶端。
+  if(doRender && !/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement&&document.activeElement.tagName)||'')){
+    renderNav();renderModule();
   }
-  renderSyncRow();
 }
 /* 冲突裁决：两端各自都改过，交给用户选，绝不自动覆盖 */
 function openConflict(remote){
@@ -1275,7 +1284,7 @@ function openConflict(remote){
 function conflictKeepCloud(){
   if(!CONFLICT)return;
   if(!confirm('用云端数据覆盖本机？\n本机未上传的改动会先自动存成快照，可随时回滚。'))return;
-  applyRemote(CONFLICT);CONFLICT=null;renderSyncModal();toast('已采用云端数据');
+  applyRemote(CONFLICT,true);CONFLICT=null;renderSyncModal();toast('已采用云端数据');
 }
 async function conflictKeepLocal(){
   if(!CONFLICT)return;
@@ -1295,10 +1304,10 @@ function conflictLater(){CONFLICT=null;renderSyncModal();toast('已暂缓，随�
 async function forcePullCloud(){
   if(!SYNC||!SYNC.id){toast('尚未连接云端');return;}
   toast('读取云端…');
-  const data=await withNetTimeout(cloudFetch(),15000);
+  const data=await withNetTimeout(cloudFetch(),30000);
   if(!data||!data._meta){toast('云端无数据或读取失败');return;}
   if(!confirm('强制用云端 v'+(data._meta.rev||0)+' 覆盖本机 v'+(D._meta.rev||0)+'？\n本机当前数据会先自动存成快照，可回滚。'))return;
-  applyRemote(data);renderSyncModal();toast('已强制采用云端数据');
+  applyRemote(data,true);renderSyncModal();toast('已强制采用云端数据');
 }
 
 /* ================= 工具 ================= */
@@ -3839,7 +3848,7 @@ function bootTheme(){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v61';
+const APP_VER='v62';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -3938,7 +3947,7 @@ async function syncNow(ev){
   syncing=true;renderSyncRow();
   try{
     if(isDirty()){
-      const r=await cloudPush();
+      const r=await cloudPush({manual:true});
       if(r.ok)toast('已上传 v'+(D._meta.rev||0));
       else if(r.reason==='conflict'){openConflict(r.remote);}
       else if(r.reason==='unverified')toast('网络不稳，稍后会自动重试');
@@ -4025,7 +4034,7 @@ function renderSyncModal(){
       <div class="row" style="margin-top:10px">
         <button class="btn ghost" onclick="copySyncCode()">复制同步码</button>
         <button class="btn ghost" onclick="pushNow()">立即上传</button>
-        <button class="btn ghost" onclick="cloudPull(true)">立即同步</button>
+        <button class="btn ghost" onclick="cloudPull(true,30000)">立即同步</button>
         <button class="btn danger" onclick="disableSync()">断开</button>
       </div>
       <div class="hint" style="margin-top:10px"><b>正常情况这些按钮你都不用点</b>：改完自动上传、切后台立刻传、其他端打开或每 45 秒自动取回，两端都改过会<b>逐条自动合并</b>（内容取并集，谁都不会被抹掉）。<br>「立即上传」「立即同步」只是网络不好时的手动补一刀；侧栏 ⟳ 按钮效果相同、更快。<br>确实想拿云端旧数据覆盖本机时，用这个：<a href="javascript:forcePullCloud()" style="color:#c0392b">强制用云端覆盖本机</a>（会先自动存快照）。</div>`;
@@ -4158,7 +4167,7 @@ async function enableGitHubRepo(){
   if(remote&&remote._meta){
     const rRev=remote._meta.rev||0,lRev=(D._meta&&D._meta.rev)||0;
     if(!autoMerge(remote)){          // 合并失败 → 以云端为准（本机那份已存快照，可回滚）
-      applyRemote(remote);
+      applyRemote(remote,true);
       renderSyncModal();
       toast('已接入云端数据 v'+rRev+'（本机原数据已存快照，可在下方回滚）');
       return;
