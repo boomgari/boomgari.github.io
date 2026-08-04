@@ -1083,6 +1083,8 @@ function autoSyncTick(){
   if(now-_lastAutoSync<4000)return;
   _lastAutoSync=now;
   if(!SYNC||!SYNC.id)return;
+  const firstJoin=!!(!SYNC.lastSync&&!(SYNC.baseRev>0));
+  if(firstJoin){cloudPull();return;}   // 新接入设备：先拉取并合并云端，绝不用本机默认去覆盖云端
   if(isDirty())cloudPush(); else cloudPull();
 }
 
@@ -1143,41 +1145,64 @@ async function rawPut(){
       const r=await fetch('https://api.github.com/gists/'+SYNC.id,{method:'PATCH',headers:{'Authorization':'token '+SYNC.token,'Content-Type':'application/json'},body:JSON.stringify(body)});
       if(!r.ok)throw new Error('patch-failed');
     }
-    }else if(SYNC.provider==='github-repo'){
-      const url='https://api.github.com/repos/'+SYNC.owner+'/'+SYNC.repo+'/contents/data.json';
-      const content=btoa(unescape(encodeURIComponent(JSON.stringify(D))));
-      const body={message:'murphys-workbench 自动保存 v'+(D._meta.rev||0),content:content};
-      if(SYNC.sha)body.sha=SYNC.sha;
-      const r=await fetch(url,{method:'PUT',headers:{'Authorization':'token '+SYNC.token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},body:JSON.stringify(body)});
-      if(!r.ok)throw new Error('repo-put-failed');
-      const j=await r.json();if(j.content&&j.content.sha){SYNC.sha=j.content.sha;saveSync();}
-    }else if(SYNC.provider==='jsonblob'){
-      const r=await fetch('https://jsonblob.com/api/jsonBlob/'+SYNC.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(D)});
+    return {ok:true};
+  }else if(SYNC.provider==='github-repo'){
+    const url='https://api.github.com/repos/'+SYNC.owner+'/'+SYNC.repo+'/contents/data.json';
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(D))));
+    const body={message:'murphys-workbench 自动保存 v'+(D._meta.rev||0),content:content};
+    if(SYNC.sha)body.sha=SYNC.sha;
+    const r=await fetch(url,{method:'PUT',headers:{'Authorization':'token '+SYNC.token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},body:JSON.stringify(body)});
+    if(r.ok){const j=await r.json();if(j.content&&j.content.sha){SYNC.sha=j.content.sha;saveSync();}return {ok:true};}
+    // 非 2xx：区分乐观锁冲突(GitHub 409) 与 缺 sha(422)，便于 cloudPush 分别处理
+    let info='';try{const ej=await r.json();info=(ej&&ej.message)||'';}catch(e){}
+    if(r.status===409||/sha does not match/i.test(info))return {ok:false,conflict:true};
+    if(r.status===422&&!SYNC.sha)return {ok:false,needSha:true};
+    throw new Error('repo-put-failed:'+r.status+' '+info);
+  }else if(SYNC.provider==='jsonblob'){
+    const r=await fetch('https://jsonblob.com/api/jsonBlob/'+SYNC.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(D)});
     if(!r.ok)throw new Error('put-failed');
+    return {ok:true};
   }else{
     const r=await fetch('https://api.jsonbin.io/v3/b/'+SYNC.id,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':SYNC.apiKey},body:JSON.stringify(D)});
     if(!r.ok)throw new Error('put-failed');
+    return {ok:true};
   }
 }
-/* 上传（乐观锁）：若云端存在"我没见过的更新版本"，拒绝写入并抛出冲突，绝不盲目覆盖 */
+/* 单次上传：处理缺 sha(needSha) 与乐观锁冲突(conflict)，其余交给 cloudPush 收尾。
+   关键修复：用同步码/链接接入的设备 sha 为 null，首次 PUT 会被 GitHub 拒(422) → 自动补一次取 sha 再传；
+   若云端已被别的端改动(GitHub 409) → 拉取+合并后再传，绝不用本机默认覆盖云端。 */
+async function pushOnce(force){
+  let res=await withNetTimeout(rawPut(),20000);
+  if(res&&res.needSha){
+    if(await withNetTimeout(cloudFetch(),15000)===false)return {ok:false,reason:'net'};
+    res=await withNetTimeout(rawPut(),20000);
+  }
+  if(res&&res.conflict){
+    const r=await withNetTimeout(cloudFetch(),15000);
+    if(r===false)return {ok:false,reason:'net'};
+    if(r&&r._meta){
+      if(!force&&!autoMerge(r)){CONFLICT=r;return {ok:false,reason:'conflict',remote:r};}
+      if(force)autoMerge(r);   // 强制：合并云端独有条目后强推（保留本机改动）
+    }
+    res=await withNetTimeout(rawPut(),20000);
+  }
+  return {ok:!!(res&&res.ok)};
+}
+/* 上传（乐观锁）：直接用本地已知 sha 推上去，绝不再"先读云端、读不到就放弃"——
+   那样在 api.github.com 偶发卡顿时，本机改动会永远传不上去（手机/平板此前因此只能等电脑先传）。 */
 async function cloudPush(opt){
   opt=opt||{};
   if(!SYNC)return {ok:false,reason:'nosync'};
+  const firstJoin=!!(!SYNC.lastSync&&!(SYNC.baseRev>0));
+  if(firstJoin&&!opt.force){
+    // 新接入设备：本机数据未经验证，必须先拉取并合并云端（顺带拿到 sha），绝不用本机默认去覆盖云端
+    await cloudPull();
+    return {ok:true};
+  }
   try{
-    if(SYNC.id&&!opt.force){
-      const remote=await withNetTimeout(cloudFetch(),15000);
-      // 读不到云端 ≠ 云端没数据：无法确认云端状态时宁可不写，避免盲目覆盖（手动上传会二次询问）
-      if(remote===false)return {ok:false,reason:'unverified'};
-      if(remote&&remote._meta){
-        const rRev=remote._meta.rev||0,base=SYNC.baseRev||0;
-        if(rRev>base){
-          // 云端有本机没见过的改动 → 不覆盖，改为逐条自动合并（两端内容取并集）
-          if(!autoMerge(remote)){CONFLICT=remote;return {ok:false,reason:'conflict',remote:remote};}
-        }
-      }
-    }
     const sentRev=(D._meta&&D._meta.rev)||0;   // 记下"这次实际传上去的版本"
-    await withNetTimeout(rawPut(),20000);
+    const r=await pushOnce(!!opt.force);
+    if(!r.ok)return r;
     // 上传期间用户可能又改了（rev 变大）→ 只认 sentRev，剩下的改动仍算待上传，下一轮补传
     SYNC.baseRev=sentRev;SYNC.lastSync=Date.now();saveSync();
     dirtySinceSync=false;
@@ -3786,7 +3811,7 @@ function bootTheme(){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v58';
+const APP_VER='v59';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -4028,16 +4053,21 @@ function renderSyncModal(){
 function manualSnap(){pushSnap(D,'手动备份');renderSyncModal();toast('已手动存一份快照');}
 async function refreshCloudStat(){
   if(!document.getElementById('cloudStat'))return;
-  const data=await withNetTimeout(cloudFetch(),15000);
   const el=document.getElementById('cloudStat');if(!el)return;
-  if(data===false){el.innerHTML='<b>云端</b>：读取失败（网络问题或同步码失效）';return;}
-  if(!data||!data._meta){el.innerHTML='<b>云端</b>：暂无数据，可点「立即上传」把本机推上去';return;}
-  const rRev=data._meta.rev||0,lRev=(D._meta&&D._meta.rev)||0;
-  let tip='';
-  if(rRev>lRev)tip=' <span style="color:#b8860b">← 云端更新，点「立即同步」取下来</span>';
-  else if(rRev<lRev)tip=' <span style="color:#2d8659">← 本机更新，点「立即上传」推上去</span>';
-  else tip=' <span style="color:#2d8659">← 两端一致 ✓</span>';
-  el.innerHTML='<b>云端</b>：v'+rRev+' · 最后由 <b>'+esc(data._meta.lastDevName||'未知设备')+'</b> 于 '+fmtTime(data._meta.updatedAt)+' 上传'+tip;
+  el.innerHTML='云端：查询中…';
+  try{
+    const data=await withNetTimeout(cloudFetch(),15000);
+    if(data===false){el.innerHTML='<b>云端</b>：读取失败（网络问题或同步码失效）';return;}
+    if(!data||!data._meta){el.innerHTML='<b>云端</b>：暂无数据，可点「立即上传」把本机推上去';return;}
+    const rRev=data._meta.rev||0,lRev=(D._meta&&D._meta.rev)||0;
+    let tip='';
+    if(rRev>lRev)tip=' <span style="color:#b8860b">← 云端更新，点「立即同步」取下来</span>';
+    else if(rRev<lRev)tip=' <span style="color:#2d8659">← 本机更新，点「立即上传」推上去</span>';
+    else tip=' <span style="color:#2d8659">← 两端一致 ✓</span>';
+    el.innerHTML='<b>云端</b>：v'+rRev+' · 最后由 <b>'+esc(data._meta.lastDevName||'未知设备')+'</b> 于 '+fmtTime(data._meta.updatedAt)+' 上传'+tip;
+  }catch(e){
+    el.innerHTML='<b>云端</b>：读取超时（api.github.com 偶发卡顿，可稍后重试）';
+  }
 }
 function exportDataCode(){
   const code=btoa(unescape(encodeURIComponent(JSON.stringify(D))));
