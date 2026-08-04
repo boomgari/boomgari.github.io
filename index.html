@@ -3136,6 +3136,7 @@ function renderTemp(){
         ${x.doneTs?`<div class="sub hint">✓ ${fmtTime(x.doneTs)}</div>`:''}
         ${x.note?`<div class="sub">${esc(x.note)}</div>`:''}
       </div>
+      <button class="btn ghost sm" onclick="openEdit('temp','${x.id}')">✏️ 编辑</button>
       <button class="del" onclick="tempDel('${x.id}')">×</button>
     </div>`;
   }).join(''):'<div class="hint">这个筛选下暂时没有待办～</div>';
@@ -3225,6 +3226,7 @@ function renderListen(){
         <div class="ttitle" style="font-size:13px"><b>${s.date} ${s.start}${s.end?' – '+s.end:''}</b> <span style="color:var(--accent-soft)">${esc(s.platform)} · ${esc(s.type||'')}</span> <span style="color:#888">(${dur<1?'<1':dur}分钟)</span></div>
         <div class="sub">${(s.scenario||[]).concat(s.mood||[],s.doing||[]).filter(Boolean).join(' · ')}${fav?' · '+fav:''}</div>
       </div>
+      <button class="btn ghost sm" onclick="openEdit('listen','${s.id}')">✏️ 编辑</button>
       <button class="del" onclick="listenDel('${s.id}')">×</button>
     </div>`;
   }).join(''):'<div class="hint">今天还没记听的内容～</div>';
@@ -3243,7 +3245,7 @@ function renderLifeNote(){
   const order=noteOrder();
   return `<div class="card">
     <div class="card-h"><h2>📒 生活小记</h2><span class="spacer"></span><span class="chip sm ${noteSortMode?'on':''}" onclick="noteSortToggle()" style="cursor:pointer">${noteSortMode?'完成排序 ✓':'⇅ 排序'}</span></div>
-    <div class="row" style="margin-bottom:8px;flex-wrap:wrap">${order.map(t=>`<span class="chip ${noteSelType===t?'on':''} ${noteSortMode?'drag-chip':''}" ${noteSortMode?`draggable="true" ondragstart="noteDrag='${t}'" ondragover="event.preventDefault()" ondrop="noteReorder(noteDrag,'${t}')"`:''} onclick="${noteSortMode?'':`noteSel('${t}')`}">${noteSortMode?'≡ ':''}${t}${noteTypeMv(t)}</span>`).join('')}</div>
+    <div class="row" style="margin-bottom:8px;flex-wrap:wrap">${order.map(t=>`<span class="chip ${noteSelType===t?'on':''} ${noteSortMode?'drag-chip':''}" ${noteSortMode?`draggable="true" ondragstart="noteDrag='${t}'" ondragover="event.preventDefault()" ondrop="noteReorder(noteDrag,'${t}')"`:''} onclick="${noteSortMode?'':`noteSel('${t}')`}">${noteSortMode?'≡ ':''}${t}</span>`).join('')}</div>
     ${noteSortMode?'<div class="hint" style="margin-bottom:8px">拖拽分类右侧 ≡ 可调整顺序，完成后点「完成排序」。</div>':''}
     <textarea id="nf_text" placeholder="此刻想记点什么…（选对应分类可填更多细节）" style="min-height:54px" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();noteAdd()}"></textarea>
     <div id="nf_detail">${noteFieldsHtml(noteSelType,noteSelType)}</div>
@@ -3260,7 +3262,7 @@ function noteItem(e){return `<div class="item" style="padding:10px">
     <div class="sub">${NOTE_COLOR[e.type]?`<span class="tag" style="background:${NOTE_COLOR[e.type]}22;color:${ink(NOTE_COLOR[e.type])}">${e.type}</span>`:`<span class="tag">${e.type}</span>`} ${e.date}${e.time?' '+e.time:''}</div>
   </div>
   <div class="item-acts">
-    <button class="btn ghost sm" onclick="openEdit('note','${e.id}')">✏️</button>
+    <button class="btn ghost sm" onclick="openEdit('note','${e.id}')">✏️ 编辑</button>
     <button class="del" onclick="noteDel('${e.id}')">×</button>
   </div>
 </div>`;}
@@ -3446,6 +3448,7 @@ function renderChecklist(){
       ${subsHtml}
       <div class="hint" style="cursor:pointer;margin-top:4px" onclick="chkExpToggle('${x.id}')">${exp?'收起子项':(subs.length?('展开子项 '+subs.length+' 个'):'＋ 添加子项')}</div>
       </div>
+      <button class="btn ghost sm" onclick="openEdit('checklist','${x.id}')">✏️ 编辑</button>
       <button class="del" onclick="chkDel('${x.id}')">×</button>
     </div>`;}).join(''):'<div class="hint">还没有每日必做事项，在下面添加一行（如：抖音续火）</div>';
   return `<div class="card">
@@ -3617,18 +3620,42 @@ const EDIT_SCHEMA={
     {k:'type',l:'类型',t:'sel',o:NOTE_ORDER},
     {k:'text',l:'内容',t:'ta'},
     {k:'date',l:'日期',t:'date'},{k:'time',l:'时间',t:'time'}
+  ]},
+  temp:{title:'临时待办',fields:[
+    {k:'text',l:'内容',t:'ta'},
+    {k:'date',l:'日期',t:'date'},
+    {k:'time',l:'时间',t:'time'},
+    {k:'place',l:'地点',t:'text'},
+    {k:'note',l:'备注',t:'ta'},
+    {k:'done',l:'已完成',t:'chk'}
+  ]},
+  listen:{title:'听',fields:[
+    {k:'platform',l:'平台',t:'sel',o:['网易云音乐','小宇宙','其他']},
+    {k:'type',l:'类型',t:'sel',o:['歌单','私人漫游','播客单集','其他']},
+    {k:'start',l:'开始',t:'time'},
+    {k:'end',l:'结束',t:'time'},
+    {k:'date',l:'日期',t:'date'},
+    {k:'scenario',l:'情景',t:'nchips',o:LISTEN_SCENARIO},
+    {k:'mood',l:'听时心情',t:'nchips',o:MOOD_OPTS},
+    {k:'doing',l:'同时在做什么',t:'nchips',o:LISTEN_DOING},
+    {k:'fav',l:'喜欢的歌/播客',t:'text'},
+    {k:'note',l:'备注',t:'ta'}
+  ]},
+  checklist:{title:'每日事项',fields:[
+    {k:'name',l:'事项名',t:'text'}
   ]}
 };
 let EDITING=null; // {mod,id}
 function getPath(o,p){return p.split('.').reduce((a,k)=>(a==null?a:a[k]),o);}
 function setPath(o,p,v){const ks=p.split('.');const last=ks.pop();let cur=o;ks.forEach(k=>{if(cur[k]==null||typeof cur[k]!=='object')cur[k]={};cur=cur[k];});cur[last]=v;}
-function editArr(mod){return mod==='note'?(D.note.entries||[]):D[mod];}
+function editArr(mod){return mod==='note'?(D.note.entries||[]):mod==='temp'?(D.note.temp.items||[]):mod==='listen'?(D.note.listen.sessions||[]):mod==='checklist'?(D.note.checklist.items||[]):D[mod];}
 function openEdit(mod,id){
   const it=editArr(mod).find(x=>x.id===id);
   if(!it){toast('找不到这条记录');return;}
   // 用深拷贝草稿承载所有编辑，原记录只在保存成功后才被替换，改坏了也不脏原数据
   EDITING={mod,id,draft:JSON.parse(JSON.stringify(it))};
   if(mod==='note'){ (NOTE_DETAIL[it.type]||[]).forEach(f=>{ if(f.chips)noteChips['edit__'+f.k]=Array.isArray(it[f.k])?it[f.k].slice():(it[f.k]?[it[f.k]]:[]); if(f.stars)noteStars['edit__'+f.k]=it[f.k]||0; }); }
+  else { const _sc=EDIT_SCHEMA[mod]; if(_sc)_sc.fields.forEach(f=>{ if(f.t==='nchips')noteChips['edit__'+f.k]=Array.isArray(it[f.k])?it[f.k].slice():(it[f.k]?[it[f.k]]:[]); if(f.t==='nstars')noteStars['edit__'+f.k]=it[f.k]||0; }); }
   $('#editTitle').textContent='✏️ 编辑'+(EDIT_SCHEMA[mod]?EDIT_SCHEMA[mod].title:'');
   $('#editBody').innerHTML='';
   renderEditBody();
@@ -3701,6 +3728,7 @@ function saveEdit(){
   if(idx<0){toast('记录已不存在');closeEdit();return;}
   editCapture(); // 提交前再同步一次 DOM（处理不触发重渲染的直接保存）
   const it=JSON.parse(JSON.stringify(EDITING.draft)); // 副本，校验失败不改脏原记录
+  if(EDITING.mod==='temp'){ if(it.done&&!it.doneTs)it.doneTs=nowISO(); if(!it.done)delete it.doneTs; }
   const nameKey=['title','name','desc','text'].find(k=>k in it);
   if(nameKey&&!String(it[nameKey]||'').trim()){toast('名称/标题不能为空');return;}
   arr[idx]=it;
@@ -3811,7 +3839,7 @@ function bootTheme(){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v60';
+const APP_VER='v61';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
