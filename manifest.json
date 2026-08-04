@@ -1,0 +1,32 @@
+{
+  "name": "Murphy's Workbench",
+  "short_name": "Murphy's",
+  "description": "个人专属工作台：工作待办、健身打卡、学习计划、游戏待办、观影记录、季度期望、心愿单",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFFFFF",
+  "theme_color": "#6B7A8A",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
