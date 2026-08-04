@@ -15,9 +15,9 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Murphy's Workbench</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap">
+<!-- 已移除 Google Fonts 外链样式表：它是渲染阻塞资源，而 fonts.googleapis.com 在中国大陆不可达，
+     浏览器会一直挂起等待超时 → 页面加载条永不结束、刷新键显示为停止(×)、SW 无法注册、无法安装到主屏幕。
+     字体栈里的 "Noto Sans TC" 保留即可 —— 安卓系统自带思源黑体，会直接命中本地字体，无需联网。 -->
 <style>
 :root{--accent:#6B7A8A;--accent-soft:#8E9CA8;--bg:#F6F7F8;--card:#FFFFFF;--text:#1A1A1A;--muted:#888888;--border:#E6E8EB;--bw:0.5px;--radius:10px;--tint:#EDEFF1;--fs:15px;--fw:400;--ff:"UserFont","PingFang TC","PingFang HK","Noto Sans TC","Microsoft JhengHei","微軟正黑體","Heiti TC",sans-serif;}
 /* 字体不在 CSS 里声明 @font-face —— 那会让浏览器把 11MB~16MB 的 ttf 计入首屏必需资源，
@@ -3752,7 +3752,7 @@ function bootTheme(){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v55';
+const APP_VER='v56';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
