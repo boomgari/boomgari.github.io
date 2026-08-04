@@ -3719,7 +3719,7 @@ function bootTheme(){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v53';
+const APP_VER='v54';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -3897,10 +3897,13 @@ function renderSyncModal(){
       <div class="hint" style="margin-top:8px">🛡 防覆盖规则：<b>只有版本号更大的数据才能覆盖版本号小的</b>。版本号只在你真正编辑时 +1，系统动作（每日重置等）不会加。所以旧数据端<b>永远无法</b>把新数据覆盖掉。 · <a href="javascript:renameDev()" style="color:var(--accent-soft)">改设备名</a></div>
     </div>
     <div>方案：<b>${provName(SYNC.provider)}</b></div>
-      <div class="hint" style="margin:8px 0">把下面同步码复制到<b>其他设备</b>粘贴即可连接（已含令牌，对方无需再填）：</div>
+      <div class="hint" style="margin:8px 0"><b>最省事：一键连接链接</b>。把下面这条链接发给自己的手机/平板，用浏览器打开一次即自动连上（无需再填任何东西）。链接含令牌，只发给自己、别外传；打开后应用会立刻把它从地址栏抹掉。</div>
+      <textarea id="sb_linkOut" readonly style="font-size:calc(var(--fs)*0.733)">${joinLink()}</textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" onclick="copyJoinLink()">复制一键连接链接</button></div>
+      <div class="hint" style="margin:12px 0 6px">或者用同步码（在对方设备「云同步」里粘贴）：</div>
       <textarea id="sb_codeOut" readonly style="font-size:calc(var(--fs)*0.733)">${code}</textarea>
       <div class="row" style="margin-top:10px">
-        <button class="btn" onclick="copySyncCode()">复制同步码</button>
+        <button class="btn ghost" onclick="copySyncCode()">复制同步码</button>
         <button class="btn ghost" onclick="pushNow()">立即上传</button>
         <button class="btn ghost" onclick="cloudPull(true)">立即同步</button>
         <button class="btn danger" onclick="disableSync()">断开</button>
@@ -4064,6 +4067,39 @@ async function enableJsonBlob(){if(!confirm('体验版：云端 24 小时不操�
 }
 function setSyncStatus(s){const t=document.querySelector('#syncBody .hint');}
 function copySyncCode(){const ta=document.getElementById('sb_codeOut');if(!ta)return;ta.select();ta.setSelectionRange(0,ta.value.length);let ok=false;try{ok=document.execCommand('copy');}catch(e){}if(navigator.clipboard){navigator.clipboard.writeText(ta.value).then(()=>toast('已复制同步码')).catch(()=>{});}if(ok)toast('已复制同步码');}
+/* 一键连接链接：把同步配置编码进 URL hash，另一台设备用浏览器打开一次即完成绑定。
+   目的是让「换地址后重新绑定三端」从"填仓库+令牌/粘同步码"降到"打开一个链接"。
+   安全：凭据落地 localStorage 后立刻 replaceState 抹掉地址栏，不留在浏览历史里。 */
+function joinLink(){
+  if(!SYNC||!SYNC.id)return '';
+  const code=btoa(JSON.stringify({p:SYNC.provider,id:SYNC.id,k:SYNC.apiKey||'',t:SYNC.token||'',o:SYNC.owner||'',r:SYNC.repo||''}));
+  return location.origin+location.pathname+'#sync='+code.replace(/\+/g,'-').replace(/\//g,'_');
+}
+function copyJoinLink(){
+  const u=joinLink();
+  if(!u){toast('请先在本机开启云同步');return;}
+  const ta=document.getElementById('sb_linkOut');
+  let ok=false;
+  if(ta){ta.value=u;ta.select();ta.setSelectionRange(0,u.length);try{ok=document.execCommand('copy');}catch(e){}}
+  if(navigator.clipboard){navigator.clipboard.writeText(u).then(()=>toast('已复制一键连接链接')).catch(()=>{});}
+  else if(ok)toast('已复制一键连接链接');
+}
+function applySyncFromURL(){
+  try{
+    const h=location.hash||'';
+    const m=h.match(/(?:^#|&)sync=([^&]+)/);
+    if(!m)return false;
+    const c=decodeURIComponent(m[1]).replace(/\s+/g,'').replace(/-/g,'+').replace(/_/g,'/');
+    const o=JSON.parse(atob(c));
+    if(!o||!o.id)return false;
+    if(o.p==='github-repo'&&(!o.o||!o.r))return false;
+    SYNC={provider:o.p,id:o.id,apiKey:o.k||'',token:o.t||'',owner:o.o||'',repo:o.r||'',sha:null,lastSync:0,baseRev:0};
+    saveSync();
+    try{history.replaceState(null,'',location.pathname+location.search);}catch(e){try{location.hash='';}catch(_){}}
+    setTimeout(()=>{try{toast('已通过链接自动连接云同步，正在取回数据…');}catch(e){}},800);
+    return true;
+  }catch(e){return false;}
+}
 function joinByCode(){const ta=document.getElementById('sb_code');if(!ta)return;const c=ta.value.trim().replace(/\s+/g,'');if(!c){toast('请先粘贴同步码');return;}try{const o=JSON.parse(atob(c));if(!o.id)throw new Error('noid');if(o.p==='github-repo'&&(!o.o||!o.r))throw new Error('norepo');SYNC={provider:o.p,id:o.id,apiKey:o.k||'',token:o.t||'',owner:o.o||'',repo:o.r||'',sha:null,lastSync:0,baseRev:0};saveSync();cloudPull();renderSyncModal();toast('已通过同步码连接');}catch(e){if(e&&e.message==='noid'){toast('同步码不含 Gist ID：第1台生成码时云端未创建成功，请重开同步');}else if(e&&e.message==='norepo'){toast('同步码缺少仓库信息：请在第1台设备上重新复制一次同步码');}else{toast('同步码格式错误，请完整复制整段');}}}
 function disableSync(){if(!confirm('断开云同步？（本地数据保留）'))return;SYNC=null;localStorage.removeItem(KEY+'_sync');renderSyncRow();renderSyncModal();toast('已断开');}
 
@@ -4228,7 +4264,10 @@ async function init(){
       else{const local=localStorage.getItem(KEY);if(local){await mirrorToServer();}}
     }catch(e){}
   }
-  load();dailyResetCheck();refreshSleepToday();ensureFitToday();
+  load();
+  // 地址栏带 #sync= 时自动完成云同步绑定（换站点地址后免去手工重绑），紧接 load 之后、首次 cloudPull 之前
+  applySyncFromURL();
+  dailyResetCheck();refreshSleepToday();ensureFitToday();
   try{ if(!D._meta.planSeedLuoyang && planRoot().items.length===0 && planRoot().tpl.length===0) planSeedLuoyang(); }catch(e){}
   currentModule=(D._meta&&D._meta.activeModule)||'note';
   // 主题
