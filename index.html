@@ -682,21 +682,26 @@ function yysDailyList(d){
 function yysDailyDefault(){const o={};for(let i=0;i<7;i++)o[i]=yysDailyList(i);return o;}
 const YYS_WEEKLY_BASE=[
   {name:'图鉴分享（1 蓝票）',type:'text',shop:false},
-  {name:'商店兑换（荣誉2蓝+2黑碎 / 勋章1黑蛋 / 寮黑包+2蓝）',type:'text',shop:true},
+  {name:'荣誉商店兑换（2蓝票+2黑碎）',type:'text',shop:true},
+  {name:'勋章商店兑换（1黑蛋）',type:'text',shop:true},
+  {name:'寮黑包兑换（+2蓝票）',type:'text',shop:true},
   {name:'秘闻副本（每周重置，重打 10 关）',type:'count',goal:10},
   {name:'秘闻分享（打完 10 关后分享领奖）',type:'text',shop:false},
   {name:'六道之门 ×2',type:'count',goal:2},
-  {name:'协同斗技',type:'xietong'},
+  {name:'协同对弈',type:'xietong'},
   {name:'真蛇 ×2',type:'count',goal:2},
   {name:'百鬼棋局',type:'baigui'},
   {name:'结界突破券检查（满 30 清）',type:'jiejie'}
 ];
 function yysWeeklyDefault(){
   return YYS_WEEKLY_BASE.map(x=>{
-    const t={id:uid(),name:x.name,type:x.type,shop:!!x.shop,count:0,goal:x.goal||0,score:0};
-    if(x.type==='xietong')t.xtLog=[];
-    if(x.type==='baigui')t.bgLog=[];
-    if(x.type==='jiejie')t.jj={count:0,done:false};
+    const t={id:uid(),name:x.name,type:x.type,shop:!!x.shop,count:0,goal:x.goal||0,score:0,icon:x.icon||'',reward:x.reward||''};
+    if(x.type==='xietong'){t.xtLog=[];t.xtGoal=10;t.xtThreshold=3;t.reward=t.reward||'累计番胜≥3：蓝票+勾玉；<3：金币（每场按累计番胜判定）';}
+    if(x.type==='baigui'){t.bgLog=[];t.reward=t.reward||'按名次记录鼬乐币，每周清零';}
+    if(x.type==='jiejie'){t.jj={count:0,done:false};t.reward=t.reward||'结界突破券满 30 清';}
+    if(x.type==='points'){t.reward=t.reward||'积分累计，达目标自动完成';}
+    if(x.type==='count'){t.reward=t.reward||'按次积累，达目标自动完成';}
+    if(x.type==='text'){t.reward=t.reward||(t.shop?'商店兑换，完成后勾选':'勾选完成');}
     return t;
   });
 }
@@ -725,7 +730,8 @@ function defaultData(){
       weeklyOrder:['daily','weekly','activity'],
       actTypes:YYS_ACT_TYPES_DEFAULT.slice(),
       series:[],
-      actTpl:[]
+      actTpl:[],
+      weeklyHint:'建议顺序：图鉴分享 → 荣誉商店兑换 → 勋章商店兑换 → 寮黑包兑换 → 秘闻副本 → 秘闻分享 → 六道之门×2 → 协同对弈 → 真蛇×2 → 百鬼棋局 → 结界突破券检查。每行可切换「性质」：普通(勾选完成) / 按次积累(记次数，达目标自动完成) / 积分累计(次数+积分，达目标自动完成)。'
     },
     note:{entries:[],water:{cup:350,log:{}},mood:'',weather:'',sleep:{},moodLog:{},weatherLog:{},sleepLog:{},checklist:{items:[],done:{}},temp:{items:[]},listen:{sessions:[],active:null}},
     movie:[],
@@ -738,6 +744,25 @@ function defaultData(){
   };
 }
 
+function migrateWeeklyV64(){
+  if(D._meta&&D._meta.weeklyV64)return;
+  D._meta=D._meta||{};
+  const wk=weekKey();
+  (D.game.weekly||[]).forEach(t=>{
+    if(t.type==='xietong'&&Array.isArray(t.xtLog))t.xtLog=t.xtLog.filter(e=>(e.date||'')>=wk);
+    if(t.type==='baigui'&&Array.isArray(t.bgLog))t.bgLog=t.bgLog.filter(e=>(e.date||'')>=wk);
+    if(t.type==='jiejie'&&t.jj){t.jj={count:0,done:false,log:[]};}
+  });
+  (D.game.weekly||[]).forEach(t=>{ if(t.type==='xietong'&&(t.name==='协同斗技'))t.name='协同对弈'; });
+  const OLD_SHOP='商店兑换（荣誉2蓝+2黑碎 / 勋章1黑蛋 / 寮黑包+2蓝）';
+  const sidx=(D.game.weekly||[]).findIndex(t=>(t.name||'').trim()===OLD_SHOP);
+  if(sidx>=0){
+    const shops=[{name:'荣誉商店兑换（2蓝票+2黑碎）',reward:'荣誉商店：2蓝票+2黑碎'},{name:'勋章商店兑换（1黑蛋）',reward:'勋章商店：1黑蛋'},{name:'寮黑包兑换（+2蓝票）',reward:'寮黑包：+2蓝票'}];
+    const repl=shops.map(s=>({id:uid(),name:s.name,type:'text',shop:true,count:0,goal:0,score:0,icon:'🛒',reward:s.reward}));
+    D.game.weekly.splice(sidx,1,...repl);
+  }
+  D._meta.weeklyV64=true;
+}
 function load(){
   try{D=JSON.parse(localStorage.getItem(KEY))||defaultData();}catch(e){D=defaultData();}
   const def=defaultData();
@@ -748,7 +773,7 @@ function load(){
   if(!D.fitness.actionLib)D.fitness.actionLib=[];
   if(!D.studyLib)D.studyLib=[];
   if(!D.game||typeof D.game!=='object')D.game=def.game;
-  D.game=migrateGame(D.game,def);dedupGameNames();migrateWeeklyProgress();
+  D.game=migrateGame(D.game,def);dedupGameNames();migrateWeeklyProgress();migrateWeeklyV64();
   if(!D.note||typeof D.note!=='object')D.note=def.note;
   if(!Array.isArray(D.note.entries))D.note.entries=[];
   if(!D.note.water||typeof D.note.water!=='object'||Array.isArray(D.note.water))D.note.water={};
@@ -2145,14 +2170,15 @@ function gDailyMove(wd,id,dir){const arr=D.game.daily[wd];if(!arr)return;const i
 function gWeeklyMove(id,dir){const arr=D.game.weekly;if(!arr)return;const i=arr.findIndex(x=>x.id===id);if(i<0)return;const j=i+dir;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];save();renderGame();}
 function gActMove(id,dir){const arr=D.game.activities;if(!arr)return;const i=arr.findIndex(x=>x.id===id);if(i<0)return;const j=i+dir;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];save();renderGame();}
 function noteTypeMove(type,dir){const o=noteOrder();const i=o.indexOf(type);if(i<0)return;const j=i+dir;if(j<0||j>=o.length)return;[o[i],o[j]]=[o[j],o[i]];D.note.typeOrder=o;save();renderNote();}
+function gameWeeklyTitle(t){const ic=(t.icon&&t.icon.trim())||({xietong:'⚔️',baigui:'🎲',jiejie:'🛡️',text:'📌',count:'🔢',points:'💯'}[t.type]||'📌');return ic+' '+esc(t.name);}
 function xtCard(t,drag){
-  const log=t.xtLog||[],n=log.length,target=10,done=n>=target;
-  const rw=i=>i<10?'蓝票+勾玉':'金币';
+  const log=t.xtLog||[],n=log.length,target=(+t.xtGoal||10),thr=(+t.xtThreshold||3),done=n>=target;
+  const rw=i=>{let c=0;for(let k=0;k<=i;k++)c+=(+((log[k]||{}).fan)||0);return c>=thr?'蓝票+勾玉':'金币';};
   const chips=log.map((s,i)=>`<span class="trk-chip">${s.fan}番 · ${s.time}<span class="hint"> ${rw(i)}</span></span>`).join('');
   const pick=`<div class="xt-pick">${[0,1,2,3,4,5,6].map(f=>`<button class="chip ${gameXTSel==f?'on':''}" onclick="gameXTSel=${f};renderGame()">${f}番</button>`).join('')}<button class="btn" onclick="xtAdd('${t.id}')">记录本场</button></div>`;
   const exp=gameXTExp[t.id];
   const list=exp?`<div class="trk-list">${log.slice().reverse().map((s,i)=>{const idx=log.length-1-i;return `<div class="trk-row"><span>${s.fan}番胜</span><span class="hint">${s.time} · ${rw(idx)}</span>${idx===0?'':`<button class="del sm" onclick="xtDel('${t.id}',${idx})">×</button>`}</div>`;}).join('')}</div>`:'';
-  return `<div class="item g-item trk ${done?'done':''}">${drag}<div style="flex:1"><div class="ttitle">⚔️ 协同斗技</div><div class="sub">本周 ${n} / ${target} 场${done?' · <span class="tag done">前10次达成</span>':''}（前10次:蓝票+勾玉 · 后10次:金币，随番胜增减）</div>${chips?`<div class="trk-chips">${chips}</div>`:''}${pick}${list}</div><button class="note-btn" onclick="gameXTExpToggle('${t.id}')">${exp?'收起':'序列'}</button></div>`;
+  return `<div class="item g-item trk ${done?'done':''}">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">本周 ${n} / ${target} 场 · 累计番胜 ${log.reduce((s,x)=>s+(+x.fan||0),0)}${done?' · <span class="tag done">达成'+target+'场</span>':''}</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${chips?`<div class="trk-chips">${chips}</div>`:''}${pick}${list}</div><button class="note-btn" onclick="gameXTExpToggle('${t.id}')">${exp?'收起':'序列'}</button></div>`;
 }
 function xtAdd(id){const t=gWeeklyFind(id);if(!t)return;t.xtLog=t.xtLog||[];t.xtLog.push({fan:gameXTSel,time:new Date().toTimeString().slice(0,5),date:todayStr()});save();renderGame();}
 function xtDel(id,i){const t=gWeeklyFind(id);if(!t||!t.xtLog)return;t.xtLog.splice(i,1);save();renderGame();}
@@ -2161,7 +2187,7 @@ function bgCard(t,drag){
   const log=t.bgLog||[],total=log.reduce((s,x)=>s+(+x.coin||0),0),exp=gameBGExp[t.id];
   const pick=`<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:4px"><input class="inp" id="bg_rank_${t.id}" placeholder="名次" style="width:80px"><input class="inp" id="bg_coin_${t.id}" placeholder="鼬乐币" style="width:90px"><button class="btn" onclick="bgAdd('${t.id}')">记录</button></div>`;
   const list=exp?`<div class="trk-list">${log.slice().reverse().map((s,i)=>{const idx=log.length-1-i;return `<div class="trk-row"><span>第${s.rank}名</span><span class="hint">${s.coin}鼬乐币 · ${s.time}</span>${idx===0?'':`<button class="del sm" onclick="bgDel('${t.id}',${idx})">×</button>`}</div>`;}).join('')}</div>`:'';
-  return `<div class="item g-item trk">${drag}<div style="flex:1"><div class="ttitle">🎲 百鬼棋局</div><div class="sub">已记录 ${log.length} 场 · 累计鼬乐币 ${total}</div>${pick}${list}</div><button class="note-btn" onclick="gameBGExpToggle('${t.id}')">${exp?'收起':'序列'}</button></div>`;
+  return `<div class="item g-item trk">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">已记录 ${log.length} 场 · 累计鼬乐币 ${total}</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${pick}${list}</div><button class="note-btn" onclick="gameBGExpToggle('${t.id}')">${exp?'收起':'序列'}</button></div>`;
 }
 function bgAdd(id){const t=gWeeklyFind(id);if(!t)return;t.bgLog=t.bgLog||[];const r=document.getElementById('bg_rank_'+id),c=document.getElementById('bg_coin_'+id);const rank=+(r?r.value:0)||0,coin=+(c?c.value:0)||0;if(!rank&&!coin){toast('填名次或鼬乐币');return;}t.bgLog.push({rank,coin,time:new Date().toTimeString().slice(0,5),date:todayStr()});save();renderGame();}
 function bgDel(id,i){const t=gWeeklyFind(id);if(!t||!t.bgLog)return;t.bgLog.splice(i,1);save();renderGame();}
@@ -2177,7 +2203,7 @@ function jjCard(t,drag){
     ${full?'<button class="btn ghost sm" onclick="jjDone(\''+t.id+'\')">'+(jj.done?'已清 ✓':'需尽快打完 ✓')+'</button>':''}
     ${(jj.log&&jj.log.length)?`<button class="note-btn" onclick="gameJjExp['${t.id}']=!gameJjExp['${t.id}'];renderGame()">${gameJjExp[t.id]?'收起':'每次时间'}</button>`:''}
   </div>${ (gameJjExp[t.id]&&jj.log&&jj.log.length)?`<div class="trk-list">${log}</div>`:'' }`;
-  return `<div class="item g-item trk ${full?'jj-full':''}">${drag}<div style="flex:1"><div class="ttitle">🎫 结界突破券</div><div class="sub">满 30 自动出现勾选（需尽快打完）；每 ＋1 自动记一次时间</div>${input}</div></div>`;
+  return `<div class="item g-item trk ${full?'jj-full':''}">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">满 30 自动出现勾选（需尽快打完）；每 ＋1 自动记一次时间</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${input}</div></div>`;
 }
 function jjSet(id,v){const t=gWeeklyFind(id);if(!t)return;t.jj=t.jj||{count:0,done:false,log:[]};t.jj.count=+v||0;if(t.jj.count<30)t.jj.done=false;save();renderGame();}
 function jjInc(id){const t=gWeeklyFind(id);if(!t)return;t.jj=t.jj||{count:0,done:false,log:[]};t.jj.count=(+t.jj.count||0)+1;t.jj.log=t.jj.log||[];t.jj.log.push({time:new Date().toTimeString().slice(0,5),date:todayStr()});if(t.jj.count<30)t.jj.done=false;save();renderGame();}
@@ -2249,6 +2275,8 @@ function weeklyDone(t){
   const ty=weeklyType(t);
   if(ty==='count'){const g=+t.goal||0;return g>0&&(+t.count||0)>=g;}
   if(ty==='points'){const g=+t.goal||600;return (+t.score||0)>=g;}
+  if(ty==='xietong'){const g=(+t.xtGoal||10);return (+((t.xtLog||[]).length))>=g;}
+  if(ty==='jiejie'){return !!(t.jj&&t.jj.done);}
   const p=(D.game.progress[weekKey()]||{}).weekly||{};return !!p[t.id];
 }
 function actProgress(a){
@@ -2291,11 +2319,15 @@ function gTplSet(tid,key,val){const t=gTplFind(tid);if(!t)return;t[key]=val;save
 function gWeeklyFind(tid){return D.game.weekly.find(x=>x.id===tid);}
 function gWeeklySet(tid,key,val){const t=gWeeklyFind(tid);if(!t)return;t[key]=val;
   if(key==='type'){
-    if(val==='xietong'&&!Array.isArray(t.xtLog))t.xtLog=[];
-    if(val==='baigui'&&!Array.isArray(t.bgLog))t.bgLog=[];
-    if(val==='jiejie'&&(!t.jj||typeof t.jj!=='object'))t.jj={count:0,done:false};
+    if(val==='xietong'){if(!Array.isArray(t.xtLog))t.xtLog=[];if(!t.xtGoal)t.xtGoal=10;if(!t.xtThreshold)t.xtThreshold=3;if(!t.reward)t.reward='累计番胜≥3：蓝票+勾玉；<3：金币（每场按累计番胜判定）';}
+    if(val==='baigui'){if(!Array.isArray(t.bgLog))t.bgLog=[];if(!t.reward)t.reward='按名次记录鼬乐币，每周清零';}
+    if(val==='jiejie'){if(!t.jj||typeof t.jj!=='object')t.jj={count:0,done:false};if(!t.reward)t.reward='结界突破券满 30 清';}
+    if(val==='points'&&!t.reward)t.reward='积分累计，达目标自动完成';
+    if(val==='count'&&!t.reward)t.reward='按次积累，达目标自动完成';
+    if(val==='text'&&!t.reward)t.reward='勾选完成';
   }
   save();}
+function gSetWeeklyHint(v){D.game.weeklyHint=v;save();renderGame();}
 function gActFind(aid){return D.game.activities.find(x=>x.id===aid);}
 function gActSet(aid,key,val){const a=gActFind(aid);if(!a)return;a[key]=val;save();}
 function gActDT(arg,val){
@@ -2376,7 +2408,7 @@ function gSeedWeekly(){
 function gDelRow(id){D.game.daily[gameTplDay]=D.game.daily[gameTplDay].filter(t=>t.id!==id);save();renderGame();}
 function gDelDaily(wd,id){if(!D.game.daily[wd])return;D.game.daily[wd]=D.game.daily[wd].filter(t=>t.id!==id);save();renderGame();}
 function gameWeeklyTpl(){
-  const TYPE_LABEL={text:'普通(勾选完成)',count:'按次积累',points:'积分累计',xietong:'协同斗技(记番胜)',baigui:'百鬼棋局(记名次)',jiejie:'结界突破券(计数/30)'};
+  const TYPE_LABEL={text:'普通(勾选完成)',count:'按次积累',points:'积分累计',xietong:'协同对弈(记番胜)',baigui:'百鬼棋局(记名次)',jiejie:'结界突破券(计数/30)'};
   const rows=D.game.weekly.map(t=>{
     const ty=weeklyType(t);
     const drag=dragSpan('weekly',t.id);
@@ -2388,6 +2420,11 @@ function gameWeeklyTpl(){
         <label style="font-size:calc(var(--fs)*0.8)">积分 <input type="number" value="${+t.score||''}" style="width:78px" onchange="gWeeklySet('${t.id}','score',+this.value)"></label>
         <label style="font-size:calc(var(--fs)*0.8)">目标 <input type="number" value="${+t.goal||600}" style="width:78px" onchange="gWeeklySet('${t.id}','goal',+this.value)"></label>
       </div>`;
+    } else if(ty==='xietong'){
+      extra=`<div class="row" style="margin-top:6px;gap:6px;flex-wrap:wrap">
+        <label style="font-size:calc(var(--fs)*0.8)">目标场数 <input type="number" value="${+t.xtGoal||10}" style="width:66px" onchange="gWeeklySet('${t.id}','xtGoal',+this.value)"></label>
+        <label style="font-size:calc(var(--fs)*0.8)">奖励番胜阈值 <input type="number" value="${+t.xtThreshold||3}" style="width:66px" onchange="gWeeklySet('${t.id}','xtThreshold',+this.value)"></label>
+      </div>`;
     } else if(ty==='count'){
       extra=`<div class="row" style="margin-top:6px;gap:6px;flex-wrap:wrap">
         <label style="font-size:calc(var(--fs)*0.8)">次数 <input type="number" value="${+t.count||''}" style="width:66px" onchange="gWeeklySet('${t.id}','count',+this.value)"></label>
@@ -2395,13 +2432,19 @@ function gameWeeklyTpl(){
       </div>`;
     }
     return `<div class="item">${drag}${gWeeklyMv(t.id)}<div class="body">
-      <input type="text" class="inp" value="${esc(t.name)}" onchange="gWeeklySet('${t.id}','name',this.value)" style="width:100%">
+      <div class="row" style="gap:6px;align-items:center">
+        <input type="text" class="inp" value="${esc(t.icon||'')}" placeholder="图标" onchange="gWeeklySet('${t.id}','icon',this.value)" style="width:54px;text-align:center">
+        <input type="text" class="inp" value="${esc(t.name)}" onchange="gWeeklySet('${t.id}','name',this.value)" style="flex:1;min-width:120px">
+      </div>
       <div class="row" style="margin-top:4px;gap:6px;align-items:center">${typeSel}${ty==='text'?`<label style="font-size:calc(var(--fs)*0.8);color:var(--muted)"><input type="checkbox" ${t.shop?'checked':''} onchange="gWeeklySet('${t.id}','shop',this.checked)"> 商店</label>`:''}</div>
+      <input type="text" class="inp" value="${esc(t.reward||'')}" placeholder="奖励说明（可选，显示在周常卡片）" onchange="gWeeklySet('${t.id}','reward',this.value)" style="width:100%;margin-top:4px;font-size:calc(var(--fs)*0.82)">
       ${extra}
     </div><button class="del" onclick="gDelWeekly('${t.id}')">×</button></div>`;
   }).join('');
   return `<div class="card"><div class="card-h"><h2>周常设置</h2></div>
-    <div class="hint">建议顺序：图鉴分享 → 商店兑换 → 秘闻副本 → 秘闻分享 → 六道之门×2 → 协同斗技 → 真蛇×2 → 百鬼棋局 → 结界突破券检查。每行可切换「性质」：普通(勾选完成) / 按次积累(记次数，达目标自动完成) / 积分累计(次数+积分，达目标自动完成)。</div>
+    <div class="hint">${esc(D.game.weeklyHint||'')}</div>
+    <details style="margin-top:6px"><summary style="cursor:pointer;font-size:calc(var(--fs)*0.85);color:var(--muted)">✎ 编辑建议顺序 / 简介</summary>
+    <textarea class="inp" onchange="gSetWeeklyHint(this.value)" style="width:100%;min-height:54px;margin-top:4px">${esc(D.game.weeklyHint||'')}</textarea></details>
     ${rows}
     <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">
       <button class="btn ghost sm" onclick="gAddWeekly('text')">＋ 普通</button>
@@ -2414,11 +2457,13 @@ function gameWeeklyTpl(){
     </div>
     <div class="hint" style="margin-top:6px">导入按名称/类型去重，只补齐缺的；顺序可用 ≡ 拖拽。</div></div>`;
 }
-function gAddWeekly(type){const t={id:uid(),name:'',shop:false,type:type||'text',count:0,goal:0,score:0};
-  if(type==='points')t.goal=600;
-  if(type==='xietong'){t.name='协同斗技';t.xtLog=[];}
-  if(type==='baigui'){t.name='百鬼棋局';t.bgLog=[];}
-  if(type==='jiejie'){t.name='结界突破券检查';t.jj={count:0,done:false};}
+function gAddWeekly(type){const t={id:uid(),name:'',shop:false,type:type||'text',count:0,goal:0,score:0,icon:'',reward:''};
+  if(type==='points'){t.goal=600;t.reward='积分累计，达目标自动完成';}
+  if(type==='xietong'){t.name='协同对弈';t.xtLog=[];t.xtGoal=10;t.xtThreshold=3;t.reward='累计番胜≥3：蓝票+勾玉；<3：金币（每场按累计番胜判定）';}
+  if(type==='baigui'){t.name='百鬼棋局';t.bgLog=[];t.reward='按名次记录鼬乐币，每周清零';}
+  if(type==='jiejie'){t.name='结界突破券检查';t.jj={count:0,done:false};t.reward='结界突破券满 30 清';}
+  if(type==='count'){t.reward='按次积累，达目标自动完成';}
+  if(type==='text'){t.reward='勾选完成';}
   D.game.weekly.push(t);save();renderGame();}
 function gDelWeekly(id){D.game.weekly=D.game.weekly.filter(t=>t.id!==id);save();renderGame();}
 function gameActivityTpl(){
@@ -3869,7 +3914,7 @@ function bootTheme(){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v63';
+const APP_VER='v64';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -4364,6 +4409,12 @@ function dailyResetCheck(){
         if(Object.keys(ob).length===0)delete D.game.progress[old];
       }
       D._meta.lastResetWeek=wk;
+      // v64：周常整体刷新——清掉按数值类（协同/百鬼/结界）的当期累计，确保周一所有周常都重置
+      (D.game.weekly||[]).forEach(t=>{
+        if(t.type==='xietong'&&Array.isArray(t.xtLog))t.xtLog=[];
+        if(t.type==='baigui'&&Array.isArray(t.bgLog))t.bgLog=[];
+        if(t.type==='jiejie'&&t.jj){t.jj={count:0,done:false,log:[]};}
+      });
     }
     // 系统动作：不推进版本号、不标记「本机有未上传改动」。
     // 否则新设备/新域名首次打开时它会先把 rev 顶起来，令 isDirty() 误判为真，
