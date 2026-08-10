@@ -3811,7 +3811,13 @@ function saveEdit(){
 }
 
 /* ================= 换肤 ================= */
-const SKINS=[['黛蓝','#4A6280'],['竹青','#6E8B5E'],['秋香','#C2B280'],['藕荷','#B98AA8'],['黛绿','#4F7365'],['檀色','#A87C5C'],['苍绿','#6B8A6B'],['青碧','#4F9C92'],['墨绿','#38564A'],['胭脂','#A85A66'],['靛青','#46568A'],['茶色','#9A734F'],['霜色','#97A6B2'],['黄栌','#C2824F'],['缃色','#D9BE6E'],['松绿','#4A7A5C'],['黎色','#8A7868'],['鸦青','#4B5A67'],['水色','#88A0A8'],['缥色','#7FA8B0'],['油绿','#5C7A4F'],['苍黄','#BFAE7A'],['赭石','#9C6B4F'],['银朱','#B05A4A'],['绀青','#2E4A6B'],['碧色','#4E8C8C'],['豆绿','#8FA86B'],['藤紫','#7A5C84'],['枣红','#8A3B3B'],['茜色','#A8504A'],['枯绿','#7A8A5C'],['黄丹','#C08552'],['退红','#B07A78'],['蟹壳青','#7C9A92'],['莺哥绿','#5C8A6E'],['密合','#C2B89A'],['藕色','#C8A0A8'],['老银','#9AA0A6'],['绛紫','#855A6E'],['天青','#88B0BE'],['琥珀','#B57A3C'],['黛紫','#6A5A86'],['紫檀','#6E4A48']];
+const SKIN_CATS=[
+ {name:'中国传统色',colors:[['黛绿','#4F7365'],['苍绿','#6B8A6B'],['墨绿','#38564A'],['霜色','#97A6B2'],['松绿','#4A7A5C'],['黎色','#8A7868'],['缥色','#7FA8B0'],['油绿','#5C7A4F'],['银朱','#B05A4A'],['豆绿','#8FA86B'],['枯绿','#7A8A5C'],['退红','#B07A78'],['蟹壳青','#7C9A92'],['莺哥绿','#5C8A6E'],['藕色','#C8A0A8'],['琥珀','#B57A3C']]},
+ {name:'日本传统色',colors:[['胡桃','#947A6D'],['藍','#165E83'],['群青','#2E4F6B'],['朱色','#EB6101'],['鶯色','#928C36']]},
+ {name:'莫兰迪色',colors:[['灰粉','#C9B4B0'],['雾绿','#A9B5A0'],['雾蓝','#9FB0C0'],['藕灰','#B0A6B8'],['豆沙','#C2A8A0']]},
+ {name:'轻亮色',colors:[['海贝色','#FFF5EE'],['靛蓝100','#C5CAE9'],['湖青200','#80DEEA'],['薄荷绿','#8FC9A8'],['薄荷青','#9AD6C4']]}
+];
+const SKINS=SKIN_CATS.flatMap(c=>c.colors);
 function softColor(hex){const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;r=Math.round(r*0.18+255*0.82);g=Math.round(g*0.18+255*0.82);b=Math.round(b*0.18+255*0.82);const h=x=>x.toString(16).padStart(2,'0');return '#'+h(r)+h(g)+h(b);}
 function strongColor(hex){const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;const L=0.2126*r/255+0.7152*g/255+0.0722*b/255;if(L>0.55){r=Math.round(r*0.6);g=Math.round(g*0.6);b=Math.round(b*0.6);}const h=x=>x.toString(16).padStart(2,'0');return '#'+h(r)+h(g)+h(b);}
 function ink(hex){const n=parseInt(hex.slice(1),16);const r=(n>>16)/255,g=((n>>8)&255)/255,b=(n&255)/255;const L=0.2126*r+0.7152*g+0.0722*b;return L>0.6?'#1A1A1A':'#fff';}
@@ -3866,22 +3872,40 @@ function closeSkin(){$('#skinModal').classList.remove('show');$('#skinOverlay').
 function renderSeasonCards(){
   const cur=D._meta.currentTheme;
   const cards=[[ 'spring','春·嫩绿','#7E9A7E'],['summer','夏·天蓝','#7B9DBD'],['autumn','秋·暖橙','#C49A6C'],['winter','冬·霜蓝','#8E9BAC']];
-  $('#seasonCards').innerHTML=cards.map(c=>`<div class="season-card ${cur===c[0]?'sel':''}" style="background:${c[2]};color:${ink(c[2])}" onclick="setTheme('${c[0]}')">${c[1]}</div>`).join('')+`<div class="season-card ${cur==='default'?'sel':''}" style="background:#bbb;color:${ink('#bbb')}" onclick="setTheme('default')">默认·雾霾蓝</div>`;
+  $('#seasonCards').innerHTML=cards.map(c=>`<div class="season-card ${cur===c[0]?'sel':''}" style="background:${c[2]};color:${ink(c[2])}" onclick="setTheme('${c[0]}')">${c[1]}</div>`).join('')+`<div class="season-card ${cur==='default'?'sel':''}" style="background:#97A6B2;color:${ink('#97A6B2')}" onclick="setTheme('default')">默认·霜色</div>`;
 }
+let skinCat='all';
 function renderSkinGrid(){
   const q=($('#skinSearch').value||'').trim();
   const cur=getAccent();
-  const grid=SKINS.filter(s=>!q||s[0].includes(q)).map(s=>{
-    const isCur=cur.toLowerCase()===s[1].toLowerCase();
-    return `<div class="swatch ${isCur?'sel':''}" style="background:${s[1]};color:${ink(s[1])}" onclick="setCustom('${s[1]}','${s[0]}')" title="${s[0]}">${s[0].length>3?s[0].slice(0,3):s[0]}</div>`;
-  }).join('');
-  $('#skinGrid').innerHTML=grid;
+  let html='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+  ['all'].concat(SKIN_CATS.map(c=>c.name)).forEach(function(n){
+    const on=(skinCat===n);
+    const lbl=(n==='all'?'全部':n);
+    const bg=on?'var(--accent)':'var(--tint)';
+    const fg=on?'var(--on-accent)':'var(--accent)';
+    html+='<button style="padding:4px 11px;border:1px solid var(--border);border-radius:8px;background:'+bg+';color:'+fg+';cursor:pointer;font-size:12px" onclick="setSkinCat(\''+n+'\')">'+lbl+'</button>';
+  });
+  html+='</div>';
+  SKIN_CATS.forEach(function(c){
+    if(skinCat!=='all'&&skinCat!==c.name)return;
+    if(q&&!c.colors.some(function(s){return s[0].includes(q);}))return;
+    html+='<div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:var(--muted);margin:4px 0 8px">'+c.name+'</div><div style="display:flex;flex-wrap:wrap;gap:8px">';
+    c.colors.filter(function(s){return !q||s[0].includes(q);}).forEach(function(s){
+      const isCur=cur.toLowerCase()===s[1].toLowerCase();
+      const disp=s[0];
+      html+='<div class="swatch '+(isCur?'sel':'')+'" style="background:'+s[1]+';color:'+ink(s[1])+';font-size:12px;line-height:1.15;text-align:center" onclick="setCustom(\''+s[1]+'\',\''+s[0]+'\')" title="'+s[0]+'">'+disp+'</div>';
+    });
+    html+='</div></div>';
+  });
+  $('#skinGrid').innerHTML=html;
 }
+function setSkinCat(n){skinCat=n;renderSkinGrid();}
 function getAccent(){const st=getComputedStyle(document.body).getPropertyValue('--accent').trim();return st;}
 function setTheme(t){D._meta.currentTheme=t;applyTheme(t);save();renderSeasonCards();renderSkinGrid();renderNav();if(typeof renderModule==='function')renderModule();}
 function setCustom(hex,name){D._meta.currentTheme='custom';applyCustom(hex);D._meta.customColor=hex;save();renderSeasonCards();renderSkinGrid();renderNav();if(typeof renderModule==='function')renderModule();toast('已切换：'+name);}
 const THEME_PALETTE={
- default:{accent:'#6B7A8A',soft:'#8E9CA8',tint:'#EDEFF1'},
+ default:{accent:'#97A6B2',soft:'#AEB9C2',tint:'#E8EBEE'},
  spring:{accent:'#7E9A7E',soft:'#9DB49D',tint:'#EAEFEA'},
  summer:{accent:'#7B9DBD',soft:'#9FB7CE',tint:'#EBF0F5'},
  autumn:{accent:'#C49A6C',soft:'#D4B58C',tint:'#F4EDE3'},
@@ -3914,7 +3938,7 @@ function bootTheme(){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v64';
+const APP_VER='v65';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
