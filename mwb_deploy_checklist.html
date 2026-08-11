@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Murphy's Workbench · 部署检查清单</title>
+<style>
+  :root{--accent:#5B8AA6;--accent-soft:#eaf1f6;--bg:#f5f6f8;--card:#fff;--border:#e3e7eb;--muted:#8a93a0;--text:#2b3138;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;font-size:16px;line-height:1.6;padding:14px}
+  .wrap{max-width:640px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+  h2{font-size:16px;margin:0 0 10px;color:var(--accent);display:flex;align-items:center;gap:6px}
+  h2 .n{background:var(--accent);color:#fff;border-radius:8px;font-size:12px;padding:1px 8px}
+  ul{margin:0;padding-left:0;list-style:none}
+  li{padding:7px 0;border-bottom:1px dashed var(--border);display:flex;gap:8px;align-items:flex-start}
+  li:last-child{border-bottom:none}
+  .box{flex:none;width:18px;height:18px;border:2px solid var(--accent);border-radius:5px;margin-top:3px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+  .box.on{background:var(--accent)}
+  b{color:var(--text)}
+  .tip{background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:13px;color:#3a4a55;margin-top:8px}
+  .tag{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:6px;font-size:12px;padding:1px 7px;margin:2px 3px 2px 0}
+  .update{font-size:12px;color:var(--muted);text-align:right;margin-top:6px}
+  code{background:#eef1f4;padding:1px 5px;border-radius:5px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛠 Murphy's Workbench · 部署检查清单</h1>
+  <div class="sub">跨设备通用要点 · 每次发版（V 迭代）前逐项自检 · 当前版本 <b>v70</b></div>
+
+  <div class="card">
+    <h2><span class="n">★</span> 第一铁律：手机端优先</h2>
+    <ul>
+      <li><span class="box on">✓</span><div><b>主力设备＝荣耀 Magic5 Pro 等手机端</b>，桌面端次之。每次部署必须把手机端显示当作默认验收标准。</div></li>
+      <li><span class="box on">✓</span><div><b>文字不挤兑、不折成多行</b>：名称/打卡时间/按钮同行时用 <code>flex</code> 不 wrap，超长用 <code>text-overflow:ellipsis</code> 兜底；时间统一右对齐单列，绝不混进名称行被挤掉。</div></li>
+      <li><span class="box on">✓</span><div><b>点击区域适合拇指</b>：按钮/勾选 ≥32px；行间距宽松，避免误触。</div></li>
+      <li><span class="box on">✓</span><div><b>信息完整可读优先</b>于桌面端排版花哨。卡片头部标签过多时主动拆成"标题一行 + 标签/操作一行"。</div></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">1</span> 数据不丢失（最高优先级）</h2>
+    <ul>
+      <li><span class="box on">✓</span><div>任何改动不得清除用户已记录数据；用户数据存 <code>localStorage</code>，与 HTML 源码分离。</div></li>
+      <li><span class="box on">✓</span><div>新字段在 <code>load()/migrate()</code> 中默认补全（如 <code>loop</code>、<code>actTaskDone</code>），旧数据零迁移风险。</div></li>
+      <li><span class="box on">✓</span><div>编辑用深拷贝草稿，原记录仅在保存成功后被替换。</div></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span> 每日打卡模块</h2>
+    <ul>
+      <li><span class="box on">✓</span><div>子项<b>默认每日循环</b>（<code>loop</code> 缺省 true），无需逐一点确认；点循环键或删除即可取消。</div></li>
+      <li><span class="box on">✓</span><div><b>独立事项也可循环</b>：无子项时事项右侧显示 🔁，编辑面板有"该事项每日循环"开关。</div></li>
+      <li><span class="box on">✓</span><div>有子项的事项<b>默认展开</b>（可自由收起）；子项区顶部统一标注"以下成员均为每日循环项"。</div></li>
+      <li><span class="box on">✓</span><div><code>dailyResetCheck</code> 零点：循环项/子项保留待重勾，非循环（一次性）跨天移除。</div></li>
+      <li><span class="box on">✓</span><div>加新成员（如 F）不影响 A–E 历史；历史按"日期+成员"独立存档。</div></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">3</span> 阴阳师模块</h2>
+    <ul>
+      <li><span class="box on">✓</span><div>周常<b>每周一整体刷新</b>（协同/百鬼/结界当期累计清空）。</div></li>
+      <li><span class="box on">✓</span><div>活动进度<b>双线实时</b>：⏱ 时间进度（按起止日期自动推导）+ ✅ 内容进度（按子项勾选占比），随时间/勾选实时更新。</div></li>
+      <li><span class="box on">✓</span><div>子任务完成改为<b>活动级持久存储</b>，跨天保留。</div></li>
+      <li><span class="box on">✓</span><div>活动卡片头部<b>手机端防折行</b>：标题一行、标签/操作一行。</div></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">4</span> 工作台账 / 工作记录</h2>
+    <ul>
+      <li><span class="box on">✓</span><div>"工作待办"已改名<b>工作台账</b>；新增独立页<b>工作记录</b>。</div></li>
+      <li><span class="box on">✓</span><div>统计整合为模块内第 3 个聚合 Tab；图表横向柱/折线/环形 + 时间筛选，默认当月。</div></li>
+      <li><span class="box on">✓</span><div>已完成项可编辑/重开/归档，"归档已完成"保留数据、统计不吞。</div></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">5</span> 换肤系统</h2>
+    <ul>
+      <li><span class="box on">✓</span><div>五分类约 48 色（中国传统色/日本传统色/莫兰迪色/轻亮色/复古色）+ 双色搭配(A主/B辅)。</div></li>
+      <li><span class="box on">✓</span><div>浅色 Fix：近白颜色保留辨识度；<code>softColor</code> 高亮色不冲白。</div></li>
+      <li><span class="box on">✓</span><div>皮肤 <code>onclick</code> 用单反斜杠 <code>\'</code> 转义（曾误报双反斜杠，真实文件本无 bug）。</div></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">6</span> 部署流程铁律</h2>
+    <ul>
+      <li><span class="box on">✓</span><div>目标地址固定 <b>https://boomgari.github.io/</b>，每次改动直接推原链接，各设备刷新即见。</div></li>
+      <li><span class="box on">✓</span><div>部署前必跑 <code>node --check</code> 全脚本语法校验；关键新函数用真实代码实跑场景验证。</div></li>
+      <li><span class="box on">✓</span><div>大文件用 GitHub <code>git refs→commit→tree</code> 取线上 blob SHA 再 PUT，规避整文件下载的 <code>IncompleteRead</code> 中断。</div></li>
+      <li><span class="box on">✓</span><div>收到明确"部署"指令即在同一轮执行，不再二次确认（除非用户说"先给草图/等确认"）。</div></li>
+    </ul>
+    <div class="tip">💡 跨设备：本清单与工作台源码同仓库，任意设备访问 <code>https://boomgari.github.io/mwb_deploy_checklist.html</code> 即可核对。如需"本机当日操作日志"，可另生成 <code>mwb_session_YYYYMMDD.html</code> 一并提交。</div>
+  </div>
+
+  <div class="update">最近更新：v70（2026-08-11）· 手机端适配 + 每日打卡循环 UI 优化</div>
+</div>
+</body>
+</html>
