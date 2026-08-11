@@ -8,7 +8,7 @@
   :root{--accent:#5B8AA6;--accent-soft:#eaf1f6;--bg:#f5f6f8;--card:#fff;--border:#e3e7eb;--muted:#8a93a0;--text:#2b3138;}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;font-size:16px;line-height:1.6;padding:14px}
-  .wrap{max-width:640px;margin:0 auto}
+  .wrap{max-width:680px;margin:0 auto}
   h1{font-size:20px;margin:0 0 4px}
   .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
   .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px}
@@ -24,6 +24,10 @@
   .tag{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:6px;font-size:12px;padding:1px 7px;margin:2px 3px 2px 0}
   .update{font-size:12px;color:var(--muted);text-align:right;margin-top:6px}
   code{background:#eef1f4;padding:1px 5px;border-radius:5px;font-size:13px}
+  table{width:100%;border-collapse:collapse;margin-top:4px;font-size:13px}
+  th,td{border:1px solid var(--border);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  td.dev{font-weight:600;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -34,11 +38,22 @@
   <div class="card">
     <h2><span class="n">★</span> 第一铁律：手机端优先</h2>
     <ul>
-      <li><span class="box on">✓</span><div><b>主力设备＝荣耀 Magic5 Pro 等手机端</b>，桌面端次之。每次部署必须把手机端显示当作默认验收标准。</div></li>
+      <li><span class="box on">✓</span><div><b>主力设备＝荣耀 Magic5 Pro（手机端）</b>，平板 / 桌面次之。每次部署必须把手机端显示当作默认验收标准（详见下方"目标设备与显示参数"）。</div></li>
       <li><span class="box on">✓</span><div><b>文字不挤兑、不折成多行</b>：名称/打卡时间/按钮同行时用 <code>flex</code> 不 wrap，超长用 <code>text-overflow:ellipsis</code> 兜底；时间统一右对齐单列，绝不混进名称行被挤掉。</div></li>
       <li><span class="box on">✓</span><div><b>点击区域适合拇指</b>：按钮/勾选 ≥32px；行间距宽松，避免误触。</div></li>
-      <li><span class="box on">✓</span><div><b>信息完整可读优先</b>于桌面端排版花哨。卡片头部标签过多时主动拆成"标题一行 + 标签/操作一行"。</div></li>
+      <li><span class="box on">✓</span><div><b>文本框 / 显示区文字必须完整可见</b>：输入与展示区域的滚动/换行要能容纳完整内容，不得被裁切或挤成多行错乱；风格简洁统一。卡片头部标签过多时主动拆成"标题一行 + 标签/操作一行"。</div></li>
     </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">0</span> 目标设备与显示参数</h2>
+    <table>
+      <tr><th>设备</th><th>屏幕规格</th><th>CSS 视口宽</th></tr>
+      <tr><td class="dev">荣耀 Magic5 Pro<br>（主力手机）</td><td>6.81″ LTPO OLED · 物理 2848×1312（竖屏 1312×2848）· 460 ppi · 120Hz · DCI-P3</td><td>≈ 393px</td></tr>
+      <tr><td class="dev">荣耀 MagicPad 3 Pro 13.3″<br>（平板）</td><td>13.3″ LCD · 3200×2136（3:2）· 291 ppi · 165Hz</td><td>≈ 1280px</td></tr>
+      <tr><td class="dev">拯救者 Y7000P 2022<br>（电脑）</td><td>15.6/16″ IPS · 2560×1440 或 2560×1600 · 165Hz · 100% sRGB（Win 常 150% 缩放）</td><td>≈ 1500–1700px</td></tr>
+    </table>
+    <div class="tip">🎯 响应式断点：<b>≤480px＝手机单栏</b> / <b>≈1280px＝平板舒适</b> / <b>≥1500px＝桌面</b>。所有布局按上述真实参数优化：手机端确保单行信息不被拆分、点击区充足；平板/桌面利用更大视口但不破坏移动版式。</div>
   </div>
 
   <div class="card">
@@ -90,17 +105,35 @@
   </div>
 
   <div class="card">
-    <h2><span class="n">6</span> 部署流程铁律</h2>
+    <h2><span class="n">6</span> 数据显示规则（全站通用）</h2>
+    <ul>
+      <li><span class="box on">✓</span><div>所有数值<b>最多保留小数点后两位</b>，可四舍五入。</div></li>
+      <li><span class="box on">✓</span><div>显示本身<b>带等号/赋值含义</b>（如"≈X"或等于号语境）时，若做了四舍五入，可在数字前加 <code>≈</code> 表示估算。</div></li>
+      <li><span class="box on">✓</span><div>显示语境<b>不含等号</b>（进度条百分比、金额、计数等纯呈现）时，<b>直接显示四舍五入后的结果</b>即可，不必额外标注"估算"。</div></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">7</span> 部署流程铁律</h2>
     <ul>
       <li><span class="box on">✓</span><div>目标地址固定 <b>https://boomgari.github.io/</b>，每次改动直接推原链接，各设备刷新即见。</div></li>
-      <li><span class="box on">✓</span><div>部署前必跑 <code>node --check</code> 全脚本语法校验；关键新函数用真实代码实跑场景验证。</div></li>
+      <li><span class="box on">✓</span><div><b>部署前必查隐藏 bug 与整体 UI</b>：跑 <code>node --check</code> 全脚本语法校验；关键新函数用真实代码实跑场景验证；核对整体 UI 表现、确保文本框文字完整可见、风格简洁统一，力求落地后直接正常使用。</div></li>
       <li><span class="box on">✓</span><div>大文件用 GitHub <code>git refs→commit→tree</code> 取线上 blob SHA 再 PUT，规避整文件下载的 <code>IncompleteRead</code> 中断。</div></li>
       <li><span class="box on">✓</span><div>收到明确"部署"指令即在同一轮执行，不再二次确认（除非用户说"先给草图/等确认"）。</div></li>
     </ul>
-    <div class="tip">💡 跨设备：本清单与工作台源码同仓库，任意设备访问 <code>https://boomgari.github.io/mwb_deploy_checklist.html</code> 即可核对。如需"本机当日操作日志"，可另生成 <code>mwb_session_YYYYMMDD.html</code> 一并提交。</div>
+    <div class="tip">🔑 <b>令牌策略</b>：本机（公司电脑）使用临时 PAT；因公司机不挂永久令牌，用户会在<b>到期前申请 30 日新令牌</b>替换 <code>gh_token.txt</code>。注意——令牌失效且未换新时，自动上载清单/日志会失败，故到期前务必更换。</div>
   </div>
 
-  <div class="update">最近更新：v70（2026-08-11）· 手机端适配 + 每日打卡循环 UI 优化</div>
+  <div class="card">
+    <h2><span class="n">8</span> 跨设备协作</h2>
+    <ul>
+      <li><span class="box on">✓</span><div><b>通用要点放仓库</b>：本清单与工作台源码同库，任意设备访问 <code>https://boomgari.github.io/mwb_deploy_checklist.html</code> 即可核对。</div></li>
+      <li><span class="box on">✓</span><div><b>当日操作日志</b>：仅在用户发来提示词 <code>"本设备短时间内无其他操作，生成当日操作日志"</code> 时，才生成 <code>mwb_session_YYYYMMDD.html</code>（标注本机当日所有操作）并提交仓库——用户免下载、跨设备可见。</div></li>
+      <li><span class="box on">✓</span><div>会话历史（<code>conversation_search</code>）服务端跨设备可用，但结构化要点以本仓库 HTML 为准。</div></li>
+    </ul>
+  </div>
+
+  <div class="update">最近更新：v70（2026-08-11）· 整合三设备显示参数 + 数据显示规则 + 当日日志触发词 + 令牌策略</div>
 </div>
 </body>
 </html>
