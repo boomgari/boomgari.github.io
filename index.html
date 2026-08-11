@@ -225,6 +225,25 @@ textarea{resize:vertical;min-height:60px;}
 @keyframes pop{to{transform:translate(-50%,-50%) scale(1);}}
 .modal h3{font-size:calc(var(--fs)*1.067);margin-bottom:12px;}
 .modal .close{float:right;background:none;border:none;font-size:calc(var(--fs)*1.467);color:var(--muted);cursor:pointer;line-height:1;}
+/* 健身/通用编辑模态（独立遮罩层，统一水平对齐） */
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:70;display:flex;align-items:center;justify-content:center;padding:14px;}
+.modal-mask .modal{position:static;transform:none;display:flex;flex-direction:column;width:min(94vw,560px);max-height:88vh;}
+.modal-h{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.modal-h h3{margin:0;flex:1;font-size:calc(var(--fs)*1.067);}
+.modal-b{flex:1;overflow-y:auto;}
+.modal-f{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:14px;}
+/* 阴阳师按次进度点（与文本/勾选框同一水平线对齐） */
+.dots{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;}
+.dot{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--accent);background:transparent;display:inline-block;box-sizing:border-box;}
+.dot.on{background:var(--accent);}
+.tag.actual{background:#EAF1F5;color:#2C6E8F;}
+/* 行内控件统一水平中线对齐（部署铁律） */
+.row,.row.c{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.field{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.field label{font-size:calc(var(--fs)*0.8);color:var(--muted);}
+/* 健身今日项编辑按钮与删除并列，垂直居中 */
+.item .ic{flex:none;background:none;border:none;color:var(--muted);font-size:calc(var(--fs)*1.1);cursor:pointer;line-height:1;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;}
+.item .ic:hover{background:var(--tint);color:var(--accent);}
 /* 换肤网格 */
 .swatch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:9px;margin-top:10px;}
 .swatch{height:46px;border-radius:9px;cursor:pointer;border:2px solid transparent;display:flex;align-items:center;justify-content:center;text-align:center;padding-bottom:0;font-size:calc(var(--fs)*0.667);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4);position:relative;}
@@ -233,6 +252,10 @@ textarea{resize:vertical;min-height:60px;}
 .season-card{flex:1;text-align:center;align-items:center;padding:10px 6px;border-radius:10px;color:#fff;font-size:calc(var(--fs)*0.867);font-weight:600;cursor:pointer;border:2px solid transparent;}
 .season-card.sel{border-color:#1A1A1A;}
 .skin-search{width:100%;padding:8px 11px;border:var(--bw) solid var(--border);border-radius:9px;margin-bottom:8px;}
+.bc-slot{display:flex;flex-direction:column;gap:3px;}
+.bc-slot span{font-size:calc(var(--fs)*0.8);color:var(--muted);}
+.bc-slot input[type=color]{width:46px;height:32px;border:var(--bw) solid var(--border);border-radius:8px;background:none;padding:2px;cursor:pointer;}
+.bc-slot input[type=text]{width:84px;padding:6px 8px;border:var(--bw) solid var(--border);border-radius:8px;font-size:calc(var(--fs)*0.8);}
 /* 拖拽手柄 */
 .drag{color:#B4BEC7;cursor:grab;font-size:calc(var(--fs)*1.2);line-height:1;padding:0;border-radius:8px;user-select:none;-webkit-user-select:none;touch-action:none;flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;transition:background .15s,color .15s;}
 .drag:hover{background:var(--tint);color:var(--accent);}
@@ -597,9 +620,27 @@ textarea.inp{min-height:52px;}
         <button class="btn ghost sm" onclick="setFont('')">恢复默认</button>
       </div>
       <div id="fontChips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-      <div style="margin-top:6px;color:var(--muted);font-size:11px">三款字体任选其一，按钮以该字体预览；选定后经云同步三端一致</div>
+    <div style="margin-top:6px;color:var(--muted);font-size:11px">三款字体任选其一，按钮以该字体预览；选定后经云同步三端一致</div>
+  </div>
+  <div style="margin-top:16px;border-top:var(--bw) solid var(--border);padding-top:14px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-weight:700">🎭 双色搭配（主色 A ＋ 辅色 B）</span></div>
+    <div class="hint" style="margin-bottom:8px">主色 A 用于按钮/交互，辅色 B 用于背景氛围。也可从图片一键提取双色（仅存两个颜色值，不占本地空间）。</div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px">
+      <div class="bc-slot"><span>主色 A（按钮/交互）</span><input type="color" id="colA" value="#4F7365" oninput="bcSet('A',this.value)"><input type="text" id="hexA" value="#4F7365" oninput="bcHex('A')"></div>
+      <div class="bc-slot"><span>辅色 B（氛围/底色）</span><input type="color" id="colB" value="#97A6B2" oninput="bcSet('B',this.value)"><input type="text" id="hexB" value="#97A6B2" oninput="bcHex('B')"></div>
+      <label class="btn ghost sm" style="cursor:pointer">📷 从图片提取<input type="file" accept="image/*" hidden onchange="bcExtractFile(this)"></label>
+      <button class="btn" onclick="bcSave()">保存双色皮肤</button>
+    </div>
+    <div id="bcCur" style="font-size:12px;color:var(--muted)"></div>
+    <div id="bcDemo" style="margin-top:10px;border-radius:10px;padding:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span id="bc_chip" style="padding:3px 10px;border-radius:20px;font-weight:600">标签</span>
+      <button id="bc_btn" class="btn sm">主色按钮</button>
+      <button id="bc_btn2" class="btn ghost sm">辅色按钮</button>
+      <span id="bc_txt" style="font-weight:600">文字示例</span>
+      <div id="bc_prog" style="height:8px;border-radius:6px;flex:1;min-width:120px;overflow:hidden"><div id="bc_progi" style="height:100%;width:60%"></div></div>
     </div>
   </div>
+</div>
 </div>
 
 <!-- 云同步模态 -->
@@ -655,10 +696,10 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 // 0=周一 … 6=周日；flex:'reward' 表示灵活行（只记数量、时间不固定）
 const YYS_DAILY_BASE=[
   {time:'06:00',name:'地域鬼王（1-3只，打完分享领勾玉）',flex:''},
-  {time:'',     name:'悬赏封印（05:00 / 18:00 各刷新一次，有勾玉就做）',flex:'reward'},
-  {time:'',     name:'式神委派（探索里，最好出 6星结界卡）',flex:'reward'},
+  {time:'',     name:'悬赏封印（05:00 / 18:00 各刷新一次，有勾玉就做）',flex:'reward',goal:2},
+  {time:'',     name:'式神委派（探索里，最好出 6星结界卡）',flex:'reward',goal:2},
   {time:'17:00',name:'逢魔之时',flex:''},
-  {time:'',     name:'金币妖怪 ×2（撩活后顺手打）',flex:'reward'},
+  {time:'',     name:'金币妖怪 ×2（撩活后顺手打）',flex:'reward',goal:2},
   {time:'',     name:'阴阳寮每日任务（寮30）',flex:''}
 ];
 const YYS_DAILY_EXTRA={
@@ -678,7 +719,7 @@ function yysDailyList(d){
     if(!a.time)return 1;
     if(!b.time)return -1;
     return a.time<b.time?-1:(a.time>b.time?1:0);
-  }).map(x=>({id:uid(),time:x.time,name:x.name,flex:x.flex,count:0}));
+  }).map(x=>({id:uid(),time:x.time,name:x.name,flex:x.flex,count:0,goal:x.goal||0}));
 }
 function yysDailyDefault(){const o={};for(let i=0;i<7;i++)o[i]=yysDailyList(i);return o;}
 const YYS_WEEKLY_BASE=[
@@ -1701,7 +1742,23 @@ function renderFitToday(){
     const d=it.detail||{};
     let det='';
     if(it.type==='力量'||it.type==='核心'){det=(d.actions||[]).map(a=>`${esc(a.name)}→${esc(a.muscle)}`).join('、')||'无动作';}
-    else if(it.type==='有氧'){det=`${d.speed||''} ${d.slope||''} 卡${d.cal||''} 心${d.hrAvg||''}/${d.hrMax||''}`;}
+    else if(it.type==='有氧'){
+      const parts=[];
+      if(d.slope!==''&&d.slope!=null)parts.push('坡度'+(d.slope)+'°');
+      if(d.speed!==''&&d.speed!=null)parts.push('速度'+(d.speed));
+      if(d.cal!==''&&d.cal!=null)parts.push((d.cal)+'卡');
+      if((d.hrAvg||d.hrMax))parts.push('心率'+(d.hrAvg||'?')+'/'+(d.hrMax||'?'));
+      det=parts.join(' · ')||'无参数';
+      const a=it.actual||{};
+      if(a.slope||a.speed||a.cal||a.hrAvg||a.hrMax){
+        const ap=[];
+        if(a.slope)ap.push('坡度'+(a.slope)+'°');
+        if(a.speed)ap.push('速度'+(a.speed));
+        if(a.cal)ap.push((a.cal)+'卡');
+        if(a.hrAvg||a.hrMax)ap.push('心率'+(a.hrAvg||'?')+'/'+(a.hrMax||'?'));
+        det+=' <span class="tag actual">实测 '+ap.join(' · ')+'</span>';
+      }
+    }
     else det=d.note||'';
     const timeBar=it.startTime
       ? `<span class="ft-main">${esc(it.startTime)}</span><span class="ft-sub">${it.endTime?('→ '+esc(it.endTime)+' · '):''}${esc(it.duration||'')}min</span><span class="ft-edit">点此改</span>`
@@ -1713,6 +1770,7 @@ function renderFitToday(){
         <div class="ttitle">${esc(it.name)} <span class="tag">${it.type}</span></div>
         <div class="sub">${det||''}</div>
       </div>
+      <button class="ic" title="编辑此事项" onclick="fitEditItem(${i})">✎</button>
       <button class="del" onclick="fitDel(${i})">×</button>
     </div>`;
   }).join('');
@@ -1758,6 +1816,69 @@ function renderFitToday(){
   </div>`;
 }
 function fitToggle(i,done){D.fitness.today[i].done=done;save();renderNav();renderFitness();}
+let fitEditIdx=-1;
+function fitEditItem(i){
+  fitEditIdx=i;
+  const rec=ensureFitToday();const it=rec.items[i];if(!it)return;
+  const d=it.detail||{};const types=fitAllTypes();
+  let body=`<div class="row c" style="margin-bottom:8px">
+    <div class="field"><label>名称</label><input type="text" id="fe_name" value="${esc(it.name)}" style="flex:2;min-width:140px"></div>
+    <div class="field"><label>类型</label><select id="fe_type">${types.map(t=>`<option ${it.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="field"><label>时长(分)</label><input type="number" id="fe_dur" value="${esc(it.duration||'')}" style="flex:0 0 72px"></div>
+  </div>`;
+  if(it.type==='力量'||it.type==='核心'){
+    body+=`<div style="margin:4px 0">${(d.actions||[]).map((a,ai)=>`<div class="row c" style="margin-bottom:5px"><input type="text" placeholder="动作名" id="fe_act_name_${ai}" value="${esc(a.name)}" style="flex:2;min-width:120px"><input type="text" placeholder="肌肉/部位" id="fe_act_mus_${ai}" value="${esc(a.muscle)}" style="flex:1.3;min-width:90px"></div>`).join('')}</div>
+    <button class="btn ghost sm" onclick="fitEditAddAct(${i})">＋ 添加动作</button>`;
+  } else if(it.type==='有氧'){
+    body+=`<div class="row c" style="margin-bottom:6px;flex-wrap:wrap">
+      <div class="field"><label>速度</label><input type="text" id="fe_speed" value="${esc(d.speed||'')}" style="flex:1;min-width:64px"></div>
+      <div class="field"><label>坡度°</label><input type="text" id="fe_slope" value="${esc(d.slope||'')}" style="flex:1;min-width:64px"></div>
+      <div class="field"><label>卡路里</label><input type="text" id="fe_cal" value="${esc(d.cal||'')}" style="flex:1;min-width:64px"></div>
+      <div class="field"><label>平均心率</label><input type="text" id="fe_hrAvg" value="${esc(d.hrAvg||'')}" style="flex:1;min-width:64px"></div>
+      <div class="field"><label>最大心率</label><input type="text" id="fe_hrMax" value="${esc(d.hrMax||'')}" style="flex:1;min-width:64px"></div>
+    </div>
+    <div class="hint" style="margin:6px 0 4px">以下为「运动完成后」实际记录（留空则不显示）：</div>
+    <div class="row c" style="flex-wrap:wrap">
+      <div class="field"><label>实测速度</label><input type="text" id="fe_a_speed" value="${esc((it.actual||{}).speed||'')}" style="flex:1;min-width:64px"></div>
+      <div class="field"><label>实测坡度°</label><input type="text" id="fe_a_slope" value="${esc((it.actual||{}).slope||'')}" style="flex:1;min-width:64px"></div>
+      <div class="field"><label>实测卡路里</label><input type="text" id="fe_a_cal" value="${esc((it.actual||{}).cal||'')}" style="flex:1;min-width:64px"></div>
+      <div class="field"><label>实测平均心率</label><input type="text" id="fe_a_hrAvg" value="${esc((it.actual||{}).hrAvg||'')}" style="flex:1;min-width:64px"></div>
+      <div class="field"><label>实测最大心率</label><input type="text" id="fe_a_hrMax" value="${esc((it.actual||{}).hrMax||'')}" style="flex:1;min-width:64px"></div>
+    </div>`;
+  } else {
+    body+=`<div style="margin-top:6px"><input type="text" id="fe_note" placeholder="自由备注" value="${esc(d.note||'')}" style="width:100%"></div>`;
+  }
+  const html=`<div class="modal-mask" id="fe_mask" onclick="if(event.target===this)fitEditClose()"><div class="modal"><div class="modal-h"><h3>编辑今日事项</h3><button class="del" onclick="fitEditClose()">×</button></div><div class="modal-b">${body}</div><div class="modal-f"><button class="btn ghost sm" onclick="fitEditClose()">取消</button><button class="btn" onclick="fitEditSave(${i})">保存</button></div></div></div>`;
+  let m=document.getElementById('fe_mask');if(m)m.outerHTML=html;else document.body.insertAdjacentHTML('beforeend',html);
+  const sel=document.getElementById('fe_type');if(sel)sel.onchange=function(){const it2=D.fitness.today[fitEditIdx];if(it2)it2.name=document.getElementById('fe_name').value;fitEditItem(fitEditIdx);};
+}
+function fitEditAddAct(i){const rec=ensureFitToday();const it=rec.items[i];it.detail=it.detail||{};it.detail.actions=it.detail.actions||[];it.detail.actions.push({name:'',muscle:''});fitEditItem(i);}
+function fitEditClose(){const m=document.getElementById('fe_mask');if(m)m.remove();fitEditIdx=-1;}
+function fitEditSave(i){
+  const rec=ensureFitToday();const it=rec.items[i];if(!it){fitEditClose();return;}
+  it.name=document.getElementById('fe_name').value.trim()||it.name;
+  it.type=document.getElementById('fe_type').value;
+  it.duration=document.getElementById('fe_dur').value;
+  const d=it.detail||{};
+  if(it.type==='力量'||it.type==='核心'){
+    const n=document.querySelectorAll('[id^=fe_act_name_]').length;
+    const acts=[];for(let k=0;k<n;k++){const nm=document.getElementById('fe_act_name_'+k).value.trim();const ms=document.getElementById('fe_act_mus_'+k).value.trim();if(nm||ms)acts.push({name:nm,muscle:ms});}
+    d.actions=acts;
+  } else if(it.type==='有氧'){
+    d.speed=document.getElementById('fe_speed').value;
+    d.slope=document.getElementById('fe_slope').value;
+    d.cal=document.getElementById('fe_cal').value;
+    d.hrAvg=document.getElementById('fe_hrAvg').value;
+    d.hrMax=document.getElementById('fe_hrMax').value;
+    it.actual=it.actual||{};
+    it.actual.speed=document.getElementById('fe_a_speed').value||'';
+    it.actual.slope=document.getElementById('fe_a_slope').value||'';
+    it.actual.cal=document.getElementById('fe_a_cal').value||'';
+    it.actual.hrAvg=document.getElementById('fe_a_hrAvg').value||'';
+    it.actual.hrMax=document.getElementById('fe_a_hrMax').value||'';
+  } else {d.note=document.getElementById('fe_note').value;}
+  it.detail=d;save();fitEditClose();renderFitness();
+}
 function fitDel(i){D.fitness.today.splice(i,1);save();renderFitness();}
 function fitSetStart(i,val){const it=D.fitness.today[i];if(!it)return;it.startTime=val;it.endTime=addMin(val,it.duration);save();renderFitness();}
 function fitAddFree(){const n=$('#ff_name').value.trim();if(!n){toast('填名称');return;}
@@ -2196,8 +2317,11 @@ function gameDailyCard(wd,prog){
     const drag=dragSpan('daily',t.id,wd);
     let body;
     if(t.flex==='reward'){
+      const goal=+t.goal||0, cnt=+t.count||0;
+      const dots=goal?Array.from({length:goal},(_,i)=>`<span class="dot ${i<cnt?'on':''}"></span>`).join(''):'';
+      const pct=goal?Math.min(100,Math.round(cnt/goal*100)):0;
       const log=(t.countLog||[]).map((e,i)=>`<div class="trk-row"><span>第${i+1}次</span><span class="hint">${esc(e.time)}</span></div>`).join('');
-      body=`<div style="flex:1;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" ${done?'checked':''} onchange="gProg('daily','${t.id}',this.checked)"> <span class="ttitle">${esc(t.name)}</span></label> <span class="hint">做了几次</span> <button class="btn ghost sm" onclick="gDailyInc(${wd},'${t.id}')">＋1</button> <span class="tag">${t.count||0}</span> <button class="btn ghost sm" ${(t.count||0)>0?'':'disabled style="opacity:.4"'} onclick="gDailyDec(${wd},'${t.id}')">－1</button>${(t.countLog&&t.countLog.length)?`<button class="note-btn" onclick="gameDailyRewardExp['${t.id}']=!gameDailyRewardExp['${t.id}'];renderGame()">${gameDailyRewardExp[t.id]?'收起':'每次时间'}</button>`:''}${(gameDailyRewardExp[t.id]&&t.countLog&&t.countLog.length)?`<div class="trk-list">${log}</div>`:''}</div>`;
+      body=`<div style="flex:1;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" ${done?'checked':''} onchange="gProg('daily','${t.id}',this.checked)"> <span class="ttitle">${esc(t.name)}</span></label>${dots?`<span class="dots">${dots}</span>`:''}<span class="tag">${cnt}${goal?('/'+goal):''}</span>${goal?`<span class="hint">${done?'✓ 已完成':(cnt>0?('已 '+pct+'%'):'待完成')}</span>`:''}<button class="btn ghost sm" onclick="gDailyInc(${wd},'${t.id}')">＋1</button>${cnt>0?`<button class="btn ghost sm" onclick="gDailyDec(${wd},'${t.id}')">－1</button>`:''}${(t.countLog&&t.countLog.length)?`<button class="note-btn" onclick="gameDailyRewardExp['${t.id}']=!gameDailyRewardExp['${t.id}'];renderGame()">${gameDailyRewardExp[t.id]?'收起':'每次时间'}</button>`:''}${(gameDailyRewardExp[t.id]&&t.countLog&&t.countLog.length)?`<div class="trk-list">${log}</div>`:''}</div>`;
     } else {
       body=`<input type="checkbox" ${done?'checked':''} onchange="gProg('daily','${t.id}',this.checked)"><div class="body"><div class="ttitle">${esc(t.time?t.time+' ':'')}${esc(t.name)}</div>${ts?`<div class="sub hint">✓ ${fmtTime(ts)}</div>`:''}${note?`<div class="sub note-line">📝 ${esc(note.text)} <span class="hint">${fmtTime(note.time)}</span></div>`:''}</div>`;
     }
@@ -2491,8 +2615,8 @@ function gActDT(arg,val){
 }
 function gActTasks(aid,text){const a=gActFind(aid);if(!a)return;a.tasks=text.split('\n').filter(x=>x.trim()).map(x=>({id:uid(),name:x.trim()}));save();}
 function gDailyCount(wd,tid,v){const t=(D.game.daily[wd]||[]).find(x=>x.id===tid);if(!t)return;t.countLog=t.countLog||[];t.count=+v;save();}
-function gDailyInc(wd,id){const t=(D.game.daily[wd]||[]).find(x=>x.id===id);if(!t)return;t.countLog=t.countLog||[];t.count=(+t.count||0)+1;t.countLog.push({time:new Date().toTimeString().slice(0,5),date:todayStr()});save();renderGame();}
-function gDailyDec(wd,id){const t=(D.game.daily[wd]||[]).find(x=>x.id===id);if(!t)return;if((+t.count||0)<=0)return;t.countLog=t.countLog||[];t.count-=1;if(t.countLog.length)t.countLog.pop();save();renderGame();}
+function gDailyInc(wd,id){const t=(D.game.daily[wd]||[]).find(x=>x.id===id);if(!t)return;t.countLog=t.countLog||[];t.count=(+t.count||0)+1;t.countLog.push({time:new Date().toTimeString().slice(0,5),date:todayStr()});const goal=+t.goal||0;if(goal>0&&t.count>=goal){const key=todayStr();D.game.progress[key]=D.game.progress[key]||{};const p=D.game.progress[key];p.daily=p.daily||{};if(!p.daily[id]){p.daily[id]=true;p.daily_ts=p.daily_ts||{};p.daily_ts[id]=nowISO();}}save();renderGame();}
+function gDailyDec(wd,id){const t=(D.game.daily[wd]||[]).find(x=>x.id===id);if(!t)return;if((+t.count||0)<=0)return;t.countLog=t.countLog||[];t.count-=1;if(t.countLog.length)t.countLog.pop();const goal=+t.goal||0;if(goal>0&&t.count<goal){const key=todayStr();if(D.game.progress[key]&&D.game.progress[key].daily){delete D.game.progress[key].daily[id];if(D.game.progress[key].daily_ts)delete D.game.progress[key].daily_ts[id];}}save();renderGame();}
 function gWeeklyScore(tid,v){const t=gWeeklyFind(tid);if(!t)return;t.score=+v;save();}
 function gWeeklyGuan(tid,v){const t=gWeeklyFind(tid);if(!t)return;t.guan=+v;save();}
 function renderGameTpl(){
@@ -3653,7 +3777,7 @@ function renderChecklist(){
   const doneN=items.reduce((a,it)=>a+(itemProg(it).all?1:0),0);
   const pct=items.length?Math.round(doneN/items.length*100):0;
   const ts=cl.doneTs&&cl.doneTs[t]||{};
-  const list=items.length?items.map(x=>{const p=itemProg(x);const on=p.all;const subs=x.subs||[];const exp=(subs.length>0)?(chkExp[x.id]!==false):false;
+  const list=items.length?items.map(x=>{const p=itemProg(x);const on=p.all;const subs=x.subs||[];const exp=(chkExp[x.id]===true)||(subs.length>0&&chkExp[x.id]!==false);
     // 展开态才渲染子项区（含输入框），修复「无子项时点不开添加子项」
     const subsHtml=exp?`<div style="margin-top:6px;padding-left:26px">
       ${subs.length?`<div style="font-size:calc(var(--fs)*0.75);color:var(--accent);margin-bottom:4px">🔁 以下 ${subs.length} 个成员每日循环（每天自动重置勾选）</div>`:''}
@@ -3879,7 +4003,7 @@ const EDIT_SCHEMA={
 let EDITING=null; // {mod,id}
 function getPath(o,p){return p.split('.').reduce((a,k)=>(a==null?a:a[k]),o);}
 function setPath(o,p,v){const ks=p.split('.');const last=ks.pop();let cur=o;ks.forEach(k=>{if(cur[k]==null||typeof cur[k]!=='object')cur[k]={};cur=cur[k];});cur[last]=v;}
-function editArr(mod){return mod==='note'?(D.note.entries||[]):mod==='temp'?(D.note.temp.items||[]):mod==='listen'?(D.note.listen.sessions||[]):mod==='checklist'?(D.note.checklist.items||[]):D[mod];}
+function editArr(mod){return mod==='log'?(D.logs||[]):mod==='note'?(D.note.entries||[]):mod==='temp'?(D.note.temp.items||[]):mod==='listen'?(D.note.listen.sessions||[]):mod==='checklist'?(D.note.checklist.items||[]):D[mod];}
 function openEdit(mod,id){
   const it=editArr(mod).find(x=>x.id===id);
   if(!it){toast('找不到这条记录');return;}
@@ -3941,7 +4065,7 @@ function renderEditBody(){
     else if(f.t==='time')ctl=`<input type="time" id="${id}" value="${esc(v||'')}">`;
     else if(f.t==='chk')ctl=`<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0"><input type="checkbox" id="${id}" ${v?'checked':''} style="width:16px;height:16px;margin:0"><span style="font-size:calc(var(--fs)*0.867)">是</span></label>`;
     else if(f.t==='stars')ctl=`<select id="${id}">${[1,2,3,4,5].map(n=>`<option ${(+v===n)?'selected':''}>${n}</option>`).join('')}</select>`;
-    else if(f.t==='sel')ctl=`<select id="${id}"${reRender}>${f.o.map((o,i)=>`<option value="${esc(o)}" ${v===o?'selected':''}>${esc(f.ol?f.ol[i]:o)}</option>`).join('')}</select>`;
+    else if(f.t==='sel'){const _opts=f.dyn?(f.dyn==='studyTypes'?studyAllTypes():(f.o||[])):(f.o||[]);ctl=`<select id="${id}"${reRender}>${_opts.map((o,i)=>`<option value="${esc(o)}" ${v===o?'selected':''}>${esc(f.ol?f.ol[i]:o)}</option>`).join('')}</select>`;}
     else if(f.t==='range'){const parts=String(v||'').split('~');ctl=`<div class="row"><input type="date" id="${id}_a" value="${esc(parts[0]||'')}"><input type="date" id="${id}_b" value="${esc(parts[1]||'')}"></div>`;}
     else if(f.t==='datetime'){const s=String(v||'');const dd=s.slice(0,10),tt=s.slice(11,16);ctl=`<div class="row"><input type="date" id="${id}_a" value="${esc(dd)}"><input type="time" id="${id}_b" value="${esc(tt||'00:00')}"></div>`;}
     else if(f.t==='spec'){const cat=d.category||'其他';const pr=specPreset(cat);ctl=`<input type="text" id="${id}" value="${esc(v||'')}" list="edspecs" placeholder="${esc(pr.ph)}"><datalist id="edspecs">${pr.opts.map(o=>`<option>${esc(o)}</option>`).join('')}</datalist>`;}
@@ -4038,7 +4162,7 @@ function applyFont(){
 }
 function setFont(id){if(!D._meta)D._meta={};D._meta.fontFamily=id;save();applyFont();renderFontChips();}
 function renderFontChips(){const cur=(D._meta&&D._meta.fontFamily)||'';const box=$('#fontChips');if(!box)return;box.innerHTML=FONT_OPTS.map(o=>{const f=FONT_FILES[o.id];let tag='';if(f){const st=_fontState[f.fam];tag=st==='ok'?'':(st==='loading'?`<span style="opacity:.55;font-size:calc(var(--fs)*0.7)"> 下载中…</span>`:`<span style="opacity:.55;font-size:calc(var(--fs)*0.7)"> ${f.mb}MB</span>`);}return `<button class="btn ${o.id===cur?'primary':'ghost'} sm" style="font-family:${o.stack}" onclick="setFont('${o.id}')">${o.name}${tag}</button>`;}).join('');}
-function openSkin(){renderSkinGrid();renderSeasonCards();syncFsUI();syncFwUI();renderFontChips();$('#skinModal').classList.add('show');$('#skinOverlay').classList.add('show');}
+function openSkin(){renderSkinGrid();renderSeasonCards();syncFsUI();syncFwUI();renderFontChips();bcSyncFromSaved();bcUpdate();$('#skinModal').classList.add('show');$('#skinOverlay').classList.add('show');}
 function closeSkin(){$('#skinModal').classList.remove('show');$('#skinOverlay').classList.remove('show');}
 function renderSeasonCards(){
   const cur=D._meta.currentTheme;
@@ -4120,14 +4244,88 @@ function applyCustom(hex){document.body.dataset.theme='custom';setPalette(hex);}
 /* 启动时按已存主题恢复整套调色板（修复：以前只设 dataset.theme，刷新后点缀色回退成雾霾蓝） */
 function autoSeason(){const m=new Date().getMonth()+1;return m>=3&&m<=5?'spring':m>=6&&m<=8?'summer':m>=9&&m<=11?'autumn':'winter';}
 function bootTheme(){
+  bcSyncFromSaved();
   const th=(D._meta&&D._meta.currentTheme)||'auto';
   if(th==='custom'&&D._meta.customColor){applyCustom(D._meta.customColor);return;}
+  if(th==='dual'&&D._meta.dual){applyDual(D._meta.dual.a,D._meta.dual.b);return;}
   if(THEME_PALETTE[th]){applyTheme(th);return;}
   applyTheme(autoSeason());
 }
+/* ============ 双色搭配（v71 补回 v66 功能） ============ */
+let bcA='#4F7365', bcB='#97A6B2';
+function bcSyncFromSaved(){ if(D&&D._meta&&D._meta.dual){ bcA=D._meta.dual.a||bcA; bcB=D._meta.dual.b||bcB; } }
+function bcSet(slot,hex){ hex=(hex||'').trim(); if(hex[0]!=='#')hex='#'+hex; if(!/^#[0-9a-fA-F]{6}$/.test(hex))return; if(slot==='A'){bcA=hex;const ci=$('#colA');if(ci)ci.value=hex;}else{bcB=hex;const ci=$('#colB');if(ci)ci.value=hex;} const ht=$('#hex'+slot);if(ht)ht.value=hex; bcUpdate(); }
+function bcHex(slot){ const inp=$('#hex'+slot); if(inp)bcSet(slot,inp.value); }
+function bcUpdate(){
+  const a=bcA,b=bcB,at=softColor(a),bt=softColor(b),asC=strongColor(a);
+  const demo=$('#bcDemo'); if(demo){demo.style.background=bt;demo.style.color=asC;}
+  const chip=$('#bc_chip'); if(chip){chip.style.background=b;chip.style.color=ink(b);chip.style.border='none';}
+  const btn=$('#bc_btn'); if(btn){btn.style.background=a;btn.style.color=ink(a);}
+  const btn2=$('#bc_btn2'); if(btn2){btn2.style.background=bt;btn2.style.color=b;btn2.style.border='1px solid '+b;}
+  const txt=$('#bc_txt'); if(txt){txt.style.color=asC;}
+  const prog=$('#bc_prog'); if(prog){prog.style.background=bt;} const progi=$('#bc_progi'); if(progi){progi.style.background=a;}
+  const cur=$('#bcCur'); if(cur){ const on=D&&D._meta&&D._meta.currentTheme==='dual'; cur.textContent=on?('已启用：A '+bcA+' · B '+bcB):'尚未启用（点下方按钮保存）'; cur.style.color=on?'#2e7d32':''; }
+}
+/* 从图片提取双色：仅读取像素、算出最夺目的主色A 与 最柔和的次色B，只存这两个 hex，原图不保存 → 不占手机/平板本地空间 */
+function bcExtractFile(input){
+  const f=input.files&&input.files[0]; if(!f)return;
+  const reader=new FileReader();
+  reader.onload=function(){
+    const img=new Image();
+    img.onload=function(){
+      try{
+        const W=64,H=Math.max(1,Math.round(64*img.height/img.width));
+        const c=document.createElement('canvas'); c.width=W; c.height=H;
+        const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,W,H);
+        const d=ctx.getImageData(0,0,W,H).data;
+        const pts=[];
+        for(let i=0;i<d.length;i+=4){ const r=d[i],g=d[i+1],b=d[i+2],al=d[i+3]; if(al<125)continue; const L=0.2126*r+0.7152*g+0.0722*b; if(L>245||L<12)continue; pts.push([r,g,b]); }
+        const cols=quantize2(pts);
+        if(cols[0])bcSet('A',cols[0]); if(cols[1])bcSet('B',cols[1]);
+        toast('已从图片提取双色');
+      }catch(e){ toast('图片解析失败：'+(e&&e.message||e)); }
+      input.value='';
+    };
+    img.onerror=function(){ toast('图片加载失败'); input.value=''; };
+    img.src=reader.result;
+  };
+  reader.onerror=function(){ toast('读取图片失败'); input.value=''; };
+  reader.readAsDataURL(f);
+}
+function _dist2(p,q){const dr=p[0]-q[0],dg=p[1]-q[1],db=p[2]-q[2];return dr*dr+dg*dg+db*db;}
+function _sat(rgb){const r=rgb[0]/255,g=rgb[1]/255,b=rgb[2]/255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);return mx===0?0:(mx-mn)/mx;}
+/* 2-means 量化：把像素聚成两类，取饱和度更高者为 A(主色)、更低者为 B(辅色/底色) */
+function quantize2(pts){
+  if(!pts.length)return [null,null];
+  let a=pts[0],b=pts[Math.floor(pts.length/2)]||pts[0];
+  for(let it=0;it<8;it++){
+    const ca=[0,0,0],cb=[0,0,0];let na=0,nb=0;
+    for(const p of pts){ if(_dist2(p,a)<=_dist2(p,b)){ca[0]+=p[0];ca[1]+=p[1];ca[2]+=p[2];na++;}else{cb[0]+=p[0];cb[1]+=p[1];cb[2]+=p[2];nb++;} }
+    if(na){a=[Math.round(ca[0]/na),Math.round(ca[1]/na),Math.round(ca[2]/na)];}
+    if(nb){b=[Math.round(cb[0]/nb),Math.round(cb[1]/nb),Math.round(cb[2]/nb)];}
+  }
+  const A=_sat(a)>=_sat(b)?a:b, B=_sat(a)>=_sat(b)?b:a;
+  const h=x=>x.toString(16).padStart(2,'0');
+  const hex=x=>'#'+h(x[0])+h(x[1])+h(x[2]);
+  return [hex(A),hex(B)];
+}
+function bcSave(){
+  if(!D._meta)D._meta={};
+  D._meta.dual={a:bcA,b:bcB};
+  D._meta.currentTheme='dual';
+  save(); applyDual(bcA,bcB);
+  renderSeasonCards(); renderSkinGrid(); renderNav();
+  if(typeof renderModule==='function')renderModule();
+  bcUpdate();
+  toast('已保存双色皮肤：A '+bcA+' · B '+bcB);
+}
+function applyDual(a,b){
+  document.body.dataset.theme='dual';
+  setPalette(a, softColor(b), strongColor(a));
+}
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v70';
+const APP_VER='v71';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
