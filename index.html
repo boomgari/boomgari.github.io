@@ -793,7 +793,7 @@ function load(){
   if(!D.note.listen||typeof D.note.listen!=='object')D.note.listen={sessions:[],active:null};
   if(!Array.isArray(D.note.listen.sessions))D.note.listen.sessions=[];
   if(D.note.listen.active&&typeof D.note.listen.active!=='object')D.note.listen.active=null;
-  D.note.checklist.items.forEach(it=>{if(it&&!Array.isArray(it.subs))it.subs=[];if(it&&it.subs)it.subs.forEach(s=>{if(s.loop===undefined)s.loop=true;});});
+  D.note.checklist.items.forEach(it=>{if(it&&!Array.isArray(it.subs))it.subs=[];if(it&&it.loop===undefined)it.loop=true;if(it&&it.subs)it.subs.forEach(s=>{if(s.loop===undefined)s.loop=true;});});
   D.note.entries.forEach(e=>{if(e&&e.type==='高光一刻')e.type='一日纪事';});
   // 迁移到「版本号同步」：老数据没有 rev，先给本机存一份快照兜底，再补 rev。
   // 必须用「字段缺失」判断而非 !rev —— 全新数据的 rev 就是 0，不能被顶成 1，
@@ -2383,7 +2383,7 @@ function actCardInner(a,prog){
   const ats=(D.game.actDoneTs||{})[a.id];
   const anote=gameNote(a.id);const aexp=gameNoteExp[a.id];
   const aNoteBox=aexp?`<div class="note-edit"><textarea class="inp" id="gn_${a.id}" placeholder="活动备注（今日进度/掉落/心得）">${anote?esc(anote.text):''}</textarea><button class="btn ghost sm" onclick="gameNoteSave('${a.id}')">保存备注</button></div>`:'';
-  return `<div class="card" style="margin:6px 0 8px;${p.doneAll?'opacity:.55':''}"><div class="row c">${drag}${gActMv(a.id)}${doneChk}<b style="${p.doneAll?'text-decoration:line-through;opacity:.7':''}">${esc(a.name)}</b> ${statusTag} ${a.type?`<span class="tag">${esc(a.type)}</span>`:''} ${a.reward?`<span class="tag alt">${esc(a.reward)}</span>`:''} ${a.priority?`<span class="tag">${esc(a.priority)}</span>`:''} <span class="spacer"></span><span class="hint">${fmtDt(a.start)} ~ ${fmtDt(a.end)}</span> ${tempBtn} <button class="note-btn" title="备注" onclick="gameNoteToggle('${a.id}')">📝</button> <button class="del" onclick="delAct('${a.id}')">×</button></div>
+  return `<div class="card" style="margin:6px 0 8px;${p.doneAll?'opacity:.55':''}"><div class="row c" style="flex-wrap:nowrap"><div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">${drag}${gActMv(a.id)}${doneChk}<b style="${p.doneAll?'text-decoration:line-through;opacity:.7':''};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.name)}</b></div><button class="del" onclick="delAct('${a.id}')">×</button></div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px">${statusTag} ${a.type?`<span class="tag">${esc(a.type)}</span>`:''} ${a.reward?`<span class="tag alt">${esc(a.reward)}</span>`:''} ${a.priority?`<span class="tag">${esc(a.priority)}</span>`:''} <span class="spacer"></span><span class="hint">${fmtDt(a.start)} ~ ${fmtDt(a.end)}</span> ${tempBtn} <button class="note-btn" title="备注" onclick="gameNoteToggle('${a.id}')">📝</button></div>
     ${ats?`<div class="sub hint">✓ 完成于 ${fmtTime(ats)}</div>`:''}
     ${anote?`<div class="sub note-line">📝 ${esc(anote.text)} <span class="hint">${fmtTime(anote.time)}</span></div>`:''}
     ${aNoteBox}
@@ -3653,10 +3653,11 @@ function renderChecklist(){
   const doneN=items.reduce((a,it)=>a+(itemProg(it).all?1:0),0);
   const pct=items.length?Math.round(doneN/items.length*100):0;
   const ts=cl.doneTs&&cl.doneTs[t]||{};
-  const list=items.length?items.map(x=>{const p=itemProg(x);const on=p.all;const subs=x.subs||[];const exp=chkExp[x.id];
+  const list=items.length?items.map(x=>{const p=itemProg(x);const on=p.all;const subs=x.subs||[];const exp=(subs.length>0)?(chkExp[x.id]!==false):false;
     // 展开态才渲染子项区（含输入框），修复「无子项时点不开添加子项」
     const subsHtml=exp?`<div style="margin-top:6px;padding-left:26px">
-      ${subs.map(s=>{const sd=done[x.id+'__'+s.id];const st=ts[x.id+'__'+s.id];const loop=s.loop!==false;return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><input type="checkbox" ${sd?'checked':''} onchange="chkSubToggle('${x.id}','${s.id}',this.checked)"><span style="font-size:calc(var(--fs)*0.867);flex:1">${esc(s.name)}${sd?' ✓':''}${st?` <span class="hint">${fmtTime(st)}</span>`:''}</span><button class="btn ghost sm" style="${loop?'color:#fff;background:var(--accent);border-color:var(--accent)':''}" title="${loop?'点击取消每日循环':'点击设为每日循环'}" onclick="chkSubLoopToggle('${x.id}','${s.id}')">🔁</button><button class="btn ghost sm" onclick="chkSubDel('${x.id}','${s.id}')">×</button></div>`;}).join('')}
+      ${subs.length?`<div style="font-size:calc(var(--fs)*0.75);color:var(--accent);margin-bottom:4px">🔁 以下 ${subs.length} 个成员每日循环（每天自动重置勾选）</div>`:''}
+      ${subs.map(s=>{const sd=done[x.id+'__'+s.id];const st=ts[x.id+'__'+s.id];return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;white-space:nowrap"><label style="display:flex;align-items:center;gap:6px;flex:1;min-width:0"><input type="checkbox" ${sd?'checked':''} onchange="chkSubToggle('${x.id}','${s.id}',this.checked)"><span style="font-size:calc(var(--fs)*0.867);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name)}${sd?' ✓':''}</span></label><span style="font-size:calc(var(--fs)*0.75);color:var(--muted);flex:none">${st?fmtTime(st):''}</span><button class="btn ghost sm" style="flex:none" onclick="chkSubDel('${x.id}','${s.id}')">×</button></div>`;}).join('')}
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input class="inp" id="cksub_${x.id}" placeholder="加子项（如人名）" style="flex:1;min-width:120px;font-size:calc(var(--fs)*0.867)" onkeydown="if(event.key==='Enter')chkSubAdd('${x.id}')"><label style="display:inline-flex;align-items:center;gap:3px;font-size:calc(var(--fs)*0.8);color:var(--muted);white-space:nowrap;cursor:pointer"><input type="checkbox" id="cksub_loop_${x.id}" checked> 每日循环</label><button class="btn ghost sm" onclick="chkSubAdd('${x.id}')">＋</button></div>
     </div>`:'';
     const mainTs=subs.length?'':ts[x.id];
@@ -3684,7 +3685,7 @@ function renderChecklist(){
 function chkToggle(id,v){const t=todayStr();const cl=D.note.checklist;cl.done[t]=cl.done[t]||{};cl.doneTs=cl.doneTs||{};cl.doneTs[t]=cl.doneTs[t]||{};const it=(cl.items||[]).find(x=>x.id===id);
   const mark=(k)=>{if(v)cl.doneTs[t][k]=nowISO();else delete cl.doneTs[t][k];};
   if(it&&it.subs&&it.subs.length){it.subs.forEach(s=>{cl.done[t][id+'__'+s.id]=v;mark(id+'__'+s.id);});}else{cl.done[t][id]=v;mark(id);}save();renderNote();}
-function chkAdd(){const el=document.getElementById('chk_new');const n=el?el.value.trim():'';if(!n){toast('填点什么');return;}D.note.checklist.items.push({id:uid(),name:n,subs:[]});save();renderNote();toast('已添加');}
+function chkAdd(){const el=document.getElementById('chk_new');const n=el?el.value.trim():'';if(!n){toast('填点什么');return;}D.note.checklist.items.push({id:uid(),name:n,subs:[],loop:true});save();renderNote();toast('已添加');}
 function chkDel(id){D.note.checklist.items=D.note.checklist.items.filter(x=>x.id!==id);save();renderNote();}
 function chkExpToggle(id){chkExp[id]=!chkExp[id];renderNote();}
 function chkSubAdd(pid){const el=document.getElementById('cksub_'+pid);const n=el?el.value.trim():'';if(!n){toast('填子项名');return;}const lp=document.getElementById('cksub_loop_'+pid);const loop=lp?lp.checked:true;const it=(D.note.checklist.items||[]).find(x=>x.id===pid);if(it){(it.subs=it.subs||[]).push({id:uid(),name:n,loop});}chkExp[pid]=true;save();renderNote();}
@@ -3871,7 +3872,8 @@ const EDIT_SCHEMA={
     {k:'note',l:'备注',t:'ta'}
   ]},
   checklist:{title:'每日事项',fields:[
-    {k:'name',l:'事项名',t:'text'}
+    {k:'name',l:'事项名',t:'text'},
+    {k:'loop',l:'该事项每日循环（无子项时独立循环；有子项时子项各自循环）',t:'chk'}
   ]}
 };
 let EDITING=null; // {mod,id}
@@ -4125,7 +4127,7 @@ function bootTheme(){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v69';
+const APP_VER='v70';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -4611,7 +4613,7 @@ function dailyResetCheck(){
     n.mood='';n.weather='';n.sleep={};
     D._meta.lastResetDate=t;
     // v69：每日打卡——跨天移除"一次性子项"(未标循环)，循环子项保留并待重新勾选
-    const _cl=D.note&&D.note.checklist;if(_cl&&Array.isArray(_cl.items))_cl.items.forEach(it=>{if(it&&Array.isArray(it.subs))it.subs=it.subs.filter(s=>s.loop!==false);});
+    const _cl=D.note&&D.note.checklist;if(_cl&&Array.isArray(_cl.items)){_cl.items.forEach(it=>{if(it&&Array.isArray(it.subs))it.subs=it.subs.filter(s=>s.loop!==false);});_cl.items=_cl.items.filter(it=>!(it.loop===false&&(!it.subs||it.subs.length===0)));}
     // 周常：每周一零点重置（周常按「周」存储，与日常/活动按「天」存储区分）
     const wk=weekKey();
     if(D._meta.lastResetWeek!==wk){
