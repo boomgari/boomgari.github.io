@@ -793,7 +793,7 @@ function load(){
   if(!D.note.listen||typeof D.note.listen!=='object')D.note.listen={sessions:[],active:null};
   if(!Array.isArray(D.note.listen.sessions))D.note.listen.sessions=[];
   if(D.note.listen.active&&typeof D.note.listen.active!=='object')D.note.listen.active=null;
-  D.note.checklist.items.forEach(it=>{if(it&&!Array.isArray(it.subs))it.subs=[];});
+  D.note.checklist.items.forEach(it=>{if(it&&!Array.isArray(it.subs))it.subs=[];if(it&&it.subs)it.subs.forEach(s=>{if(s.loop===undefined)s.loop=true;});});
   D.note.entries.forEach(e=>{if(e&&e.type==='高光一刻')e.type='一日纪事';});
   // 迁移到「版本号同步」：老数据没有 rev，先给本机存一份快照兜底，再补 rev。
   // 必须用「字段缺失」判断而非 !rev —— 全新数据的 rev 就是 0，不能被顶成 1，
@@ -3656,8 +3656,8 @@ function renderChecklist(){
   const list=items.length?items.map(x=>{const p=itemProg(x);const on=p.all;const subs=x.subs||[];const exp=chkExp[x.id];
     // 展开态才渲染子项区（含输入框），修复「无子项时点不开添加子项」
     const subsHtml=exp?`<div style="margin-top:6px;padding-left:26px">
-      ${subs.map(s=>{const sd=done[x.id+'__'+s.id];const st=ts[x.id+'__'+s.id];return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><input type="checkbox" ${sd?'checked':''} onchange="chkSubToggle('${x.id}','${s.id}',this.checked)"><span style="font-size:calc(var(--fs)*0.867);flex:1">${esc(s.name)}${sd?' ✓':''}${st?` <span class="hint">${fmtTime(st)}</span>`:''}</span><button class="btn ghost sm" onclick="chkSubDel('${x.id}','${s.id}')">×</button></div>`;}).join('')}
-      <div style="display:flex;gap:4px"><input class="inp" id="cksub_${x.id}" placeholder="加子项（如人名）" style="flex:1;font-size:calc(var(--fs)*0.867)" onkeydown="if(event.key==='Enter')chkSubAdd('${x.id}')"><button class="btn ghost sm" onclick="chkSubAdd('${x.id}')">＋</button></div>
+      ${subs.map(s=>{const sd=done[x.id+'__'+s.id];const st=ts[x.id+'__'+s.id];const loop=s.loop!==false;return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><input type="checkbox" ${sd?'checked':''} onchange="chkSubToggle('${x.id}','${s.id}',this.checked)"><span style="font-size:calc(var(--fs)*0.867);flex:1">${esc(s.name)}${sd?' ✓':''}${st?` <span class="hint">${fmtTime(st)}</span>`:''}</span><button class="btn ghost sm" style="${loop?'color:#fff;background:var(--accent);border-color:var(--accent)':''}" title="${loop?'点击取消每日循环':'点击设为每日循环'}" onclick="chkSubLoopToggle('${x.id}','${s.id}')">🔁</button><button class="btn ghost sm" onclick="chkSubDel('${x.id}','${s.id}')">×</button></div>`;}).join('')}
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input class="inp" id="cksub_${x.id}" placeholder="加子项（如人名）" style="flex:1;min-width:120px;font-size:calc(var(--fs)*0.867)" onkeydown="if(event.key==='Enter')chkSubAdd('${x.id}')"><label style="display:inline-flex;align-items:center;gap:3px;font-size:calc(var(--fs)*0.8);color:var(--muted);white-space:nowrap;cursor:pointer"><input type="checkbox" id="cksub_loop_${x.id}" checked> 每日循环</label><button class="btn ghost sm" onclick="chkSubAdd('${x.id}')">＋</button></div>
     </div>`:'';
     const mainTs=subs.length?'':ts[x.id];
     return `<div class="item ${on?'done':''}" style="padding:8px 10px">
@@ -3687,8 +3687,9 @@ function chkToggle(id,v){const t=todayStr();const cl=D.note.checklist;cl.done[t]
 function chkAdd(){const el=document.getElementById('chk_new');const n=el?el.value.trim():'';if(!n){toast('填点什么');return;}D.note.checklist.items.push({id:uid(),name:n,subs:[]});save();renderNote();toast('已添加');}
 function chkDel(id){D.note.checklist.items=D.note.checklist.items.filter(x=>x.id!==id);save();renderNote();}
 function chkExpToggle(id){chkExp[id]=!chkExp[id];renderNote();}
-function chkSubAdd(pid){const el=document.getElementById('cksub_'+pid);const n=el?el.value.trim():'';if(!n){toast('填子项名');return;}const it=(D.note.checklist.items||[]).find(x=>x.id===pid);if(it){(it.subs=it.subs||[]).push({id:uid(),name:n});}chkExp[pid]=true;save();renderNote();}
+function chkSubAdd(pid){const el=document.getElementById('cksub_'+pid);const n=el?el.value.trim():'';if(!n){toast('填子项名');return;}const lp=document.getElementById('cksub_loop_'+pid);const loop=lp?lp.checked:true;const it=(D.note.checklist.items||[]).find(x=>x.id===pid);if(it){(it.subs=it.subs||[]).push({id:uid(),name:n,loop});}chkExp[pid]=true;save();renderNote();}
 function chkSubToggle(pid,sid,v){const t=todayStr();const cl=D.note.checklist;cl.done[t]=cl.done[t]||{};cl.doneTs=cl.doneTs||{};cl.doneTs[t]=cl.doneTs[t]||{};const k=pid+'__'+sid;cl.done[t][k]=v;if(v)cl.doneTs[t][k]=nowISO();else delete cl.doneTs[t][k];save();renderNote();}
+function chkSubLoopToggle(pid,sid){const it=(D.note.checklist.items||[]).find(x=>x.id===pid);if(!it)return;const s=(it.subs||[]).find(x=>x.id===sid);if(!s)return;s.loop=s.loop===false?true:false;save();renderNote();}
 function chkSubDel(pid,sid){const it=(D.note.checklist.items||[]).find(x=>x.id===pid);if(it)it.subs=it.subs.filter(s=>s.id!==sid);save();renderNote();}
 
 /* ===== 状态统计卡：近30天心情/天气占比 + 饮水/睡眠迷你柱状图（周/月/年切换） ===== */
@@ -3948,7 +3949,21 @@ function renderEditBody(){
     html+=`<div class="field"><label>${esc(f.l)}</label>${ctl}</div>`;
   });
   $('#editBody').innerHTML=html;
+  if(EDITING.mod==='checklist')appendChkLoopManager();
 }
+// v69：每日打卡编辑面板——循环成员管理（直接改 EDITING.draft.subs，随"保存"一并提交，历史不受影响）
+function appendChkLoopManager(){
+  const d=EDITING.draft;const subs=d.subs||(d.subs=[]);
+  let box=document.getElementById('chkLoopMgr');
+  if(!box){$('#editBody').insertAdjacentHTML('beforeend','<div id="chkLoopMgr"></div>');box=document.getElementById('chkLoopMgr');}
+  box.innerHTML=`<div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:7px">🔁 循环成员（每日自动重置）</div>
+    ${subs.length?subs.map(s=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="flex:1;font-weight:500">${esc(s.name)}</span><span style="font-size:12px;color:${s.loop!==false?'var(--accent)':'var(--muted)'}">${s.loop!==false?'🔁 循环':'仅今天'}</span><button class="btn ghost sm" style="${s.loop!==false?'color:#fff;background:var(--accent);border-color:var(--accent)':''}" onclick="chkLoopToggleDraft('${s.id}')">${s.loop!==false?'取消循环':'设循环'}</button><button class="del" onclick="chkLoopDelDraft('${s.id}')">×</button></div>`).join(''):'<div class="hint">还没有循环成员，在下面添加。</div>'}
+    <div style="display:flex;gap:6px;align-items:center;margin-top:4px"><input class="inp" id="chkloop_new" placeholder="加成员，如 F" style="flex:1"><label style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--muted);white-space:nowrap;cursor:pointer"><input type="checkbox" id="chkloop_new_loop" checked> 每日循环</label><button class="btn sm" onclick="chkLoopAddDraft()">＋ 添加</button></div>
+    <div class="hint" style="margin-top:6px">加成员→立即成为循环成员，从明天起每天出现；历史按"日期+成员"存档，不受增删影响。点 × 仅移除该成员此后循环。</div>`;
+}
+function chkLoopAddDraft(){const n=document.getElementById('chkloop_new');if(!n||!n.value.trim()){toast('填成员名');return;}const lp=document.getElementById('chkloop_new_loop');const loop=lp?lp.checked:true;EDITING.draft.subs=EDITING.draft.subs||[];EDITING.draft.subs.push({id:uid(),name:n.value.trim(),loop});appendChkLoopManager();}
+function chkLoopToggleDraft(sid){const s=(EDITING.draft.subs||[]).find(x=>x.id===sid);if(!s)return;s.loop=s.loop===false?true:false;appendChkLoopManager();}
+function chkLoopDelDraft(sid){EDITING.draft.subs=EDITING.draft.subs.filter(x=>x.id!==sid);appendChkLoopManager();}
 function saveEdit(){
   if(!EDITING)return;
   const arr=editArr(EDITING.mod);
@@ -4110,7 +4125,7 @@ function bootTheme(){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v68';
+const APP_VER='v69';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -4595,6 +4610,8 @@ function dailyResetCheck(){
     }
     n.mood='';n.weather='';n.sleep={};
     D._meta.lastResetDate=t;
+    // v69：每日打卡——跨天移除"一次性子项"(未标循环)，循环子项保留并待重新勾选
+    const _cl=D.note&&D.note.checklist;if(_cl&&Array.isArray(_cl.items))_cl.items.forEach(it=>{if(it&&Array.isArray(it.subs))it.subs=it.subs.filter(s=>s.loop!==false);});
     // 周常：每周一零点重置（周常按「周」存储，与日常/活动按「天」存储区分）
     const wk=weekKey();
     if(D._meta.lastResetWeek!==wk){
