@@ -733,6 +733,7 @@ function defaultData(){
       actTypes:YYS_ACT_TYPES_DEFAULT.slice(),
       series:[],
       actTpl:[],
+      actTaskDone:{},
       weeklyHint:'建议顺序：图鉴分享 → 荣誉商店兑换 → 勋章商店兑换 → 寮黑包兑换 → 秘闻副本 → 秘闻分享 → 六道之门×2 → 协同对弈 → 真蛇×2 → 百鬼棋局 → 结界突破券检查。每行可切换「性质」：普通(勾选完成) / 按次积累(记次数，达目标自动完成) / 积分累计(次数+积分，达目标自动完成)。'
     },
     note:{entries:[],water:{cup:350,log:{}},mood:'',weather:'',sleep:{},moodLog:{},weatherLog:{},sleepLog:{},checklist:{items:[],done:{}},temp:{items:[]},listen:{sessions:[],active:null}},
@@ -892,6 +893,9 @@ function migrateGame(g,def){
   if(!Array.isArray(g.series))g.series=[];
   if(!Array.isArray(g.actTpl))g.actTpl=[];
   if(!g.actDone||typeof g.actDone!=='object')g.actDone={};
+  if(!g.actTaskDone||typeof g.actTaskDone!=='object')g.actTaskDone={};
+  // 把“今天”按天勾选的子任务聚合为活动级持久完成（与 gProgAct 双向同步，旧数据不丢）
+  (function(){const tp=(((g.progress||{})[todayStr()])||{}).activity||{};(g.activities||[]).forEach(a=>{(a.tasks||[]).forEach(t=>{if(tp[a.id+'_'+t.id]){g.actTaskDone[a.id]=g.actTaskDone[a.id]||{};g.actTaskDone[a.id][t.id]=true;}});});})();
   if(!g.progress||typeof g.progress!=='object')g.progress={};
   if(!Array.isArray(g.weeklyOrder)||g.weeklyOrder.length===0)g.weeklyOrder=def.weeklyOrder.slice();
   delete g.dailyRoutine;delete g.weeklyProgress;
@@ -2343,31 +2347,43 @@ function fmtDt(s){return (s||'').replace('T',' ');}
 function actCardInner(a,prog){
   const p=actProgress(a);
   const st=actStatus(a);
-  const tdone=(a.tasks||[]).filter(t=>(prog.activity||{})[a.id+'_'+t.id]).length;
+  const tdone=(a.tasks||[]).filter(t=>(((D.game.actTaskDone||{})[a.id])||{})[t.id]).length;
   const ttotal=(a.tasks||[]).length;
   const tasks=a.tasks.map(t=>{
     const key=a.id+'_'+t.id;
-    const done=(prog.activity||{})[key];
+    const done=!!(((D.game.actTaskDone||{})[a.id])||{})[t.id];
     const ts=(prog.activity_ts||{})[key];
     const nt=gameNote(key);const ex=gameNoteExp[key];
     const nb=ex?`<div class="note-edit"><textarea class="inp" id="gn_${key}" placeholder="补充备注（奖励/细节）">${nt?esc(nt.text):''}</textarea><button class="btn ghost sm" onclick="gameNoteSave('${key}')">保存备注</button></div>`:'';
     return `<div class="item g-item ${done?'done':''}" style="padding:7px 8px;margin-bottom:5px"><input type="checkbox" ${done?'checked':''} onchange="gProgAct('${a.id}','${t.id}',this.checked)"><div class="body"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div>${ts?`<div class="sub hint">✓ ${fmtTime(ts)}</div>`:''}${nt?`<div class="sub note-line">📝 ${esc(nt.text)} <span class="hint">${fmtTime(nt.time)}</span></div>`:''}</div><button class="note-btn" title="备注" onclick="gameNoteToggle('${key}')">📝</button></div>${nb}`;
   }).join('');
   const flex=(a.flex||[]).map((f,i)=>`<span class="tag" style="display:inline-flex;align-items:center;gap:4px">${esc(f.k||'字段')}:<input value="${esc(f.v||'')}" placeholder="值" style="width:62px;border:none;background:transparent;font-size:calc(var(--fs)*0.8);color:inherit;padding:0" onchange="gActFlexSet('${a.id}',${i},'v',this.value)"></span>`).join('');
-  let progHtml='';
-  if(p.ty==='ticket'){
-    progHtml=`<div class="progbar ${p.pct>=100?'ok':''}"><i style="width:${p.pct}%"></i></div><div class="act-sum">门票进度 ${p.pct}% · 总${p.total}/耗${p.consumed}/余${p.remaining}${(p.perDay>0&&p.remaining>0)?(' · 约'+Math.ceil(p.remaining/p.perDay)+'天'):''}</div>`;
-  } else if(p.ty==='daily'){
-    progHtml=`<div class="progbar ${p.pct>=100?'ok':''}"><i style="width:${p.pct}%"></i></div><div class="act-sum">打卡进度 ${p.pct}% · ${p.done}/${p.target} 天</div>`;
+  let progHtml='';const bars=[];
+  if(p.time){
+    const t=p.time;
+    bars.push(`<div class="progbar ${t.pct>=100?'ok':''}"><i style="width:${t.pct}%"></i></div><div class="act-sum">⏱ 时间进度 ${t.pct}% · ${t.done}/${t.total} 天</div>`);
   }
+  if(p.content){
+    const c=p.content;
+    bars.push(`<div class="progbar ${c.pct>=100?'ok':''}"><i style="width:${c.pct}%"></i></div><div class="act-sum">✅ 内容进度 ${c.pct}% · ${c.done}/${c.total} 项</div>`);
+  }
+  if(bars.length===0){
+    if(p.ty==='ticket'){
+      progHtml=`<div class="progbar ${p.pct>=100?'ok':''}"><i style="width:${p.pct}%"></i></div><div class="act-sum">门票进度 ${p.pct}% · 总${p.total}/耗${p.consumed}/余${p.remaining}${(p.perDay>0&&p.remaining>0)?(' · 约'+Math.ceil(p.remaining/p.perDay)+'天'):''}</div>`;
+    } else if(p.ty==='daily'){
+      const dl=a.dl||{target:0,done:0};
+      progHtml=`<div class="progbar ${p.pct>=100?'ok':''}"><i style="width:${p.pct}%"></i></div><div class="act-sum">打卡进度 ${p.pct}% · ${+dl.done||0}/${+dl.target||0} 天</div>`;
+    }
+  }
+  progHtml=bars.join('');
   const statusTag = st? `<span class="tag ${st.cls}">${st.txt}</span>` : (ttotal?`<span class="hint">子项 ${tdone}/${ttotal}</span>`:'');
   const doneChk = (p.ty==='binary')? `<input type="checkbox" ${((D.game.actDone||{})[a.id])?'checked':''} onchange="gActDone('${a.id}',this.checked)" title="整个活动完成">`:'';
-  const tempBtn = (p.pct<100)? `<button class="btn ghost sm" onclick="gActTempDone('${a.id}')" title="标记今天暂时完成">今日完成</button>`:'';
+  const tempBtn = (!p.doneAll)? `<button class="btn ghost sm" onclick="gActTempDone('${a.id}')" title="标记今天暂时完成">今日完成</button>`:'';
   const drag=dragSpan('activity',a.id);
   const ats=(D.game.actDoneTs||{})[a.id];
   const anote=gameNote(a.id);const aexp=gameNoteExp[a.id];
   const aNoteBox=aexp?`<div class="note-edit"><textarea class="inp" id="gn_${a.id}" placeholder="活动备注（今日进度/掉落/心得）">${anote?esc(anote.text):''}</textarea><button class="btn ghost sm" onclick="gameNoteSave('${a.id}')">保存备注</button></div>`:'';
-  return `<div class="card" style="margin:6px 0 8px;${p.pct>=100?'opacity:.55':''}"><div class="row c">${drag}${gActMv(a.id)}${doneChk}<b style="${p.pct>=100?'text-decoration:line-through;opacity:.7':''}">${esc(a.name)}</b> ${statusTag} ${a.type?`<span class="tag">${esc(a.type)}</span>`:''} ${a.reward?`<span class="tag alt">${esc(a.reward)}</span>`:''} ${a.priority?`<span class="tag">${esc(a.priority)}</span>`:''} <span class="spacer"></span><span class="hint">${fmtDt(a.start)} ~ ${fmtDt(a.end)}</span> ${tempBtn} <button class="note-btn" title="备注" onclick="gameNoteToggle('${a.id}')">📝</button> <button class="del" onclick="delAct('${a.id}')">×</button></div>
+  return `<div class="card" style="margin:6px 0 8px;${p.doneAll?'opacity:.55':''}"><div class="row c">${drag}${gActMv(a.id)}${doneChk}<b style="${p.doneAll?'text-decoration:line-through;opacity:.7':''}">${esc(a.name)}</b> ${statusTag} ${a.type?`<span class="tag">${esc(a.type)}</span>`:''} ${a.reward?`<span class="tag alt">${esc(a.reward)}</span>`:''} ${a.priority?`<span class="tag">${esc(a.priority)}</span>`:''} <span class="spacer"></span><span class="hint">${fmtDt(a.start)} ~ ${fmtDt(a.end)}</span> ${tempBtn} <button class="note-btn" title="备注" onclick="gameNoteToggle('${a.id}')">📝</button> <button class="del" onclick="delAct('${a.id}')">×</button></div>
     ${ats?`<div class="sub hint">✓ 完成于 ${fmtTime(ats)}</div>`:''}
     ${anote?`<div class="sub note-line">📝 ${esc(anote.text)} <span class="hint">${fmtTime(anote.time)}</span></div>`:''}
     ${aNoteBox}
@@ -2377,7 +2393,7 @@ function actCardInner(a,prog){
     ${tasks||''}</div>`;
 }
 function gProg(kind,id,v){const key=(kind==='weekly')?weekKey():todayStr();if(!D.game.progress[key])D.game.progress[key]={};const p=D.game.progress[key];if(kind==='daily'){(p.daily=p.daily||{})[id]=v;p.daily_ts=p.daily_ts||{};if(v)p.daily_ts[id]=nowISO();else delete p.daily_ts[id];}else{(p.weekly=p.weekly||{})[id]=v;p.weekly_ts=p.weekly_ts||{};if(v)p.weekly_ts[id]=nowISO();else delete p.weekly_ts[id];}save();renderNav();renderGame();}
-function gProgAct(aid,tid,v){const dt=todayStr();if(!D.game.progress[dt])D.game.progress[dt]={};const p=D.game.progress[dt];const k=aid+'_'+tid;(p.activity=p.activity||{})[k]=v;p.activity_ts=p.activity_ts||{};if(v)p.activity_ts[k]=nowISO();else delete p.activity_ts[k];save();renderNav();renderGame();}
+function gProgAct(aid,tid,v){const dt=todayStr();if(!D.game.progress[dt])D.game.progress[dt]={};const p=D.game.progress[dt];const k=aid+'_'+tid;(p.activity=p.activity||{})[k]=v;p.activity_ts=p.activity_ts||{};if(v)p.activity_ts[k]=nowISO();else delete p.activity_ts[k];D.game.actTaskDone=D.game.actTaskDone||{};(D.game.actTaskDone[aid]=D.game.actTaskDone[aid]||{})[tid]=v;save();renderNav();renderGame();}
 function gActDone(aid,v){D.game.actDone=D.game.actDone||{};D.game.actDone[aid]=v;D.game.actDoneTs=D.game.actDoneTs||{};if(v)D.game.actDoneTs[aid]=nowISO();else delete D.game.actDoneTs[aid];save();renderNav();renderGame();}
 function weeklyType(t){return t.type||'text';}
 function weeklyDone(t){
@@ -2398,18 +2414,42 @@ function actProgress(a){
     const pct= total>0? Math.min(100,Math.round(consumed/total*100)) : 0;
     return {pct,ty,total,consumed,remaining,perDay:+tk.perDay||0,phase2:+tk.phase2||0};
   }
-  if(ty==='daily'){
-    const dl=a.dl||{target:0,done:0};
-    const target=+dl.target||0, done=+dl.done||0;
-    const pct= target>0? Math.min(100,Math.round(done/target*100)) : (done>0?100:0);
-    return {pct,ty,target,done};
+  // 时间进度（按日历天数自动推导，随时间实时推进）
+  let time=null;
+  if(a.start&&a.end){
+    const dayNum=s=>{const d=new Date(s);d.setHours(0,0,0,0);return d.getTime();};
+    const sd=dayNum(a.start), ed=dayNum(a.end), nd=dayNum(new Date());
+    const total=Math.max(1,Math.round((ed-sd)/864e5)+1);
+    let done=Math.round((nd-sd)/864e5)+1;
+    done=Math.max(0,Math.min(total,done));
+    time={done,total,pct: total>0?Math.round(done/total*100):0};
   }
-  const done=!!((D.game.actDone||{})[a.id]);
-  return {pct: done?100:0, ty:'binary', done};
+  // 内容进度（按子任务勾选占比，活动级持久完成）
+  let content=null;
+  const tasks=a.tasks||[];
+  if(tasks.length){
+    const td=((D.game.actTaskDone||{})[a.id])||{};
+    const cd=tasks.filter(t=>td[t.id]).length;
+    content={done:cd,total:tasks.length,pct: tasks.length?Math.round(cd/tasks.length*100):0};
+  }
+  // 聚合 pct（用于系列总进度条/角标）：优先内容，其次时间，再退化到原始逻辑
+  let pct;
+  if(content) pct=content.pct;
+  else if(time) pct=time.pct;
+  else if(ty==='daily'){const dl=a.dl||{target:0,done:0};const target=+dl.target||0,done=+dl.done||0;pct= target>0?Math.min(100,Math.round(done/target*100)):(done>0?100:0);}
+  else pct=(((D.game.actDone||{})[a.id])?100:0);
+  // 真正“完成”才用于置灰（内容全完 / binary勾选 / 门票耗尽）
+  let doneAll=false;
+  if(content&&content.pct>=100)doneAll=true;
+  else if(ty==='binary')doneAll=!!((D.game.actDone||{})[a.id]);
+  else if(ty==='ticket'){const tk=a.tk||{};const total=(+tk.given||0)+(+tk.bought||0);doneAll=(total>0&&(+tk.consumed||0)>=total);}
+  return {pct,ty,time,content,doneAll,dl:(a.dl||{target:0,done:0})};
 }
 function actStatus(a){
   const p=actProgress(a);
-  if(p.pct>=100) return {cls:'done',txt:'全部完成✓'};
+  if(p.content&&p.content.pct>=100) return {cls:'done',txt:'全部完成✓'};
+  if(p.doneAll) return {cls:'done',txt:'全部完成✓'};
+  if(p.time&&p.time.done>=p.time.total) return {cls:'end',txt:'已到期'};
   if((a.tempDone||'')===todayStr()) return {cls:'temp',txt:'今日已打卡'};
   return null;
 }
@@ -2600,12 +2640,7 @@ function gameActivityTpl(){
       </div>
       <div class="hint" style="width:100%">总门票 ${total} · 已消耗 ${+tk.consumed||0} · 剩余 ${remaining}${days?(' · 按上限约还需 '+days+' 天'):''}</div>`;
     } else if(ty==='daily'){
-      const dl=a.dl||{target:0,done:0};
-      extra=`<div class="row" style="width:100%;margin:4px 0;gap:6px;flex-wrap:wrap">
-        <label style="font-size:calc(var(--fs)*0.8)">持续天数(目标) <input type="number" value="${+dl.target||''}" style="width:62px" onchange="gActSetDl('${a.id}','target',+this.value)"></label>
-        <label style="font-size:calc(var(--fs)*0.8)">已打卡天数 <input type="number" value="${+dl.done||''}" style="width:62px" onchange="gActSetDl('${a.id}','done',+this.value)"></label>
-        <button class="btn ghost sm" onclick="gActDailyCheck('${a.id}')">今日打卡 +1</button>
-      </div>`;
+      extra=`<div class="hint" style="width:100%">进度已自动计算：填了起止日期→按日历天数（时间进度）；加了子任务→按勾选占比（内容进度）。无需手动填天数，也不会再出现 0/0。</div>`;
     }
     return `<div class="item" style="align-items:stretch;flex-direction:column;gap:6px">
     <div class="row c" style="width:100%;flex-wrap:wrap;gap:6px">
@@ -4075,7 +4110,7 @@ function bootTheme(){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v67';
+const APP_VER='v68';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
