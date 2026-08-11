@@ -42,6 +42,7 @@ input,textarea,select{font-family:inherit;font-size:calc(var(--fs)*0.933);color:
 .nav-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;margin-bottom:4px;color:var(--text);cursor:pointer;font-size:calc(var(--fs)*0.967);transition:background .15s;user-select:none;}
 .nav-item:hover{background:var(--bg);}
 .nav-item.active{background:var(--tint);color:var(--on-tint);font-weight:600;box-shadow:inset 3px 0 0 var(--accent);}
+body[data-theme="dual"] .nav-item.active{background:linear-gradient(90deg,var(--accent),var(--dual-b));color:var(--on-tint);box-shadow:inset 3px 0 0 var(--accent);}
 .nav-item .ic{width:20px;text-align:center;font-size:calc(var(--fs)*1.067);}
 .nav-item .badge{margin-left:auto;background:var(--accent);color:var(--on-accent);font-size:calc(var(--fs)*0.733);min-width:20px;height:20px;line-height:20px;text-align:center;border-radius:10px;padding:0 5px;font-weight:600;}
 .side-foot{padding:10px;border-top:var(--bw) solid var(--border);}
@@ -232,31 +233,6 @@ textarea{resize:vertical;min-height:60px;}
 .season-card{flex:1;text-align:center;align-items:center;padding:10px 6px;border-radius:10px;color:#fff;font-size:calc(var(--fs)*0.867);font-weight:600;cursor:pointer;border:2px solid transparent;}
 .season-card.sel{border-color:#1A1A1A;}
 .skin-search{width:100%;padding:8px 11px;border:var(--bw) solid var(--border);border-radius:9px;margin-bottom:8px;}
-/* v66 换肤美化：分类标签 + 预览卡 */
-.skin-tab{display:inline-flex;align-items:center;height:30px;padding:0 13px;border:1px solid var(--border);border-radius:18px;background:var(--bg);font-size:12.5px;cursor:pointer;color:var(--muted);margin:0 6px 8px 0;}
-.skin-tab.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent);}
-.skin-tab .cnt{font-size:10px;opacity:.7;margin-left:5px;}
-.skin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;margin-top:6px;}
-.skin-tile{position:relative;border:1.5px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .12s,box-shadow .12s;min-height:80px;display:flex;flex-direction:column;}
-.skin-tile:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12);}
-.skin-tile .bar{height:6px;width:100%;flex:none;}
-.skin-tile .nm{font-size:13px;font-weight:700;padding:7px 9px 0;line-height:1.2;word-break:break-all;}
-.skin-tile .hex{font-size:10px;opacity:.7;padding:1px 9px 8px;}
-.skin-tile.sel{box-shadow:0 0 0 3px var(--selc,#97A6B2);}
-.skin-tile .badge{position:absolute;top:5px;right:5px;font-size:9px;font-weight:700;border-radius:6px;padding:1px 5px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);}
-.skin-tile .chk{position:absolute;bottom:6px;right:6px;width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
-.skin-mode{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-bottom:10px;}
-.skin-mode button{border:none;background:var(--bg);padding:7px 16px;font-size:13px;cursor:pointer;color:var(--muted);}
-.skin-mode button.on{background:var(--accent);color:var(--on-accent);}
-.skin-dual{margin-top:6px;}
-.bc-top{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;}
-.bc-slot{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);}
-.bc-slot input[type=color]{width:52px;height:36px;border:1px solid var(--border);border-radius:8px;background:none;padding:2px;cursor:pointer;}
-.bc-slot input[type=text]{width:92px;height:32px;border:1px solid var(--border);border-radius:8px;padding:0 8px;font-size:12px;outline:none;}
-.bc-extract{height:36px;padding:0 14px;border:1px dashed var(--accent);background:var(--tint);color:var(--accent);border-radius:9px;font-size:12.5px;cursor:pointer;align-self:center;}
-.bc-extract:hover{filter:brightness(.97);}
-.bc-demo{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:12px;border-radius:12px;margin:4px 0 10px;}
-.bc-surface{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:10px;flex:1;min-width:200px;}
 /* 拖拽手柄 */
 .drag{color:#B4BEC7;cursor:grab;font-size:calc(var(--fs)*1.2);line-height:1;padding:0;border-radius:8px;user-select:none;-webkit-user-select:none;touch-action:none;flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;transition:background .15s,color .15s;}
 .drag:hover{background:var(--tint);color:var(--accent);}
@@ -590,46 +566,8 @@ textarea.inp{min-height:52px;}
   <button class="close" onclick="closeSkin()">×</button>
   <h3>🎨 选择皮肤</h3>
   <div class="season-cards" id="seasonCards"></div>
-  <div class="skin-mode" id="skinMode">
-    <button data-mode="single" class="on" onclick="setSkinMode('single')">单色配色</button>
-    <button data-mode="dual" onclick="setSkinMode('dual')">双色搭配</button>
-  </div>
-  <div id="skinSingle">
-    <input class="skin-search" id="skinSearch" placeholder="搜索颜色名…（输入「新」/「浅」/「日+」筛选）" oninput="renderSkinGrid()">
-    <div id="skinGrid"></div>
-  </div>
-  <div id="skinDual" style="display:none">
-    <div class="skin-dual">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5">选两色搭配：<b>A=主色</b>（按钮/交互），<b>B=辅色</b>（氛围/浅底）。可点下方色块填 A/B、手填 hex，或上传图片自动提取。大面积底用 B 浅底，A 只用在交互处，更出彩不刺眼。</div>
-      <div class="bc-top">
-        <div class="bc-slot"><span>主色 A（按钮/交互）</span><input type="color" id="colA" value="#4F7365" oninput="bcSet('A',this.value)"><input type="text" id="hexA" value="#4F7365" oninput="bcHex('A')"></div>
-        <div class="bc-slot"><span>辅色 B（氛围/底色）</span><input type="color" id="colB" value="#97A6B2" oninput="bcSet('B',this.value)"><input type="text" id="hexB" value="#97A6B2" oninput="bcHex('B')"></div>
-        <button class="bc-extract" onclick="document.getElementById('bcFile').click()">🎨 从图片提取双色</button>
-        <input type="file" id="bcFile" accept="image/*" style="display:none" onchange="bcExtractFile(this)">
-      </div>
-      <div class="bc-demo" id="bcDemo">
-        <span id="bc_nav" style="display:inline-flex;align-items:center;height:28px;padding:0 12px;border-radius:8px;font-size:12px;font-weight:600">导航项</span>
-        <button id="bc_btn" style="height:32px;padding:0 16px;border:none;border-radius:9px;font-size:13px;cursor:pointer">主按钮(A)</button>
-        <button id="bc_btn2" style="height:32px;padding:0 14px;border-radius:9px;font-size:13px;cursor:pointer;border:1px solid #999">次按钮(B)</button>
-        <span id="bc_chip" style="display:inline-flex;align-items:center;height:24px;padding:0 11px;border-radius:12px;font-size:12px;font-weight:600">标签</span>
-        <span id="bc_prog" style="display:inline-block;width:140px;height:8px;border-radius:5px;overflow:hidden;background:#eee"><i id="bc_progi" style="display:block;height:100%;width:60%"></i></span>
-        <span style="font-size:12px" id="bc_txt">正文文字示例</span>
-      </div>
-      <div class="bc-surface" id="bc_surface">
-        <div style="font-size:13px;font-weight:700" id="bc_st">浅底表面(B)</div>
-        <div style="font-size:12px;line-height:1.5" id="bc_sb">双色下，大面积底用 B 的浅底，主色 A 只用在交互处——既出彩又不刺眼。</div>
-      </div>
-      <div style="display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap;margin-top:8px">
-        <span style="display:inline-flex;align-items:center;gap:6px"><i id="bc_ca" style="width:13px;height:13px;border-radius:3px;border:1px solid rgba(0,0,0,.1)"></i>A主色 <b id="bc_ta"></b></span>
-        <span style="display:inline-flex;align-items:center;gap:6px"><i id="bc_cb" style="width:13px;height:13px;border-radius:3px;border:1px solid rgba(0,0,0,.1)"></i>B辅色 <b id="bc_tb"></b></span>
-        <span style="display:inline-flex;align-items:center;gap:6px"><i id="bc_ct" style="width:13px;height:13px;border-radius:3px;border:1px solid rgba(0,0,0,.1)"></i>B浅底 <b id="bc_tt"></b></span>
-      </div>
-      <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <button class="btn primary" onclick="bcSave()">保存为双色皮肤</button>
-        <span id="bcCur" style="font-size:12px;color:var(--muted)"></span>
-      </div>
-    </div>
-  </div>
+  <input class="skin-search" id="skinSearch" placeholder="搜索颜色名…" oninput="renderSkinGrid()">
+  <div class="swatch-grid" id="skinGrid"></div>
   <div style="margin-top:18px;border-top:var(--bw) solid var(--border);padding-top:14px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
       <span style="font-weight:700">🔠 字体大小</span>
@@ -700,7 +638,7 @@ let D, currentModule='work';
 
 const NAV=[
   {id:'note',name:'日常小记',ic:'🌅'},
-  {id:'work',name:'工作待办',ic:'📋'},
+  {id:'work',name:'工作台账',ic:'📋'},
   {id:'fitness',name:'健身打卡',ic:'💪'},
   {id:'study',name:'学习计划',ic:'🎓'},
   {id:'game',name:'痒痒鼠来咯',ic:'🎮'},
@@ -772,6 +710,7 @@ function yysWeeklyDefault(){
 function defaultData(){
   return {
     work:[],
+    logs:[],
     fitness:{
       weekTemplate:{'单周':emptyWeekTpl(),'双周':emptyWeekTpl(),'生理周':emptyWeekTpl()},
       activeTpl:'auto',
@@ -1472,27 +1411,39 @@ function countGameTodo(){
 
 /* ================= 渲染分发 ================= */
 function renderModule(){
-  const t={note:'日常小记',work:'工作待办',fitness:'健身打卡',study:'学习计划',game:'痒痒鼠来咯',plan:'从长计议',movie:'观影记录',quarter:'季度期望',wish:'心愿单'}[currentModule];
+  const t={note:'日常小记',work:'工作台账',fitness:'健身打卡',study:'学习计划',game:'痒痒鼠来咯',plan:'从长计议',movie:'观影记录',quarter:'季度期望',wish:'心愿单'}[currentModule];
   $('#modTitle').textContent=t;
   const map={note:renderNote,work:renderWork,fitness:renderFitness,study:renderStudy,game:renderGame,plan:renderPlan,movie:renderMovie,quarter:renderQuarter,wish:renderWish};
   (map[currentModule]||renderWork)();
   if(location.protocol.startsWith('http'))$('#content').scrollTop=0;
 }
 
-/* ================= 工作待办 ================= */
-let workTab='list', workFilter='全部', workTypes=['常规工作','标书制作','外借','其他'];
+/* ================= 工作台账 ================= */
+let workTab='list', workFilter='全部', workState='all', workStatFocus='', workTypes=['常规工作','标书制作','外借','其他'], LOG_TYPES=['提前完成','自发任务','指派完成','协助配合','其他'];
 function renderWork(){
   let html=`<div class="tabs">
     <div class="tab ${workTab==='list'?'on':''}" onclick="workTab='list';renderWork()">待办列表</div>
+    <div class="tab ${workTab==='log'?'on':''}" onclick="workTab='log';renderWork()">工作记录</div>
     <div class="tab ${workTab==='stat'?'on':''}" onclick="workTab='stat';renderWork()">统计</div>
   </div>`;
   if(workTab==='stat'){html+=renderWorkStat();}
+  else if(workTab==='log'){html+=renderWorkLog();}
   else{
-    html+=`<div class="row" style="margin-bottom:12px">`+
-      ['全部','每日计划','每周计划','月度计划'].map(f=>`<span class="chip ${workFilter===f?'on':''}" onclick="workFilter='${f}';renderWork()">${f}</span>`).join('')+
-      `</div>`;
-    html+=`<div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="clearDone('work')">清空已完成</button></div>`;
-    const list=D.work.filter(x=>workFilter==='全部'||x.planType===workFilter);
+    html+=`<div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px">
+      ${['全部','进行中','已完成','已归档'].map(s=>`<span class="chip ${workState===s?'on':''}" onclick="workState='${s}';renderWork()">${s}</span>`).join('')}
+    </div>`;
+    html+=`<div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px">
+      ${['全部','每日计划','每周计划','月度计划'].map(f=>`<span class="chip ${workFilter===f?'on':''}" onclick="workFilter='${f}';renderWork()">${f}</span>`).join('')}
+    </div>`;
+    html+=`<div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="archiveAllDone()">📦 归档已完成</button></div>`;
+    let list=D.work.filter(x=>{
+      if(workFilter!=='全部'&&x.planType!==workFilter)return false;
+      if(workState==='all')return !x.archived;
+      if(workState==='进行中')return !x.done&&!x.archived;
+      if(workState==='已完成')return x.done&&!x.archived;
+      if(workState==='已归档')return !!x.archived;
+      return true;
+    });
     if(list.length===0)html+=`<div class="empty"><div class="em">📋</div>暂无待办，添加一条吧</div>`;
     list.forEach(it=>html+=workItem(it));
     html+=workForm();
@@ -1501,10 +1452,16 @@ function renderWork(){
 }
 function workItem(it){
   const range=it.startDate?(it.endDate?`${it.startDate} ~ ${it.endDate}`:`自 ${it.startDate}`):(it.endDate?`截止：${it.endDate}`:'');
-  return `<div class="item ${it.done?'done':''}">
+  const archived=!!it.archived;
+  const acts=archived
+    ? `<button class="btn ghost sm" onclick="unarchive('work','${it.id}')">↩ 取消归档</button>`
+    : (it.done
+        ? `<button class="btn ghost sm" onclick="archiveOne('work','${it.id}')">📦 归档</button><button class="btn ghost sm" onclick="reopen('work','${it.id}')">↺ 重开</button>`
+        : '');
+  return `<div class="item ${it.done?'done':''} ${archived?'arch':''}">
     <input type="checkbox" ${it.done?'checked':''} onchange="toggleDone('work','${it.id}',this.checked)">
     <div class="body">
-      <div class="ttitle">${esc(it.title)}</div>
+      <div class="ttitle">${esc(it.title)} ${archived?'<span class="tag" style="opacity:.7">已归档</span>':''}</div>
       <div class="sub">${it.workType||'常规工作'} ${range?('· '+esc(range)):''}</div>
       <div class="meta-grid">
         ${it.location?`<span class="tag">📍 ${esc(it.location)}</span>`:''}
@@ -1515,6 +1472,7 @@ function workItem(it){
       ${it.note?`<div class="emptybox">📝 ${esc(it.note)}</div>`:''}
     </div>
     <div class="item-acts">
+      ${acts}
       <button class="btn ghost sm" onclick="openEdit('work','${it.id}')">✏️ 编辑</button>
       <button class="del" onclick="delItem('work','${it.id}')">×</button>
     </div>
@@ -1522,7 +1480,7 @@ function workItem(it){
 }
 function workForm(){
   return `<div class="card">
-    <div class="card-h"><h2>➕ 添加工作待办</h2></div>
+    <div class="card-h"><h2>➕ 添加待办</h2></div>
     <div class="field"><label>工作类型 *</label>
       <div class="row">${workTypes.map(t=>`<span class="chip ${t==='常规工作'?'on':''}" data-wt onclick="selWT(this,'${t}')">${t}</span>`).join('')}</div>
       <input type="hidden" id="wf_workType" value="常规工作">
@@ -1558,51 +1516,139 @@ function addWork(){
   if(wt==='标书制作'||wt==='外借'){it.fee=$('#wf_fee').value;it.paid=$('#wf_paid').value;}
   D.work.unshift(it);save();renderNav();renderWork();toast('已添加');
 }
+/* ===== 待办：归档 / 重开（数据保留，不吞统计） ===== */
+function archiveOne(mod,id){const it=(D[mod]||[]).find(x=>x.id===id);if(!it)return;it.archived=true;save();renderNav();renderWork();toast('已归档');}
+function unarchive(mod,id){const it=(D[mod]||[]).find(x=>x.id===id);if(!it)return;it.archived=false;save();renderNav();renderWork();toast('已取消归档');}
+function reopen(mod,id){const it=(D[mod]||[]).find(x=>x.id===id);if(!it)return;it.done=false;it.doneDate='';it.archived=false;save();renderNav();renderWork();toast('已重新打开');}
+function archiveAllDone(){const n=D.work.filter(x=>x.done&&!x.archived).length;if(n===0){toast('没有可归档的已完成项');return;}if(!confirm('将 '+n+' 条已完成待办归档？\n（数据保留，仅从活跃列表移走，统计仍计入累计完成）'))return;D.work.forEach(x=>{if(x.done&&!x.archived)x.archived=true;});save();renderNav();renderWork();toast('已归档 '+n+' 条');}
+
+/* ===== 工作记录（与待办相对：待办=怕忘而记，记录=做完留痕） ===== */
+let logMode='quick', logFilter='全部';
+function renderWorkLog(){
+  let html=`<div class="row" style="margin-bottom:10px;flex-wrap:wrap;gap:6px;align-items:center">
+    <span class="chip ${logMode==='quick'?'on':''}" onclick="logMode='quick';renderWorkLog()">⚡ 速记</span>
+    <span class="chip ${logMode==='detail'?'on':''}" onclick="logMode='detail';renderWorkLog()">📝 详细</span>
+    <span style="flex:1"></span>
+    <select onchange="logFilter=this.value;renderWorkLog()" style="font-size:calc(var(--fs)*0.85)">
+      <option value="全部">全部类型</option>${LOG_TYPES.map(t=>`<option value="${t}" ${logFilter===t?'selected':''}>${t}</option>`).join('')}
+    </select>
+  </div>`;
+  html+=logForm();
+  const items=(D.logs||[]).filter(x=>logFilter==='全部'||x.type===logFilter).slice().sort((a,b)=>String(b.doneAt||'').localeCompare(String(a.doneAt||'')));
+  if(items.length===0)html+=`<div class="empty"><div class="em">🗒️</div>还没有工作记录，随手记一笔吧</div>`;
+  items.forEach(it=>{
+    const dt=String(it.doneAt||'');
+    const disp=dt?dt.slice(0,10).replace(/-/g,'.')+(dt.length>10?(' '+dt.slice(11,16)):''):'未记时间';
+    html+=`<div class="item">
+      <div class="body">
+        <div class="ttitle">${esc(it.title||'')} ${it.type?`<span class="tag" style="background:var(--accent);color:var(--on-accent)">${esc(it.type)}</span>`:''}</div>
+        <div class="sub">🕒 ${disp}${it.project?(' · 📁 '+esc(it.project)):''}${it.effort?(' · ⏱ '+esc(it.effort)):''}</div>
+        ${it.detail?`<div class="emptybox">${esc(it.detail)}</div>`:''}
+        ${it.custom?`<div class="meta-grid"><span class="tag alt">✎ ${esc(it.custom)}</span></div>`:''}
+      </div>
+      <div class="item-acts">
+        <button class="btn ghost sm" onclick="openEdit('log','${it.id}')">✏️ 编辑</button>
+        <button class="del" onclick="delLog('${it.id}')">×</button>
+      </div>
+    </div>`;
+  });
+  $('#content').innerHTML=html;
+}
+function logForm(){
+  if(logMode==='quick'){
+    return `<div class="card"><div class="card-h"><h2>⚡ 速记一笔</h2></div>
+      <div class="field"><label>今天做了啥（一句话）</label><input type="text" id="lf_title" placeholder="例：提前做完竞品分析" onkeydown="if(event.key==='Enter')addLog()"></div>
+      <button class="btn" onclick="addLog()">记一笔</button></div>`;
+  }
+  return `<div class="card"><div class="card-h"><h2>📝 详细记录</h2></div>
+    <div class="row">
+      <div class="field"><label>完成时间 *</label><input type="datetime-local" id="lf_doneAt" step="60" value="${todayLocalDT()}"></div>
+      <div class="field"><label>类型</label><select id="lf_type">${LOG_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>标题 *</label><input type="text" id="lf_title" placeholder="做了什么" onkeydown="if(event.key==='Enter')addLog()"></div>
+    <div class="field"><label>详情（可细化）</label><textarea id="lf_detail" placeholder="背景、过程、产出…"></textarea></div>
+    <div class="row">
+      <div class="field"><label>关联项目/部门</label><input type="text" id="lf_project"></div>
+      <div class="field"><label>耗时</label><input type="text" id="lf_effort" placeholder="如 2h"></div>
+    </div>
+    <div class="field"><label>自定义项（自由填写，如关键词/对接人/备注）</label><input type="text" id="lf_custom" placeholder="纯按个人需要"></div>
+    <button class="btn" onclick="addLog()">记一笔</button></div>`;
+}
+function todayLocalDT(){const d=new Date();const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
+function curHM(){const d=new Date();const p=n=>String(n).padStart(2,'0');return p(d.getHours())+':'+p(d.getMinutes());}
+function addLog(){
+  const title=$('#lf_title').value.trim();if(!title){toast('请填写标题');return;}
+  const it={id:uid(),title,type:logMode==='quick'?'其他':$('#lf_type').value,detail:$('#lf_detail')?$('#lf_detail').value:'',project:$('#lf_project')?$('#lf_project').value:'',effort:$('#lf_effort')?$('#lf_effort').value:'',custom:$('#lf_custom')?$('#lf_custom').value:'',doneAt:logMode==='quick'?(todayStr()+'T'+curHM()):$('#lf_doneAt').value};
+  D.logs.unshift(it);save();renderNav();renderWorkLog();toast('已记录');
+}
+function delLog(id){if(!confirm('删除这条工作记录？'))return;const i=(D.logs||[]).findIndex(x=>x.id===id);if(i>=0){D.logs.splice(i,1);save();renderNav();renderWorkLog();toast('已删除');}}
+
+/* ===== 统计（方案A 聚合页：待办费用 + 工作记录类别 + 完成趋势，带时间筛选） ===== */
+const CHART_COLORS=['#4F7365','#C2A8A0','#7FA8B0','#B57A3C','#B07A78','#9AA7B0','#A9B5A0','#947A6D','#5C8A6E','#8A7868'];
+function hbarRow(label,val,max,sub){
+  const w=max>0?(val/max*100):0;
+  return `<div class="row c" style="margin:5px 0">
+    <span style="width:64px;font-size:calc(var(--fs)*0.8);color:var(--muted)">${label}</span>
+    <div style="flex:1;height:16px;background:var(--bg);border-radius:5px;overflow:hidden"><div style="height:100%;width:${w}%;background:var(--accent);border-radius:5px;transition:width .3s"></div></div>
+    <span style="font-size:calc(var(--fs)*0.8);min-width:54px;text-align:right">${val}${sub||''}</span>
+  </div>`;
+}
+function ringChart(segments){
+  const total=segments.reduce((a,s)=>a+s.value,0);
+  if(total<=0)return '<div class="hint">暂无数据</div>';
+  const r=52,c=2*Math.PI*r;let off=0;
+  const arcs=segments.map(s=>{const len=s.value/total*c;const seg=`<circle cx="60" cy="60" r="${r}" fill="none" stroke="${s.color}" stroke-width="16" stroke-dasharray="${len.toFixed(2)} ${(c-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 60 60)"/>`;off+=len;return seg;}).join('');
+  const legend=segments.map(s=>`<div style="display:flex;align-items:center;gap:6px;margin:3px 0;font-size:calc(var(--fs)*0.82)"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${s.color}"></span>${esc(s.label)} <b>${s.value}</b></div>`).join('');
+  return `<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><svg width="120" height="120" viewBox="0 0 120 120">${arcs}<circle cx="60" cy="60" r="36" fill="var(--card)"/></svg><div>${legend}</div></div>`;
+}
+function miniLine(points){
+  if(!points||points.length===0)return '<div class="hint">暂无数据</div>';
+  const w=260,h=72,max=Math.max(1,...points),n=points.length,step=n>1?w/(n-1):0;
+  const pts=points.map((p,i)=>`${(i*step).toFixed(1)},${(h-(p/max)*(h-12)-6).toFixed(1)}`).join(' ');
+  const dots=points.map((p,i)=>`<circle cx="${(i*step).toFixed(1)}" cy="${(h-(p/max)*(h-12)-6).toFixed(1)}" r="3" fill="var(--accent)"/></circle>`).join('');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="max-width:100%"><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${dots}</svg>`;
+}
+function monthKey(d){if(!d)return '';const dt=new Date(d);if(isNaN(dt))return '';return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');}
 function renderWorkStat(){
-  // 周：本周+前11周；月：近6月；年：近3年
-  const weeks=[],months=[],years=[];
-  const ws=weekStart(new Date());
-  for(let i=11;i>=0;i--){const d=new Date(ws);d.setDate(d.getDate()-7*i);weeks.push(d);}
-  const now=new Date();
-  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d);}
-  for(let i=2;i>=0;i--){years.push(now.getFullYear()-i);}
-  function inWeek(dt,w){const s=weekStart(w);const e=new Date(s);e.setDate(e.getDate()+7);const x=new Date(dt);return x>=s&&x<e;}
-  function wkCount(w){return D.work.filter(x=>{const d=x.startDate||x.addDate;return d&&inWeek(d,w);}).length;}
-  function wkFee(w){let f=0,p=0;D.work.forEach(x=>{const d=x.startDate||x.addDate;if((x.workType==='标书制作'||x.workType==='外借')&&d&&inWeek(d,w)){f+=(+x.fee||0);if(x.paid==='是')p+=(+x.fee||0);}});return {f,p};}
-  function moCount(m){const y=m.getFullYear(),mo=m.getMonth();return D.work.filter(x=>{const d=x.startDate||x.addDate;if(!d)return false;const dt=new Date(d);return dt.getFullYear()===y&&dt.getMonth()===mo;}).length;}
-  function moFee(m){const y=m.getFullYear(),mo=m.getMonth();let f=0,p=0;D.work.forEach(x=>{if((x.workType==='标书制作'||x.workType==='外借')&&x.startDate||x.addDate){const dt=new Date(x.startDate||x.addDate);if(dt.getFullYear()===y&&dt.getMonth()===mo){f+=(+x.fee||0);if(x.paid==='是')p+=(+x.fee||0);}}});return {f,p};}
-  function yrCount(y){return D.work.filter(x=>{const d=x.startDate||x.addDate;return d&&new Date(d).getFullYear()===y;}).length;}
-  function yrFee(y){let f=0,p=0;D.work.forEach(x=>{if((x.workType==='标书制作'||x.workType==='外借')&&(x.startDate||x.addDate)&&new Date(x.startDate||x.addDate).getFullYear()===y){f+=(+x.fee||0);if(x.paid==='是')p+=(+x.fee||0);}});return {f,p};}
-  const tbl=(arr,label,countFn,feeFn)=>{
-    let max=Math.max(1,...arr.map(countFn));
-    const rows=arr.map((a,i)=>{const c=countFn(a);const fe=feeFn(a);
-      return `<div class="row c" style="margin:5px 0">
-        <span style="width:78px;font-size:calc(var(--fs)*0.8);color:var(--muted)">${label(a)}</span>
-        <div style="flex:1;height:16px;background:var(--bg);border-radius:5px;overflow:hidden"><div style="height:100%;width:${c/max*100}%;background:var(--accent-soft);border-radius:5px"></div></div>
-        <span style="font-size:calc(var(--fs)*0.8);min-width:34px;text-align:right">${c}条</span>
-        <span style="font-size:calc(var(--fs)*0.733);color:var(--muted);min-width:96px;text-align:right">¥${fe.f} (待¥${fe.f-fe.p})</span>
-      </div>`;}).join('');
-    return rows;
-  };
-  const cur=weeks[weeks.length-1];
-  const curFee=wkFee(cur);
+  const months=new Set();
+  D.work.forEach(x=>{const m=monthKey(x.startDate||x.addDate);if(m)months.add(m);});
+  (D.logs||[]).forEach(x=>{const m=monthKey(x.doneAt);if(m)months.add(m);});
+  const mlist=[...months].sort().reverse();
+  if(workStatFocus&&!mlist.includes(workStatFocus))workStatFocus=mlist[0]||'';
+  const inFocus=x=>!workStatFocus||monthKey(x.startDate||x.addDate)===workStatFocus;
+  const inFocusLog=x=>!workStatFocus||monthKey(x.doneAt)===workStatFocus;
+  let totF=0,totP=0;
+  D.work.forEach(x=>{if((x.workType==='标书制作'||x.workType==='外借')&&inFocus(x)){totF+=(+x.fee||0);if(x.paid==='是')totP+=(+x.fee||0);}});
+  const cumDone=D.work.filter(x=>x.done||x.archived).length;
+  const now=new Date();const feeMonths=[];
+  for(let i=5;i>=0;i--){feeMonths.push(new Date(now.getFullYear(),now.getMonth()-i,1));}
+  const feeRows=feeMonths.map(d=>{const y=d.getFullYear(),mo=d.getMonth();let f=0,p=0;D.work.forEach(x=>{if((x.workType==='标书制作'||x.workType==='外借')&&(x.startDate||x.addDate)){const dt=new Date(x.startDate||x.addDate);if(dt.getFullYear()===y&&dt.getMonth()===mo){f+=(+x.fee||0);if(x.paid==='是')p+=(+x.fee||0);}}});return {label:(mo+1)+'月',f,p};});
+  const feeMax=Math.max(1,...feeRows.map(r=>r.f));
+  const typeCount={};LOG_TYPES.forEach(t=>typeCount[t]=0);(D.logs||[]).filter(inFocusLog).forEach(x=>{const t=x.type||'其他';typeCount[t]=(typeCount[t]||0)+1;});
+  const ringSegs=LOG_TYPES.map((t,i)=>({label:t,value:typeCount[t],color:CHART_COLORS[i%CHART_COLORS.length]})).filter(s=>s.value>0);
+  const trend=feeMonths.map(d=>{const y=d.getFullYear(),mo=d.getMonth();return D.work.filter(x=>(x.done||x.archived)&&x.doneDate&&(new Date(x.doneDate).getFullYear()===y&&new Date(x.doneDate).getMonth()===mo)).length;});
+  const sel=`<select onchange="workStatFocus=this.value;renderWork()" style="font-size:calc(var(--fs)*0.85)"><option value="">全部时间</option>${mlist.map(m=>`<option value="${m}" ${workStatFocus===m?'selected':''}>${m.replace('-','年')}月</option>`).join('')}</select>`;
+  const focusLabel=workStatFocus?workStatFocus.replace('-','年')+'月':'所选范围';
   return `<div class="stat-cards">
     <div class="stat-card"><div class="n">${D.work.length}</div><div class="l">总任务数</div></div>
-    <div class="stat-card"><div class="n">${D.work.filter(x=>!x.done).length}</div><div class="l">未完成</div></div>
-    <div class="stat-card"><div class="n">¥${curFee.f}</div><div class="l">本周费用</div></div>
-    <div class="stat-card"><div class="n">¥${curFee.f-curFee.p}</div><div class="l">本周待到账</div></div>
+    <div class="stat-card"><div class="n">${D.work.filter(x=>!x.done&&!x.archived).length}</div><div class="l">未完成</div></div>
+    <div class="stat-card"><div class="n">¥${totF}</div><div class="l">${focusLabel}费用</div></div>
+    <div class="stat-card"><div class="n">¥${totF-totP}</div><div class="l">待到账</div></div>
+    <div class="stat-card"><div class="n">${cumDone}</div><div class="l">累计完成(含归档)</div></div>
+    <div class="stat-card"><div class="n">${(D.logs||[]).length}</div><div class="l">工作记录</div></div>
   </div>
   <div class="chart-box">
-    <div style="font-weight:600;margin-bottom:8px">按周统计（本周 + 前11周）</div>
-    ${tbl(weeks,w=>{const e=new Date(w);return (e.getMonth()+1)+'/'+e.getDate();},wkCount,wkFee)}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>按月费用（已到账=实色条）</b>${sel}</div>
+    ${feeRows.map(r=>hbarRow(r.label,'¥'+r.f,feeMax,' (待¥'+(r.f-r.p)+')')).join('')}
+    <div class="hint" style="margin-top:6px">已到账费用 = 实色条全额；待到账部分在括号中单独列出，便于核对某月标书/外借劳动所得。</div>
   </div>
   <div class="chart-box" style="margin-top:14px">
-    <div style="font-weight:600;margin-bottom:8px">按月统计（近6月）</div>
-    ${tbl(months,m=>{(m.getMonth()+1)+'月'},moCount,moFee)}
+    <div style="font-weight:600;margin-bottom:8px">工作记录 · 类别分布（环形图，配色与背景区分）</div>
+    ${ringChart(ringSegs)}
   </div>
   <div class="chart-box" style="margin-top:14px">
-    <div style="font-weight:600;margin-bottom:8px">按年统计（近3年）</div>
-    ${tbl(years,y=>y+'年',yrCount,yrFee)}
+    <div style="font-weight:600;margin-bottom:8px">待办完成趋势（近6月，折线·主题色）</div>
+    ${miniLine(trend)}
   </div>`;
 }
 
@@ -3546,7 +3592,7 @@ function renderTodayOverview(){
   const gDone=gDaily.filter(x=>(prog.daily||{})[x.id]).length;
   const gPct=gDaily.length?Math.round(gDone/gDaily.length*100):0;
   const rows=[
-    {ic:'📋',name:'工作待办',color:'var(--accent)',val:`进行中 ${doingN} · 今日完成 ${doneTodayN}`,pct:workPct,on:doingN>0||doneTodayN>0},
+    {ic:'📋',name:'工作台账',color:'var(--accent)',val:`进行中 ${doingN} · 今日完成 ${doneTodayN}`,pct:workPct,on:doingN>0||doneTodayN>0},
     {ic:'💪',name:'健身打卡',color:'var(--accent)',val:fitTotal?`今日 ${fitDone}/${fitTotal} 次`:'今日无计划',pct:fitPct,on:fitDone>0},
     {ic:'🎓',name:'学习计划',color:'var(--accent)',val:studyN?`今日 ${studyN} 项${studyMins?(' · 约 '+studyMins+' 分'):''}`:'今日未学',pct:0,on:studyN>0},
     {ic:'🎬',name:'观影记录',color:'var(--accent)',val:mv.length?`今日 ${mv.length} 部${mvNames?'：'+mvNames:''}`:'今日未看',pct:0,on:mv.length>0},
@@ -3669,7 +3715,7 @@ function clearAll(mod){if(!confirm('清空全部？此操作不可恢复'))retur
 /* ========== 通用编辑引擎：所有模块的记录都可再次修改 ========== */
 // t: text/num/date/time/ta(多行)/sel/chk/stars/datetime/range(a~b)
 const EDIT_SCHEMA={
-  work:{title:'工作待办',fields:[
+  work:{title:'工作台账',fields:[
     {k:'workType',l:'工作类型',t:'sel',o:['常规工作','标书制作','外借','其他']},
     {k:'title',l:'工作标题',t:'text'},
     {k:'startDate',l:'开始日期',t:'date'},{k:'endDate',l:'截止日期',t:'date'},
@@ -3679,6 +3725,15 @@ const EDIT_SCHEMA={
     {k:'fee',l:'费用 ¥（标书/外借）',t:'num'},
     {k:'paid',l:'是否到账',t:'sel',o:['否','是']},
     {k:'note',l:'备注',t:'ta'},{k:'done',l:'已完成',t:'chk'}
+  ]},
+  log:{title:'工作记录',fields:[
+    {k:'type',l:'类型',t:'sel',o:['提前完成','自发任务','指派完成','协助配合','其他']},
+    {k:'title',l:'标题',t:'text'},
+    {k:'doneAt',l:'完成时间',t:'datetime'},
+    {k:'detail',l:'详情（可细化）',t:'ta'},
+    {k:'project',l:'关联项目/部门',t:'text'},
+    {k:'effort',l:'耗时',t:'text'},
+    {k:'custom',l:'自定义项（自由填写）',t:'text'}
   ]},
   study:{title:'学习计划',fields:[
     {k:'type',l:'类型',t:'sel',dyn:'studyTypes'},
@@ -3874,37 +3929,15 @@ function saveEdit(){
 }
 
 /* ================= 换肤 ================= */
-/* v66 配色：按草图 v66.8 替换。颜色项格式 [名称, hex, flag, tag]
-   flag: 1=新增 2=浅色(明度偏高)；tag: '日+'=日本恢复项。浅色均已压低明度，手机/小屏不发刺眼。 */
 const SKIN_CATS=[
- {name:'中国传统色',colors:[
-   ['黛绿','#4F7365'],['苍绿','#6B8A6B'],['墨绿','#38564A'],['霜色','#97A6B2'],['黎色','#8A7868'],
-   ['缥色','#7FA8B0'],['银朱','#B05A4A'],['豆绿','#8FA86B'],['退红','#B07A78'],['蟹壳青','#7C9A92'],
-   ['莺哥绿','#5C8A6E'],['藕色','#C8A0A8'],['琥珀','#B57A3C'],
-   ['松花绿','#2E4D34',1],['铜绿','#549688',1],['苔绿','#6B7B4A',1],['苍翠','#3E6B4F',1]
- ]},
- {name:'日本传统色',colors:[
-   ['胡桃','#947A6D'],['群青','#2E4F6B'],
-   ['桜','#FEDFE1',1,'日+'],['山吹','#F8B862',1,'日+'],['藤色','#BBBCDE',1,'日+'],
-   ['利休茶','#A7A06B',1,'日+'],['桑','#96703D',1,'日+']
- ]},
- {name:'莫兰迪色',colors:[
-   ['灰粉','#C9B4B0'],['雾绿','#A9B5A0'],['雾蓝','#9FB0C0'],['藕灰','#B0A6B8'],['豆沙','#C2A8A0'],
-   ['蓝灰','#9AA7B0',1],['米驼','#C7B9A8',1]
- ]},
- {name:'轻亮色',colors:[
-   ['海贝色','#FFF5EE',2],['靛蓝100','#C5CAE9'],
-   ['薄荷蓝','#A2DBD0',1],['雾青','#9DC3C6',1],['暮青','#88AEB0',1],['黛青','#6E9B9E',1],['天蓝','#7FB5D0',1],['晴蓝','#93B8CE',1]
- ]},
- {name:'复古色',colors:[
-   ['芥末黄','#FFDB58'],['焦橙','#CC5500'],['三文鱼红','#FA8072'],['矢车菊蓝','#6495ED'],
-   ['芥末绿','#B5A642',1],['杏橙','#E08E45',1],['复古绿','#4A7C59',1],['复古卡其','#C3B091',1],['复古棕','#8B5A2B',1]
- ]}
+ {name:'中国传统色',colors:[['黛绿','#4F7365'],['苍绿','#6B8A6B'],['墨绿','#38564A'],['霜色','#97A6B2'],['黎色','#8A7868'],['缥色','#7FA8B0'],['银朱','#B05A4A'],['豆绿','#8FA86B'],['退红','#B07A78'],['蟹壳青','#7C9A92'],['莺哥绿','#5C8A6E'],['藕色','#C8A0A8'],['琥珀','#B57A3C'],['松花绿','#2E4D34'],['铜绿','#549688'],['苔绿','#6B7B4A'],['苍翠','#3E6B4F']]},
+ {name:'日本传统色',colors:[['胡桃','#947A6D'],['群青','#2E4F6B'],['桜','#FEDFE1'],['山吹','#F8B862'],['藤色','#BBBCDE'],['利休茶','#A7A06B'],['桑','#96703D']]},
+ {name:'莫兰迪色',colors:[['灰粉','#C9B4B0'],['雾绿','#A9B5A0'],['雾蓝','#9FB0C0'],['藕灰','#B0A6B8'],['豆沙','#C2A8A0'],['蓝灰','#9AA7B0'],['米驼','#C7B9A8']]},
+ {name:'轻亮色',colors:[['海贝色','#FFF5EE'],['靛蓝100','#C5CAE9'],['薄荷蓝','#A2DBD0'],['雾青','#9DC3C6'],['暮青','#88AEB0'],['黛青','#6E9B9E'],['天蓝','#7FB5D0'],['晴蓝','#93B8CE']]},
+ {name:'复古色',colors:[['芥末黄','#FFDB58'],['焦橙','#CC5500'],['三文鱼红','#FA8072'],['矢车菊蓝','#6495ED'],['芥末绿','#B5A642'],['杏橙','#E08E45'],['复古绿','#4A7C59'],['复古卡其','#C3B091'],['复古棕','#8B5A2B']]}
 ];
 const SKINS=SKIN_CATS.flatMap(c=>c.colors);
-/* v66 浅色修复：明度过高(L>0.80)的颜色不再一味掺白，而是 *0.88 压暗一点，
-   让浅色（如海贝色）的浅底仍可辨识、不发白刺眼；其余仍走原浅底混白逻辑。 */
-function softColor(hex){const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;const L=0.2126*r/255+0.7152*g/255+0.0722*b/255;if(L>0.80){r=Math.round(r*0.88);g=Math.round(g*0.88);b=Math.round(b*0.88);const h=x=>x.toString(16).padStart(2,'0');return '#'+h(r)+h(g)+h(b);}r=Math.round(r*0.18+255*0.82);g=Math.round(g*0.18+255*0.82);b=Math.round(b*0.18+255*0.82);const h=x=>x.toString(16).padStart(2,'0');return '#'+h(r)+h(g)+h(b);}
+function softColor(hex){const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;const L=0.2126*r/255+0.7152*g/255+0.0722*b/255;if(L>0.80){r=Math.round(r*0.88);g=Math.round(g*0.88);b=Math.round(b*0.88);}else{r=Math.round(r*0.18+255*0.82);g=Math.round(g*0.18+255*0.82);b=Math.round(b*0.18+255*0.82);}const h=x=>x.toString(16).padStart(2,'0');return '#'+h(r)+h(g)+h(b);}
 function strongColor(hex){const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;const L=0.2126*r/255+0.7152*g/255+0.0722*b/255;if(L>0.55){r=Math.round(r*0.6);g=Math.round(g*0.6);b=Math.round(b*0.6);}const h=x=>x.toString(16).padStart(2,'0');return '#'+h(r)+h(g)+h(b);}
 function ink(hex){const n=parseInt(hex.slice(1),16);const r=(n>>16)/255,g=((n>>8)&255)/255,b=(n&255)/255;const L=0.2126*r+0.7152*g+0.0722*b;return L>0.6?'#1A1A1A':'#fff';}
 function applyFs(){const v=(D._meta&&D._meta.fontSize)||15;document.documentElement.style.setProperty('--fs',v+'px');const r=$('#fsRange');if(r)r.value=v;const t=$('#fsVal');if(t)t.textContent=v+'px';}
@@ -3953,71 +3986,58 @@ function applyFont(){
 }
 function setFont(id){if(!D._meta)D._meta={};D._meta.fontFamily=id;save();applyFont();renderFontChips();}
 function renderFontChips(){const cur=(D._meta&&D._meta.fontFamily)||'';const box=$('#fontChips');if(!box)return;box.innerHTML=FONT_OPTS.map(o=>{const f=FONT_FILES[o.id];let tag='';if(f){const st=_fontState[f.fam];tag=st==='ok'?'':(st==='loading'?`<span style="opacity:.55;font-size:calc(var(--fs)*0.7)"> 下载中…</span>`:`<span style="opacity:.55;font-size:calc(var(--fs)*0.7)"> ${f.mb}MB</span>`);}return `<button class="btn ${o.id===cur?'primary':'ghost'} sm" style="font-family:${o.stack}" onclick="setFont('${o.id}')">${o.name}${tag}</button>`;}).join('');}
-function openSkin(){
-  const isDual=(D._meta&&D._meta.currentTheme)==='dual';
-  skinMode=isDual?'dual':'single';
-  const single=$('#skinSingle'), dual=$('#skinDual');
-  if(single)single.style.display=isDual?'none':'';
-  if(dual)dual.style.display=isDual?'':'none';
-  document.querySelectorAll('#skinMode button').forEach(function(b){b.classList.toggle('on',b.dataset.mode===(isDual?'dual':'single'));});
-  renderSkinGrid();renderSeasonCards();syncFsUI();syncFwUI();renderFontChips();
-  if(isDual){ bcSyncFromSaved(); bcUpdate(); }
-  $('#skinModal').classList.add('show');$('#skinOverlay').classList.add('show');
-}
+function openSkin(){renderSkinGrid();renderSeasonCards();syncFsUI();syncFwUI();renderFontChips();$('#skinModal').classList.add('show');$('#skinOverlay').classList.add('show');}
 function closeSkin(){$('#skinModal').classList.remove('show');$('#skinOverlay').classList.remove('show');}
 function renderSeasonCards(){
   const cur=D._meta.currentTheme;
   const cards=[[ 'spring','春·嫩绿','#7E9A7E'],['summer','夏·天蓝','#7B9DBD'],['autumn','秋·暖橙','#C49A6C'],['winter','冬·霜蓝','#8E9BAC']];
   $('#seasonCards').innerHTML=cards.map(c=>`<div class="season-card ${cur===c[0]?'sel':''}" style="background:${c[2]};color:${ink(c[2])}" onclick="setTheme('${c[0]}')">${c[1]}</div>`).join('')+`<div class="season-card ${cur==='default'?'sel':''}" style="background:#97A6B2;color:${ink('#97A6B2')}" onclick="setTheme('default')">默认·霜色</div>`;
 }
-let skinCat='all', skinMode='single';
-function setSkinMode(m){
-  skinMode=m;
-  const single=$('#skinSingle'), dual=$('#skinDual');
-  if(single)single.style.display=(m==='single')?'':'none';
-  if(dual)dual.style.display=(m==='dual')?'':'none';
-  document.querySelectorAll('#skinMode button').forEach(function(b){b.classList.toggle('on',b.dataset.mode===m);});
-  if(m==='dual'){ bcSyncFromSaved(); bcUpdate(); }
-  else renderSkinGrid();
-}
-function skinTab(n,lbl,cnt){return '<span class="skin-tab'+(skinCat===n?' on':'')+'" onclick="setSkinCat(\''+n+'\')">'+lbl+'<span class="cnt">'+cnt+'</span></span>';}
+let skinCat='all';
 function renderSkinGrid(){
   const q=($('#skinSearch').value||'').trim();
   const cur=getAccent();
-  let html='<div style="display:flex;flex-wrap:wrap;margin-bottom:6px">';
-  const allCount=SKIN_CATS.reduce(function(a,c){return a+c.colors.length;},0);
-  html+=skinTab('all','全部',allCount);
-  SKIN_CATS.forEach(function(c){ html+=skinTab(c.name,c.name,c.colors.length); });
+  let html='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+  ['all'].concat(SKIN_CATS.map(c=>c.name)).forEach(function(n){
+    const on=(skinCat===n);
+    const lbl=(n==='all'?'全部':n);
+    const bg=on?'var(--accent)':'var(--tint)';
+    const fg=on?'var(--on-accent)':'var(--accent)';
+    html+='<button style="padding:4px 11px;border:1px solid var(--border);border-radius:8px;background:'+bg+';color:'+fg+';cursor:pointer;font-size:12px" onclick="setSkinCat(\''+n+'\')">'+lbl+'</button>';
+  });
   html+='</div>';
   SKIN_CATS.forEach(function(c){
     if(skinCat!=='all'&&skinCat!==c.name)return;
-    const items=c.colors.filter(function(s){
-      if(q==='新')return s[2]===1;
-      if(q==='浅')return s[2]===2;
-      if(q==='日+')return s[3]==='日+';
-      if(!q)return true;
-      return s[0].indexOf(q)>=0;
+    if(q&&!c.colors.some(function(s){return s[0].includes(q);}))return;
+    html+='<div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:var(--muted);margin:4px 0 8px">'+c.name+'</div><div style="display:flex;flex-wrap:wrap;gap:8px">';
+    c.colors.filter(function(s){return !q||s[0].includes(q);}).forEach(function(s){
+      const isCur=cur.toLowerCase()===s[1].toLowerCase();
+      const t=softColor(s[1]); const so=strongColor(s[1]);
+      const disp=s[0];
+      html+='<div class="swatch '+(isCur?'sel':'')+'" style="background:'+t+';border-top:5px solid '+s[1]+';color:'+so+';font-size:12px;line-height:1.15;text-align:center;min-height:46px;display:flex;flex-direction:column;justify-content:center;cursor:pointer" onclick="setCustom(\''+s[1]+'\',\''+s[0]+'\')" onmouseover="previewSkin(\''+s[1]+'\',\''+s[0]+'\')" title="'+s[0]+'">'+disp+'</div>';
     });
-    if(!items.length)return;
-    html+='<div style="margin:10px 0 4px;font-size:13px;font-weight:700;color:var(--muted)">'+c.name+' <span style="font-weight:400;font-size:11px;opacity:.7">'+items.length+' 色</span></div><div class="skin-grid">';
-    items.forEach(function(s){
-      const name=s[0],hex=s[1],flag=s[2],tag=s[3];
-      const t=softColor(hex), a=hex, sc=strongColor(hex);
-      const isCur=cur.toLowerCase()===hex.toLowerCase();
-      const selc=isCur?a:'#97A6B2';
-      const badge=tag==='日+'?'<span class="badge" style="color:#9b59b6">日+</span>':(flag===2?'<span class="badge" style="color:#2e7d32">浅</span>':(flag===1?'<span class="badge" style="color:#c0392b">新</span>':''));
-      html+='<div class="skin-tile'+(isCur?' sel':'')+'" style="background:'+t+';--selc:'+selc+'" onclick="setCustom(\''+hex+'\',\''+name+'\')">'
-        +'<div class="bar" style="background:'+a+'"></div>'
-        +'<div class="nm" style="color:'+sc+'">'+name+'</div>'
-        +'<div class="hex" style="color:'+sc+'">'+hex+'</div>'
-        +(isCur?'<div class="chk" style="background:'+a+';color:'+ink(hex)+'">✓</div>':'')
-        +badge+'</div>';
-    });
-    html+='</div>';
+    html+='</div></div>';
   });
   $('#skinGrid').innerHTML=html;
 }
 function setSkinCat(n){skinCat=n;renderSkinGrid();}
+function previewSkin(hex,name){
+  const a=hex,t=softColor(hex),s=strongColor(hex);
+  const card=document.getElementById('skinPreview'); if(!card)return;
+  card.style.background=t; card.style.color=s;
+  const set=function(id,p,v){const el=document.getElementById(id);if(el)el.style[p]=v;};
+  set('pv_nav','background',a); set('pv_nav','color',ink(hex));
+  set('pv_btn','background',a); set('pv_btn','color',ink(hex));
+  set('pv_btn2','background',t); set('pv_btn2','color',a); set('pv_btn2','borderColor',a);
+  set('pv_chip','background',a); set('pv_chip','color',ink(hex));
+  set('pv_progi','background',a);
+  set('pv_st','color',s);
+  set('pv_acc','background',a); set('pv_tint','background',t); set('pv_soft','background',s);
+  const ta=document.getElementById('pv_tacc'); if(ta)ta.textContent=a;
+  const tt=document.getElementById('pv_ttint'); if(tt)tt.textContent=t;
+  const ts=document.getElementById('pv_tsoft'); if(ts)ts.textContent=s;
+  const nm=document.getElementById('pv_name'); if(nm)nm.textContent=name+'  '+a;
+}
 function getAccent(){const st=getComputedStyle(document.body).getPropertyValue('--accent').trim();return st;}
 function setTheme(t){D._meta.currentTheme=t;applyTheme(t);save();renderSeasonCards();renderSkinGrid();renderNav();if(typeof renderModule==='function')renderModule();}
 function setCustom(hex,name){D._meta.currentTheme='custom';applyCustom(hex);D._meta.customColor=hex;save();renderSeasonCards();renderSkinGrid();renderNav();if(typeof renderModule==='function')renderModule();toast('已切换：'+name);}
@@ -4039,105 +4059,23 @@ function setPalette(accent,tint,soft){
  const meta=document.querySelector('meta[name=theme-color]');if(meta)meta.content=accent;
 }
 function applyTheme(t){
- if(t==='dual'&&D._meta&&D._meta.dual){applyDual(D._meta.dual.a,D._meta.dual.b);return;}
  document.body.dataset.theme=t==='custom'?'custom':t;
  if(t==='custom'){setPalette(D._meta.customColor||'#6B7A8A');return;}
  const p=THEME_PALETTE[t]||THEME_PALETTE.default;
  setPalette(p.accent,p.tint,p.soft);
 }
 function applyCustom(hex){document.body.dataset.theme='custom';setPalette(hex);}
-/* v66 双色：A=主色(交互) → --accent/--accent-soft；B=辅色(氛围) → --tint(浅底)。大面积底用 B 浅底，A 只用在交互处。 */
-function applyDual(a,b){
- document.body.dataset.theme='dual';
- setPalette(a, softColor(b), strongColor(a));
-}
-/* ============ 双色搭配（v66） ============ */
-let bcA='#4F7365', bcB='#97A6B2';
-function bcSyncFromSaved(){ if(D&&D._meta&&D._meta.dual){ bcA=D._meta.dual.a||bcA; bcB=D._meta.dual.b||bcB; } }
-function bcSet(slot,hex){ hex=(hex||'').trim(); if(hex[0]!=='#')hex='#'+hex; if(!/^#[0-9a-fA-F]{6}$/.test(hex))return; if(slot==='A'){bcA=hex;const ci=$('#colA');if(ci)ci.value=hex;}else{bcB=hex;const ci=$('#colB');if(ci)ci.value=hex;} const ht=$('#hex'+slot);if(ht)ht.value=hex; bcUpdate(); }
-function bcHex(slot){ const inp=$('#hex'+slot); if(inp)bcSet(slot,inp.value); }
-function bcUpdate(){
-  const a=bcA,b=bcB,at=softColor(a),bt=softColor(b),asC=strongColor(a),bs=strongColor(b);
-  const d=$('#bcDemo'); if(d){d.style.background=bt;d.style.color=asC;}
-  const nav=$('#bc_nav'); if(nav){nav.style.background='linear-gradient(135deg,'+a+','+b+')';nav.style.color='#fff';}
-  const btn=$('#bc_btn'); if(btn){btn.style.background=a;btn.style.color=ink(a);}
-  const btn2=$('#bc_btn2'); if(btn2){btn2.style.background=bt;btn2.style.color=b;btn2.style.border='1px solid '+b;}
-  const chip=$('#bc_chip'); if(chip){chip.style.background=b;chip.style.color=ink(b);chip.style.border='none';}
-  const prog=$('#bc_prog'); if(prog){prog.style.background=bt;} const progi=$('#bc_progi'); if(progi){progi.style.background=a;}
-  const txt=$('#bc_txt'); if(txt){txt.style.color=asC;}
-  const surf=$('#bc_surface'); if(surf){surf.style.background=bt;}
-  const st=$('#bc_st'); if(st){st.style.color=b;}
-  const sb=$('#bc_sb'); if(sb){sb.style.color=bs;}
-  const ca=$('#bc_ca'); if(ca){ca.style.background=a;} const ta=$('#bc_ta'); if(ta){ta.textContent=a;}
-  const cb=$('#bc_cb'); if(cb){cb.style.background=b;} const tb=$('#bc_tb'); if(tb){tb.textContent=b;}
-  const ct=$('#bc_ct'); if(ct){ct.style.background=bt;} const tt=$('#bc_tt'); if(tt){tt.textContent=bt;}
-  const cur=$('#bcCur'); if(cur){ const on=D&&D._meta&&D._meta.currentTheme==='dual'; cur.textContent=on?('已启用：A '+bcA+' · B '+bcB):'尚未启用（点下方按钮保存）'; cur.style.color=on?'#2e7d32':''; }
-}
-/* 从图片提取双色：仅读取像素、算出最夺目的主色A 与 最柔和的次色B，只存这两个 hex，原图不保存 → 不占手机/平板本地空间 */
-function bcExtractFile(input){
-  const f=input.files&&input.files[0]; if(!f)return;
-  const reader=new FileReader();
-  reader.onload=function(){
-    const img=new Image();
-    img.onload=function(){
-      try{
-        const W=64,H=Math.max(1,Math.round(64*img.height/img.width));
-        const c=document.createElement('canvas'); c.width=W; c.height=H;
-        const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,W,H);
-        const d=ctx.getImageData(0,0,W,H).data;
-        const pts=[];
-        for(let i=0;i<d.length;i+=4){ const r=d[i],g=d[i+1],b=d[i+2],al=d[i+3]; if(al<125)continue; const L=0.2126*r+0.7152*g+0.0722*b; if(L>245||L<12)continue; pts.push([r,g,b]); }
-        const cols=quantize2(pts);
-        if(cols[0])bcSet('A',cols[0]); if(cols[1])bcSet('B',cols[1]);
-        toast('已从图片提取双色');
-      }catch(e){ toast('图片解析失败：'+(e&&e.message||e)); }
-      input.value='';
-    };
-    img.onerror=function(){ toast('图片加载失败'); input.value=''; };
-    img.src=reader.result;
-  };
-  reader.onerror=function(){ toast('读取图片失败'); input.value=''; };
-  reader.readAsDataURL(f);
-}
-function _dist2(p,q){const dr=p[0]-q[0],dg=p[1]-q[1],db=p[2]-q[2];return dr*dr+dg*dg+db*db;}
-function _sat(rgb){const r=rgb[0]/255,g=rgb[1]/255,b=rgb[2]/255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);return mx===0?0:(mx-mn)/mx;}
-/* 2-means 量化：把像素聚成两类，取饱和度更高者为 A(主色)、更低者为 B(辅色/底色) */
-function quantize2(pts){
-  if(!pts.length)return [null,null];
-  let a=pts[0],b=pts[Math.floor(pts.length/2)]||pts[0];
-  for(let it=0;it<8;it++){
-    const ca=[0,0,0],cb=[0,0,0];let na=0,nb=0;
-    for(const p of pts){ if(_dist2(p,a)<=_dist2(p,b)){ca[0]+=p[0];ca[1]+=p[1];ca[2]+=p[2];na++;}else{cb[0]+=p[0];cb[1]+=p[1];cb[2]+=p[2];nb++;} }
-    if(na){a=[Math.round(ca[0]/na),Math.round(ca[1]/na),Math.round(ca[2]/na)];}
-    if(nb){b=[Math.round(cb[0]/nb),Math.round(cb[1]/nb),Math.round(cb[2]/nb)];}
-  }
-  const A=_sat(a)>=_sat(b)?a:b, B=_sat(a)>=_sat(b)?b:a;
-  const h=x=>x.toString(16).padStart(2,'0');
-  const hex=x=>'#'+h(x[0])+h(x[1])+h(x[2]);
-  return [hex(A),hex(B)];
-}
-function bcSave(){
-  if(!D._meta)D._meta={};
-  D._meta.dual={a:bcA,b:bcB};
-  D._meta.currentTheme='dual';
-  save(); applyDual(bcA,bcB);
-  renderSeasonCards(); renderSkinGrid(); renderNav();
-  if(typeof renderModule==='function')renderModule();
-  bcUpdate();
-  toast('已保存双色皮肤：A '+bcA+' · B '+bcB);
-}
 /* 启动时按已存主题恢复整套调色板（修复：以前只设 dataset.theme，刷新后点缀色回退成雾霾蓝） */
 function autoSeason(){const m=new Date().getMonth()+1;return m>=3&&m<=5?'spring':m>=6&&m<=8?'summer':m>=9&&m<=11?'autumn':'winter';}
 function bootTheme(){
   const th=(D._meta&&D._meta.currentTheme)||'auto';
   if(th==='custom'&&D._meta.customColor){applyCustom(D._meta.customColor);return;}
-  if(th==='dual'&&D._meta.dual){applyDual(D._meta.dual.a,D._meta.dual.b);return;}
   if(THEME_PALETTE[th]){applyTheme(th);return;}
   applyTheme(autoSeason());
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v66';
+const APP_VER='v67';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
