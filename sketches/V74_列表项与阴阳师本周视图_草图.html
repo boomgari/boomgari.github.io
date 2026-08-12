@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V74 草图 · 列表项通用布局 &amp; 阴阳师本周视图</title>
+<style>
+  :root{--accent:#6B9B8F;--tint:#E8F0EE;--bg:#F6F7F8;--card:#fff;--border:#E6E8EB;--muted:#888;--text:#1A1A1A;--fs:14.5px;}
+  *{box-sizing:border-box} body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);font-size:var(--fs);line-height:1.55;padding:16px}
+  .wrap{max-width:440px;margin:0 auto}
+  h1{font-size:18px;margin:0 0 4px} .sub{color:var(--muted);font-size:13px;margin-bottom:16px;line-height:1.6}
+  .phone{width:100%;max-width:393px;margin:0 auto 18px;background:var(--bg);border:8px solid #222;border-radius:34px;overflow:hidden;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.15)}
+  .label{background:#2a2a2a;color:#fff;font-size:12px;padding:6px 12px;margin:-12px -12px 12px -12px}
+  .card{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+  .card-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .card-h h2{font-size:calc(var(--fs)*1.05);margin:0;flex:1}
+  .card-h .arrow{font-size:12px;color:var(--muted);cursor:pointer;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+  .drag{color:#B4BEC7;cursor:grab;font-size:16px;line-height:1;padding:0;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:28px}
+  .del{background:none;border:none;color:#C25B5B;font-size:18px;line-height:1;cursor:pointer;padding:0 4px}
+  .tag{display:inline-flex;align-items:center;font-size:calc(var(--fs)*0.78);padding:2px 8px;border-radius:20px;background:var(--tint);color:var(--accent);font-weight:600;white-space:nowrap}
+  .tag.alt{background:#F0EAE2;color:#B07A3C}
+  .tag.done{background:#E3EFE7;color:#3C8C5A}
+  .hint{font-size:calc(var(--fs)*0.82);color:var(--muted);white-space:nowrap}
+  .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .item{display:flex;align-items:flex-start;gap:8px;padding:9px 10px;border:0.5px solid var(--border);border-radius:9px;margin-bottom:7px;background:#fff}
+  .item .body{flex:1;min-width:0}
+  .ttitle{font-size:calc(var(--fs)*0.96);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sub{font-size:calc(var(--fs)*0.84);color:var(--muted);margin-top:3px}
+  .meta-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px}
+  .meta-line .spacer{flex:1}
+  .btn-ghost{display:inline-flex;align-items:center;gap:3px;background:#fff;border:0.5px solid var(--border);color:var(--text);border-radius:7px;padding:4px 8px;font-size:calc(var(--fs)*0.82);font-weight:500}
+  .note-btn{background:var(--tint);border:0.5px solid var(--border);color:var(--text);border-radius:7px;padding:4px 8px;font-size:calc(var(--fs)*0.82)}
+  .bad{color:#C25B5B;font-size:12px;background:#FBEDED;padding:2px 6px;border-radius:4px;margin-left:6px}
+  .ok{color:#3C8C5A;font-size:12px;background:#E3EFE7;padding:2px 6px;border-radius:4px;margin-left:6px}
+  .vs{display:flex;gap:14px;flex-wrap:wrap}
+  .vs>div{flex:1;min-width:300px}
+  .old .item{flex-wrap:wrap}
+  .old .meta-line{gap:4px}
+  .old .tag,.old .hint{white-space:normal}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>V74 草图 ① · 列表项通用布局 &amp; 阴阳师本周视图</h1>
+  <div class="sub">核心原则：每个独立文段单独成行；标签/时间/按钮内部不折行；一行放不下时整体换到下一行，而不是把单个标签拆碎。折叠区让信息多时也能只看想看的部分。</div>
+
+  <h2 style="font-size:15px;margin:16px 0 8px">A. 活动卡片头部：现在 vs 建议</h2>
+  <div class="vs">
+    <div class="phone">
+      <div class="label">❌ 现在（文字被挤成多行）</div>
+      <div class="card old">
+        <div class="row" style="flex-wrap:nowrap">
+          <span class="drag">≡</span><span class="drag" style="flex-direction:column;font-size:10px">▲<br>▼</span>
+          <b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">联动活动</b>
+          <button class="del">×</button>
+        </div>
+        <div class="meta-line">
+          <span class="tag alt">中型活动</span>
+          <span class="hint">2026-08-05 09:00 ~ 2026-08-18 23:59</span>
+          <span class="tag">2 个</span>
+          <button class="btn-ghost">今日完成</button>
+          <button class="note-btn">📝</button>
+        </div>
+        <div class="bad">问题：标签、时间、个数被挤成三行</div>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="label">✅ 建议（标题一行 + 元信息一行）</div>
+      <div class="card">
+        <div class="row" style="flex-wrap:nowrap;gap:8px">
+          <span class="drag">≡</span>
+          <b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">联动活动</b>
+          <button class="del">×</button>
+        </div>
+        <div class="meta-line">
+          <span class="tag alt">中型活动</span>
+          <span class="tag">2 个</span>
+          <span class="spacer"></span>
+          <span class="hint">08-05 09:00 ~ 08-18</span>
+          <button class="btn-ghost">今日完成</button>
+          <button class="note-btn">📝</button>
+        </div>
+        <div class="ok">改善：标题独占一行；标签/时间/按钮内部不折行，整体太长时整行下移</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="font-size:15px;margin:20px 0 8px">B. 阴阳师「本周视图」：建议增加折叠</h2>
+  <div class="phone">
+    <div class="label">✅ 建议布局（可折叠日常/周常/活动）</div>
+
+    <!-- 日常卡片（已折叠） -->
+    <div class="card">
+      <div class="card-h">
+        <span class="arrow">▶</span>
+        <h2>周三 日常</h2>
+        <span class="hint" style="margin-left:auto">5/7 完成</span>
+        <span class="drag">≡</span>
+      </div>
+      <div class="sub">已折叠：今日日常已完成，暂不展开</div>
+    </div>
+
+    <!-- 周常卡片（已折叠） -->
+    <div class="card">
+      <div class="card-h">
+        <span class="arrow">▶</span>
+        <h2>周常</h2>
+        <span class="hint" style="margin-left:auto">0 项待做</span>
+        <span class="drag">≡</span>
+      </div>
+      <div class="sub">已折叠：本周暂无进行中的周常</div>
+    </div>
+
+    <!-- 活动卡片（展开） -->
+    <div class="card">
+      <div class="card-h">
+        <span class="arrow" style="transform:rotate(90deg)">▶</span>
+        <h2>活动 <span class="hint" style="font-weight:400">2 个进行中</span></h2>
+        <span class="drag">≡</span>
+      </div>
+
+      <div class="item">
+        <span class="drag">≡</span>
+        <div class="body">
+          <div class="ttitle">神猪战纪</div>
+          <div class="meta-line">
+            <span class="tag">限时副本</span>
+            <span class="tag alt">御魂、皮肤</span>
+            <span class="tag">5</span>
+            <span class="spacer"></span>
+            <span class="hint">08-05 ~ 08-18</span>
+          </div>
+          <div class="meta-line" style="margin-top:7px">
+            <button class="btn-ghost">今日完成</button>
+            <button class="note-btn">📝</button>
+          </div>
+          <div class="sub" style="margin-top:6px">⏱ 时间 57% · 8/14 天 &nbsp;|&nbsp; ✅ 内容 0% · 0/3 项</div>
+          <div style="margin-top:6px;padding-left:18px">
+            <div class="meta-line"><input type="checkbox"> <span>十掌伏魔</span> <span class="hint">每天</span></div>
+            <div class="meta-line"><input type="checkbox"> <span>猪猪快跑</span> <span class="hint">每天</span></div>
+            <div class="meta-line"><input type="checkbox"> <span>食梦物语</span> <span class="hint">每天</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="item">
+        <span class="drag">≡</span>
+        <div class="body">
+          <div class="ttitle">限定活动</div>
+          <div class="meta-line">
+            <span class="tag done">已到期</span>
+            <span class="tag">限定活动</span>
+            <span class="tag">5</span>
+            <span class="spacer"></span>
+            <span class="hint">08-12 ~ 08-12</span>
+          </div>
+          <div class="meta-line" style="margin-top:7px">
+            <button class="btn-ghost">今日完成</button>
+            <button class="note-btn">📝</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint" style="margin-top:6px">拖拽分区标题右侧 ≡ 可调整「日常/周常/活动」顺序。</div>
+  </div>
+
+  <div class="card" style="margin-top:18px;background:#fff">
+    <h2 style="font-size:15px;margin:0 0 8px">文字描述（设计方向）</h2>
+    <ul style="padding-left:18px;margin:0;font-size:13px;line-height:1.8;color:#444">
+      <li><b>标题独占一行</b>：活动/周常/日常的名字不再和标签、时间混在同一行，避免名字还没超长，就被旁边元素挤下去。</li>
+      <li><b>元信息整体换行</b>：类型标签、时间、个数、操作按钮放在第二行；内部每个元素 <code>white-space:nowrap</code>，保证单个标签不碎开；整行放不下时，整组一起换到第三行。</li>
+      <li><b>折叠区记忆状态</b>：日常/周常/活动三个大卡默认按内容智能展开（有未完成项就展开，全完成就收起），也可手动 ▶/▼ 切换，折叠状态记在本地，刷新保留。</li>
+      <li><b>移除上下箭头</b>：排序只用左侧拖拽柄 ≡，不再显示 ▲▼，减少每个条目的横向宽度。</li>
+      <li><b>适配 14.5px 字号</b>：标签、hint、按钮字号统一用 <code>calc(var(--fs)*0.78~0.85)</code>，在 393px 视口下仍保持充足横向空间。</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>
