@@ -1,0 +1,109 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>V74 草图③ · 图标与对号线条化</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f4f5f7;color:#1f2329;padding:18px}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-size:19px;margin:0 0 4px}
+.sub{color:#7a8089;font-size:13px;margin-bottom:14px;line-height:1.5}
+.note{background:#fff;border:1px solid #e6e8eb;border-left:4px solid #97A6B2;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#444;margin-bottom:16px;line-height:1.8}
+.note b{color:#2b3038}
+.card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:16px}
+.card h2{font-size:14px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.card .desc{font-size:12.5px;color:#7a8089;line-height:1.6;margin:0 0 12px}
+.row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.col{flex:1;min-width:300px}
+.col h3{font-size:12px;margin:0 0 10px;color:#7a8089;font-weight:700;letter-spacing:.5px}
+.lbl{font-size:11px;color:#aab;margin:14px 0 6px}
+/* 现在 */
+.now .chkbox{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#97A6B2;color:#fff;font-size:15px;font-weight:700;margin:4px}
+.now .ic{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;background:#eef1f4;color:#5a6472;font-size:18px;margin:4px}
+/* 建议 */
+.fix .chkbox{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border:2px solid #97A6B2;border-radius:6px;color:#97A6B2;background:#fff;margin:4px}
+.fix .ic{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;color:#5a6472;margin:4px}
+.fix .ic svg{display:block}
+.tag{display:inline-block;font-size:11px;color:#999;background:#f0f1f3;border-radius:5px;padding:1px 7px;margin:2px}
+demo{display:block}
+.foot{font-size:11.5px;color:#888;line-height:1.7;margin-top:8px}
+</style></head>
+<body><div class="wrap">
+<h1>V74 草图③ · 图标与对号「线条化 / 规整化」</h1>
+<div class="sub">目标：去掉卡通圆润风与弧线对号，统一为<b>细线条几何图标</b> + <b>直线几何对号</b>；并把功能键做小、做紧凑，给文字让出空间。</div>
+<div class="note">
+<b>本页只出草图与文字描述，不部署。</b><br>
+改动范围（精确对应你提的要求）：<br>
+① <b>对号</b>：当前是字体字形 <b>✓ / √</b>（随字体带弧度，你截图里那道弯就是它）→ 改为<b>内联 SVG 直线对号</b>（stroke-linecap=square、linejoin=miter，无弧线，完全贴合你给的参考图）。用于：勾选框、皮肤"当前色"角标、各处完成态。<br>
+② <b>功能键图标</b>：当前多为 emoji 或大号圆角方块（📝✎🗑＋🔔等，偏卡通）→ 改为<b>统一描边线条图标</b>（笔记=对话泡描边、编辑=铅笔描边、删除=垃圾桶描边、添加=加号、铃铛=通知描边），尺寸从 ~34px 缩到 ~28–30px，颜色用中性灰， hover 才显主色，平时不抢戏。<br>
+③ <b>上下调整键 ▲▼（gDailyMv / gWeeklyMv / gActMv）</b>：直接<b>删除</b>，排序只保留三道杠拖拽手柄 ≡（你确认它好用）。本页仅标注"移除"，实际布局见草图①②。<br>
+④ <b>拖拽手柄 ≡</b>：保留（已是线条风），仅把点击区收到 28–30px，避免过宽。
+</div>
+
+<!-- 对号对比 -->
+<div class="card">
+  <h2>① 对号：弧线字形 → 直线几何 SVG</h2>
+  <p class="desc">左"现在"是字体字形的弯钩；右"建议"是纯 SVG 两直线段、方头接口，与你的参考图一致，跨设备字体都不会变弯。</p>
+  <div class="row">
+    <div class="col now">
+      <h3>现在 · 字体字形（带弧度）</h3>
+      <span class="lbl">勾选框内</span>
+      <div><span class="chkbox">✓</span><span class="chkbox">√</span></div>
+      <span class="lbl">皮肤当前色角标</span>
+      <div><span class="chkbox">✓</span></div>
+    </div>
+    <div class="col fix">
+      <h3>建议 · 直线几何 SVG（无弧）</h3>
+      <span class="lbl">勾选框内（未勾=描边方框）</span>
+      <div>
+        <span class="chkbox"></span>
+        <span class="chkbox"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="#97A6B2" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter"/></svg></span>
+      </div>
+      <span class="lbl">皮肤当前色角标</span>
+      <div><span class="chkbox" style="background:#97A6B2;border:none;color:#fff"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="square" stroke-linejoin="miter"/></svg></span></div>
+    </div>
+  </div>
+  <div class="foot">实现要点：画一个全局 .chk-svg 类（两条 line 或一条 path），所有"完成/当前"态复用同一 SVG，颜色跟随主题主色；字形 ✓/√ 不再出现。</div>
+</div>
+
+<!-- 功能键图标对比 -->
+<div class="card">
+  <h2>② 功能键：圆角 emoji → 细线条几何图标（更小更紧凑）</h2>
+  <p class="desc">左"现在"为大号圆角块 + emoji/字符；右"建议"为统一描边线条图标，尺寸缩小约 15%，中性灰、不抢文字空间。</p>
+  <div class="row">
+    <div class="col now">
+      <h3>现在 · 圆角大块（~34px，emoji/字符）</h3>
+      <span class="ic">✎</span><span class="ic">🗑</span><span class="ic">＋</span><span class="ic">🔔</span><span class="ic">📝</span>
+      <div class="foot">备注：emoji 自带彩色卡通描边，正是你想避开的风。</div>
+    </div>
+    <div class="col fix">
+      <h3>建议 · 线条图标（~30px，中性灰描边）</h3>
+      <span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16 L4 20 L8 20 L18 10 L14 6 Z"/><path d="M13 7 L17 11"/></svg></span>
+      <span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7 L20 7"/><path d="M6 7 L6 20 L18 20 L18 7"/><path d="M9 7 L9 4 L15 4 L15 7"/></svg></span>
+      <span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5 L12 19"/><path d="M5 12 L19 12"/></svg></span>
+      <span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9 L6 18 L18 18 L18 9 Z"/><path d="M9 9 L9 6 L15 6 L15 9"/><path d="M10 13 L14 13"/></svg></span>
+      <span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5 L19 19"/><path d="M5 11 L5 5 L11 5"/><path d="M19 13 L19 19 L13 19"/></svg></span>
+      <div class="foot">左→右依次为：编辑(铅笔) / 删除(垃圾桶) / 添加(加号) / 通知(铃铛) / 笔记(对话泡)。统一 1.8 描边、圆角仅用于"接头"不用于"整体造型"，视觉干净。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 删除上下键 + 手柄 -->
+<div class="card">
+  <h2>③ 排序键：删除 ▲▼，仅留 ≡ 手柄</h2>
+  <p class="desc">▲▼ 上下调整键与拖拽手柄功能重叠且占横向宽度 → 移除；≡ 手柄保留并收窄到 ~28px。</p>
+  <div class="row">
+    <div class="col now">
+      <h3>现在 · 手柄 + 上下键（占两格宽）</h3>
+      <div style="display:flex;gap:8px;align-items:center"><span class="ic">≡</span><span class="ic" style="font-size:13px">▲</span><span class="ic" style="font-size:13px">▼</span><span style="font-size:12px;color:#888">（每行多占 ~70px）</span></div>
+    </div>
+    <div class="col fix">
+      <h3>建议 · 仅手柄（一行更窄）</h3>
+      <div style="display:flex;gap:8px;align-items:center"><span class="ic" style="width:28px;height:28px;font-size:15px">≡</span><span style="font-size:12px;color:#888">（排序全靠拖拽，宽度省回给文字）</span></div>
+    </div>
+  </div>
+  <div class="foot">涉及函数：gDailyMv / gWeeklyMv / gActMv / mvBtns 相关渲染分支直接移除；列表项 flex 行去掉这两个按钮位，文字列 flex:1 自动吃到 freed 宽度。</div>
+</div>
+
+<div class="note" style="border-left-color:#B5A642">
+<b>落地后跨设备一致性：</b>SVG 线条图标与 SVG 直线对号是矢量、不依赖系统字体，荣耀 Magic5 Pro（手机）、MagicPad 3 Pro（平板）、拯救者（电脑）三端渲染完全一致，不会再出现"某端字体把对号画弯"的情况。
+</div>
+
+</div></body></html>
