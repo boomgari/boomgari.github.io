@@ -1,0 +1,199 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>V74 草图④ · 换肤界面还原 v66.8</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f4f5f7;color:#1f2329;padding:18px}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-size:19px;margin:0 0 4px} .sub{color:#7a8089;font-size:13px;margin-bottom:14px;line-height:1.5}
+.note{background:#fff;border:1px solid #e6e8eb;border-left:4px solid #B5A642;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#444;margin-bottom:16px;line-height:1.8}
+.note b{color:#2b3038}
+.bad{background:#fff;border:1px solid #e6e8eb;border-left:4px solid #c0392b;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#444;margin-bottom:16px;line-height:1.8}
+.bad b{color:#a32218}
+.hero{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:16px}
+.hero h2{font-size:13px;margin:0 0 10px;color:#7a8089;font-weight:700}
+.demo{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 18px;border:none;border-radius:9px;font-size:13px;cursor:pointer}
+.btn2{display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 16px;border-radius:9px;font-size:13px;cursor:pointer}
+.chip{display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:13px;font-size:12px;font-weight:600}
+.nav{display:inline-flex;align-items:center;height:30px;padding:0 14px;border-radius:8px;font-size:13px;font-weight:600}
+.prog{width:160px;height:8px;border-radius:5px;overflow:hidden}
+.prog>i{display:block;height:100%;width:62%}
+.surface{border-radius:10px;padding:10px 12px;flex:1;min-width:220px;margin-top:6px}
+.st{font-size:13px;font-weight:700;margin-bottom:4px}
+.sb{font-size:12px;line-height:1.55}
+.codes{display:flex;gap:14px;font-size:12px;color:#666;flex-wrap:wrap;margin-top:8px}
+.codes span{display:inline-flex;align-items:center;gap:6px}
+.swatchmini{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.1)}
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.search{flex:1;min-width:180px;height:38px;border:1px solid #d8dbe0;border-radius:10px;padding:0 12px;font-size:13px;outline:none}
+.tabs{display:flex;gap:7px;flex-wrap:wrap}
+.tab{padding:6px 13px;border:1px solid #d8dbe0;border-radius:20px;background:#fff;font-size:12.5px;cursor:pointer;color:#555}
+.tab.on{background:#97A6B2;color:#fff;border-color:#97A6B2}
+.cat{margin-bottom:18px}
+.cat h3{font-size:13px;color:#7a8089;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.cat h3 .cnt{font-size:11px;color:#aab;font-weight:400}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px}
+.tile{position:relative;border:1.5px solid rgba(0,0,0,.08);border-radius:14px;padding:0;overflow:hidden;cursor:pointer;transition:transform .12s,box-shadow .12s;min-height:84px}
+.tile:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.tile .bar{height:7px;width:100%}
+.tile .nm{font-size:13px;font-weight:700;padding:8px 10px 0}
+.tile .hex{font-size:10.5px;opacity:.7;padding:1px 10px 9px}
+.tile.sel{box-shadow:0 0 0 3px var(--selc,#97A6B2)}
+.chk{position:absolute;bottom:7px;right:7px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.bc{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin:18px 0}
+.bc h2{font-size:14px;margin:0 0 6px}
+.bc .hint{font-size:12px;color:#7a8089;margin-bottom:12px;line-height:1.5}
+.bc-top{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-bottom:14px}
+.bc-slot{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#555}
+.bc-slot input[type=color]{width:54px;height:38px;border:1px solid #d8dbe0;border-radius:8px;cursor:pointer;background:none;padding:2px}
+.bc-slot input[type=text]{width:96px;height:34px;border:1px solid #d8dbe0;border-radius:8px;padding:0 8px;font-size:12px;outline:none}
+</style></head>
+<body><div class="wrap">
+<h1>V74 草图④ · 换肤界面还原为 v66.8「好看视图」</h1>
+<div class="sub">你要的"之前那版好看视图" = v66.8：顶部常驻<b>实时预览卡</b>（含招牌的「浅底表面」块）+ 五分类色板 + 双色搭配。下方是可交互还原稿，点色块即可联动预览。</div>
+
+<div class="bad">
+<b>v73 的回归点（已定位）：</b><br>
+代码里 <code>previewSkin()</code> 与色块 <code>onmouseover="previewSkin(...)"</code> 仍指向一个 <code>skinPreview</code> 预览卡和若干 <code>pv_*</code> 元素，但<b>当前弹窗 HTML 中根本没有这个预览卡</b>（skinModal 只剩 季节卡 + 色板 + 字体 + 双色）。于是悬停色块时 <code>previewSkin</code> 直接 no-op —— 你记忆里那张"点色块实时看上身"的好看预览，就是这样丢掉的。<br>
+<b>还原动作</b>：把 v66.8 的实时预览卡（含浅底表面块）重新接回 skinModal 顶部，并让 <code>previewSkin</code> / 悬停真正驱动它。色板与双色区 v73 已具备，无需大改。
+</div>
+
+<div class="note">
+<b>v66.8 预览卡的颜色分区（你要的"薄荷层次"）：</b><br>
+· <b>次按钮</b>：浅底(tint)填充 + 主色描边 + 主色文字（而非纯透明描边）；<br>
+· <b>标签</b>：实色(主色)填充 + 白字（实心标签，强化主色观感）；<br>
+· <b>浅底表面块</b>：大块主色浅底上放标题+正文，专门感受主色铺开后的"清爽感"——这是该视图的灵魂，必须回来。<br>
+· 双色搭配卡同步采用同分区（次按钮=B浅底、标签=B实色）。
+</div>
+
+<div class="hero" id="hero">
+  <h2>单色皮肤预览（点下方色块实时联动 · 还原 v66.8）</h2>
+  <div class="demo" id="demo">
+    <span class="nav" id="d_nav">导航项</span>
+    <button class="btn" id="d_btn">主按钮</button>
+    <button class="btn2" id="d_btn2">次按钮</button>
+    <span class="chip" id="d_chip">标签</span>
+    <span class="prog" id="d_prog"><i id="d_progi"></i></span>
+    <span style="font-size:12px" id="d_txt">这是一段正文文字示例</span>
+  </div>
+  <div class="surface" id="d_surface">
+    <div class="st" id="d_st">浅底表面</div>
+    <div class="sb" id="d_sb">这是一块铺在「主色浅底」上的正文区——薄荷/主色的清爽感主要来自这里，而非实心色块。v73 少了它，所以你觉得"不对味"。</div>
+  </div>
+  <div class="codes">
+    <span><i class="swatchmini" id="c_acc"></i>主色 <b id="t_acc"></b></span>
+    <span><i class="swatchmini" id="c_tint"></i>浅底 <b id="t_tint"></b></span>
+    <span><i class="swatchmini" id="c_soft"></i>强调 <b id="t_soft"></b></span>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input class="search" id="q" placeholder="搜索颜色名…" oninput="render()">
+  <div class="tabs" id="tabs"></div>
+</div>
+
+<div id="cats"></div>
+
+<!-- 双色搭配 -->
+<div class="bc">
+  <h2>双色搭配 · 灵感色 / 自选两色</h2>
+  <div class="hint">主色 A 用于按钮/交互，辅色 B 用于背景氛围。下方实时看双色上身（v73 已具备，本页仅展示其应处的位置与分区）。</div>
+  <div class="bc-top">
+    <div class="bc-slot"><span>主色 A（按钮/交互）</span><input type="color" id="colA" value="#4F7365" oninput="bcUpdate()"><input type="text" id="hexA" value="#4F7365" oninput="bcHex('A')"></div>
+    <div class="bc-slot"><span>辅色 B（氛围/底色）</span><input type="color" id="colB" value="#97A6B2" oninput="bcUpdate()"><input type="text" id="hexB" value="#97A6B2" oninput="bcHex('B')"></div>
+  </div>
+  <div class="demo" id="bcDemo">
+    <span class="nav" id="bc_nav">导航项</span>
+    <button class="btn" id="bc_btn">主按钮(A)</button>
+    <button class="btn2" id="bc_btn2">次按钮(B)</button>
+    <span class="chip" id="bc_chip">标签</span>
+    <span class="prog" id="bc_prog"><i id="bc_progi"></i></span>
+    <span style="font-size:12px" id="bc_txt">正文文字示例</span>
+  </div>
+  <div style="margin-top:8px"><div class="surface" id="bc_surface">
+    <div class="st" id="bc_st">浅底表面(B)</div>
+    <div class="sb" id="bc_sb">双色下，大面积底用 B 的浅底，主色 A 只用在交互处——既出彩又不刺眼。</div>
+  </div></div>
+  <div class="codes" style="margin-top:10px">
+    <span><i class="swatchmini" id="bc_ca"></i>A主色 <b id="bc_ta"></b></span>
+    <span><i class="swatchmini" id="bc_cb"></i>B辅色 <b id="bc_tb"></b></span>
+    <span><i class="swatchmini" id="bc_ct"></i>B浅底 <b id="bc_tt"></b></span>
+  </div>
+</div>
+
+<div class="note">
+<b>确认即还原：</b>本页即 v66.8 视图的交互稿。你确认后，我把这张预览卡 + 浅底表面块重新写进 skinModal 顶部、并接好 <code>previewSkin</code>/悬停联动；色板五分类与双色区保留 v73 现有实现（其颜色分区已符合上面对齐规则）。不改任何已存皮肤数据。
+</div>
+
+</div>
+<script>
+function softColor(hex){const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;const L=0.2126*r/255+0.7152*g/255+0.0722*b/255;if(L>0.80){r=Math.round(r*0.88);g=Math.round(g*0.88);b=Math.round(b*0.88);}else{r=Math.round(r*0.18+255*0.82);g=Math.round(g*0.18+255*0.82);b=Math.round(b*0.18+255*0.82);}const h=x=>x.toString(16).padStart(2,'0');return '#'+h(r)+h(g)+h(b);}
+function strongColor(hex){const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;const L=0.2126*r/255+0.7152*g/255+0.0722*b/255;if(L>0.55){r=Math.round(r*0.6);g=Math.round(g*0.6);b=Math.round(b*0.6);}const h=x=>x.toString(16).padStart(2,'0');return '#'+h(r)+h(g)+h(b);}
+function ink(hex){const n=parseInt(hex.slice(1),16);const r=n>>16,g=(n>>8)&255,b=n&255;const L=0.2126*r/255+0.7152*g/255+0.0722*b/255;return L>0.6?'#1A1A1A':'#FFFFFF';}
+const CATS=[
+ {name:'中国传统色', colors:[['黛绿','#4F7365'],['苍绿','#6B8A6B'],['墨绿','#38564A'],['霜色','#97A6B2'],['黎色','#8A7868'],['缥色','#7FA8B0'],['银朱','#B05A4A'],['豆绿','#8FA86B'],['退红','#B07A78'],['蟹壳青','#7C9A92'],['莺哥绿','#5C8A6E'],['藕色','#C8A0A8'],['琥珀','#B57A3C'],['松花绿','#2E4D34'],['铜绿','#549688'],['苔绿','#6B7B4A'],['苍翠','#3E6B4F']]},
+ {name:'日本传统色', colors:[['胡桃','#947A6D'],['群青','#2E4F6B'],['桜','#FEDFE1'],['山吹','#F8B862'],['藤色','#BBBCDE'],['利休茶','#A7A06B'],['桑','#96703D']]},
+ {name:'莫兰迪色', colors:[['灰粉','#C9B4B0'],['雾绿','#A9B5A0'],['雾蓝','#9FB0C0'],['藕灰','#B0A6B8'],['豆沙','#C2A8A0'],['蓝灰','#9AA7B0'],['米驼','#C7B9A8']]},
+ {name:'轻亮色', colors:[['海贝色','#FFF5EE'],['靛蓝100','#C5CAE9'],['薄荷蓝','#A2DBD0'],['雾青','#9DC3C6'],['暮青','#88AEB0'],['黛青','#6E9B9E'],['天蓝','#7FB5D0'],['晴蓝','#93B8CE']]},
+ {name:'复古色', colors:[['芥末黄','#FFDB58'],['焦橙','#CC5500'],['三文鱼红','#FA8072'],['矢车菊蓝','#6495ED'],['芥末绿','#B5A642'],['杏橙','#E08E45'],['复古绿','#4A7C59'],['复古卡其','#C3B091'],['复古棕','#8B5A2B']]}
+];
+let curCat='all', curHex='#97A6B2';
+function setCat(c){curCat=c;render();}
+function pick(hex,name){curHex=hex;updateHero(hex,name);render();}
+function updateHero(hex,name){
+  const a=hex,t=softColor(hex),s=strongColor(hex);
+  const d=document.getElementById('demo'); d.style.background=t; d.style.color=s;
+  document.getElementById('d_nav').style.background=a; document.getElementById('d_nav').style.color=ink(hex);
+  document.getElementById('d_btn').style.background=a; document.getElementById('d_btn').style.color=ink(hex);
+  document.getElementById('d_btn2').style.background=t; document.getElementById('d_btn2').style.color=a; document.getElementById('d_btn2').style.border='1px solid '+a;
+  document.getElementById('d_chip').style.background=a; document.getElementById('d_chip').style.color=ink(hex); document.getElementById('d_chip').style.border='none';
+  document.getElementById('d_prog').style.background=t; document.getElementById('d_progi').style.background=a;
+  document.getElementById('d_txt').style.color=s;
+  document.getElementById('d_surface').style.background=t; document.getElementById('d_st').style.color=a; document.getElementById('d_sb').style.color=s;
+  document.getElementById('c_acc').style.background=a; document.getElementById('t_acc').textContent=a;
+  document.getElementById('c_tint').style.background=t; document.getElementById('t_tint').textContent=t;
+  document.getElementById('c_soft').style.background=s; document.getElementById('t_soft').textContent=s;
+}
+function render(){
+  const q=(document.getElementById('q').value||'').trim();
+  let th='<span class="tab'+(curCat==='all'?' on':'')+'" onclick="setCat(\'all\')">全部</span>';
+  CATS.forEach(function(c){ th+='<span class="tab'+(curCat===c.name?' on':'')+'" onclick="setCat(\''+c.name+'\')">'+c.name+'</span>'; });
+  document.getElementById('tabs').innerHTML=th;
+  let html='';
+  CATS.forEach(function(c){
+    if(curCat!=='all'&&curCat!==c.name)return;
+    const items=c.colors.filter(function(s){return !q||s[0].includes(q);});
+    if(!items.length)return;
+    html+='<div class="cat"><h3>'+c.name+'<span class="cnt">'+items.length+' 色</span></h3><div class="grid">';
+    items.forEach(function(s){
+      const name=s[0],hex=s[1],t=softColor(hex),a=hex,sc=strongColor(hex);
+      const cur=(curHex&&curHex.toLowerCase()===hex.toLowerCase());
+      const selc=cur?a:'#97A6B2';
+      html+='<div class="tile'+(cur?' sel':'')+'" style="background:'+t+';--selc:'+selc+'" onclick="pick(\''+hex+'\',\''+name+'\')">'
+        +'<div class="bar" style="background:'+a+'"></div>'
+        +'<div class="nm" style="color:'+sc+'">'+name+'</div>'
+        +'<div class="hex" style="color:'+sc+'">'+hex+'</div>'
+        +(cur?'<div class="chk" style="background:'+a+';color:'+ink(hex)+'"><svg viewBox="0 0 24 24" width="12" height="12"><path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="'+ink(hex)+'" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter"/></svg></div>':'')
+        +'</div>';
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('cats').innerHTML=html;
+}
+function bcUpdate(){
+  const a=document.getElementById('colA').value,b=document.getElementById('colB').value;
+  const at=softColor(a),bt=softColor(b),asC=strongColor(a),bs=strongColor(b);
+  const d=document.getElementById('bcDemo'); d.style.background=bt; d.style.color=asC;
+  document.getElementById('bc_nav').style.background='linear-gradient(135deg,'+a+','+b+')'; document.getElementById('bc_nav').style.color='#fff';
+  document.getElementById('bc_btn').style.background=a; document.getElementById('bc_btn').style.color=ink(a);
+  document.getElementById('bc_btn2').style.background=bt; document.getElementById('bc_btn2').style.color=b; document.getElementById('bc_btn2').style.border='1px solid '+b;
+  document.getElementById('bc_chip').style.background=b; document.getElementById('bc_chip').style.color=ink(b); document.getElementById('bc_chip').style.border='none';
+  document.getElementById('bc_prog').style.background=bt; document.getElementById('bc_progi').style.background=a;
+  document.getElementById('bc_txt').style.color=asC;
+  document.getElementById('bc_surface').style.background=bt; document.getElementById('bc_st').style.color=b; document.getElementById('bc_sb').style.color=bs;
+  document.getElementById('bc_ca').style.background=a; document.getElementById('bc_ta').textContent=a;
+  document.getElementById('bc_cb').style.background=b; document.getElementById('bc_tb').textContent=b;
+  document.getElementById('bc_ct').style.background=bt; document.getElementById('bc_tt').textContent=bt;
+}
+function bcHex(slot){const inp=document.getElementById('hex'+slot);let v=inp.value.trim();if(v[0]!=='#')v='#'+v;if(/^#[0-9a-fA-F]{6}$/.test(v)){document.getElementById('col'+slot).value=v.toLowerCase();bcUpdate();}}
+render(); updateHero('#97A6B2','霜色'); bcUpdate();
+</script>
+</body></html>
