@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V74 草图 · 阴阳师设置界面</title>
+<style>
+  :root{--accent:#6B9B8F;--tint:#E8F0EE;--bg:#F6F7F8;--card:#fff;--border:#E6E8EB;--muted:#888;--text:#1A1A1A;--fs:14.5px;}
+  *{box-sizing:border-box} body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);font-size:var(--fs);line-height:1.55;padding:16px}
+  .wrap{max-width:440px;margin:0 auto}
+  h1{font-size:18px;margin:0 0 4px} .sub{color:var(--muted);font-size:13px;margin-bottom:16px;line-height:1.6}
+  .phone{width:100%;max-width:393px;margin:0 auto 18px;background:var(--bg);border:8px solid #222;border-radius:34px;overflow:hidden;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.15)}
+  .label{background:#2a2a2a;color:#fff;font-size:12px;padding:6px 12px;margin:-12px -12px 12px -12px}
+  .card{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+  .card-h{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .card-h h2{font-size:calc(var(--fs)*1.05);margin:0;flex:1}
+  .card-h .arrow{font-size:12px;color:var(--muted);width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+  .section-title{font-size:calc(var(--fs)*1.05);font-weight:700;color:var(--text);margin:0}
+  .section-sub{font-size:calc(var(--fs)*0.8);color:var(--muted)}
+  .drag{color:#B4BEC7;cursor:grab;font-size:16px;line-height:1;padding:0;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:28px}
+  .del{background:none;border:none;color:#C25B5B;font-size:18px;line-height:1;cursor:pointer;padding:0 4px}
+  .tag{display:inline-flex;align-items:center;font-size:calc(var(--fs)*0.78);padding:2px 8px;border-radius:20px;background:var(--tint);color:var(--accent);font-weight:600;white-space:nowrap}
+  .hint{font-size:calc(var(--fs)*0.82);color:var(--muted);line-height:1.5}
+  .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .inp{border:0.5px solid var(--border);border-radius:8px;padding:7px 9px;font-size:calc(var(--fs)*0.9);background:#FBFBFC;min-width:0}
+  .btn-ghost{display:inline-flex;align-items:center;gap:3px;background:#fff;border:0.5px solid var(--border);color:var(--text);border-radius:7px;padding:5px 9px;font-size:calc(var(--fs)*0.82);font-weight:500}
+  .item{display:flex;align-items:flex-start;gap:8px;padding:9px 10px;border:0.5px solid var(--border);border-radius:9px;margin-bottom:7px;background:#fff}
+  .item .body{flex:1;min-width:0}
+  .folded{background:#FAFAFA}
+  .folded .body{padding:4px 0}
+  .chip{display:inline-flex;align-items:center;gap:4px;font-size:calc(var(--fs)*0.75);padding:3px 9px;border-radius:16px;border:0.5px solid var(--border);background:#fff;cursor:pointer;margin:2px 4px 2px 0}
+  .muted{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>V74 草图 ② · 阴阳师设置界面</h1>
+  <div class="sub">把「每日日常设置」「周常设置」「周期性活动」做成可折叠大节；把原来的「类型管理」从活动模板底部抽出来，做成独立醒目的卡片/节，避免和具体活动混在一起。</div>
+
+  <div class="phone">
+    <div class="label">✅ 建议：设置页也支持折叠 + 类型管理独立成块</div>
+
+    <!-- 每日日常设置（折叠） -->
+    <div class="card folded">
+      <div class="card-h">
+        <span class="arrow">▶</span>
+        <div>
+          <div class="section-title">每日日常设置</div>
+          <div class="section-sub">设一次即模板 · 周三 · 7 条</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 周常设置（折叠） -->
+    <div class="card folded">
+      <div class="card-h">
+        <span class="arrow">▶</span>
+        <div>
+          <div class="section-title">周常设置</div>
+          <div class="section-sub">6 条周常 · 1 条建议/简介</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 周期性活动（展开） -->
+    <div class="card">
+      <div class="card-h">
+        <span class="arrow" style="transform:rotate(90deg)">▶</span>
+        <div>
+          <div class="section-title">周期性活动</div>
+          <div class="section-sub">2 个进行中 · 编辑活动/子任务/灵活行</div>
+        </div>
+      </div>
+
+      <!-- 单个活动编辑块 -->
+      <div class="item">
+        <span class="drag">≡</span>
+        <div class="body">
+          <div class="row">
+            <select class="inp" style="width:auto"><option>联动</option></select>
+            <select class="inp" style="width:auto"><option>未分组</option></select>
+            <input class="inp" value="神猪战纪" style="flex:1;min-width:90px">
+            <button class="del">×</button>
+          </div>
+          <div class="row" style="margin-top:6px">
+            <span class="muted">开始</span><input class="inp" value="2026-08-05" style="width:108px">
+            <input class="inp" value="09:00" style="width:72px">
+            <span class="muted">结束</span><input class="inp" value="2026-08-18" style="width:108px">
+            <input class="inp" value="23:59" style="width:72px">
+          </div>
+          <div class="row" style="margin-top:6px">
+            <span class="muted">完成方式</span>
+            <select class="inp" style="width:auto"><option>每日进入</option></select>
+            <span class="muted">权重</span><input class="inp" value="1" style="width:44px">
+            <input class="inp" placeholder="奖励" style="flex:1;min-width:70px">
+            <input class="inp" placeholder="优先级" style="flex:1;min-width:70px">
+          </div>
+          <div class="hint" style="margin-top:8px">子任务（每行一个）：</div>
+          <textarea class="inp" style="width:100%;min-height:54px;margin-top:4px">十掌伏魔
+猪猪快跑
+食梦物语</textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:6px"><button class="btn-ghost">＋ 新增活动</button></div>
+    </div>
+
+    <!-- 类型管理：独立醒目的节 -->
+    <div class="card" style="border-left:4px solid var(--accent)">
+      <div class="card-h">
+        <span class="arrow" style="transform:rotate(90deg)">▶</span>
+        <h2 style="color:var(--accent)">🏷 类型管理</h2>
+      </div>
+      <div class="hint" style="margin-bottom:8px">已用该类型的活动不会被删除，仅失去快捷选项。</div>
+      <div class="row" style="margin-bottom:8px">
+        <input class="inp" placeholder="新类型名" style="flex:1;min-width:120px">
+        <button class="btn-ghost">＋ 添加类型</button>
+      </div>
+      <div class="row">
+        <span class="chip">联动 ✎ ×</span>
+        <span class="chip">超鬼王 ✎ ×</span>
+        <span class="chip">爬塔 ✎ ×</span>
+        <span class="chip">其他 ✎ ×</span>
+      </div>
+    </div>
+
+    <!-- 系列管理 -->
+    <div class="card folded">
+      <div class="card-h">
+        <span class="arrow">▶</span>
+        <h2>📁 系列管理</h2>
+      </div>
+    </div>
+
+    <!-- 门票模板库 -->
+    <div class="card folded">
+      <div class="card-h">
+        <span class="arrow">▶</span>
+        <h2>🎫 门票模板库</h2>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px;background:#fff">
+    <h2 style="font-size:15px;margin:0 0 8px">文字描述（设计方向）</h2>
+    <ul style="padding-left:18px;margin:0;font-size:13px;line-height:1.8;color:#444">
+      <li><b>大节折叠</b>：「每日日常设置」「周常设置」「周期性活动」三大块默认可折叠。添加新活动时只展开「周期性活动」，避免日常/周常的冗长列表把活动编辑区挤到屏幕外。</li>
+      <li><b>类型管理独立成块</b>：原来是活动卡片底部一行小字「类型管理…」，现在抽成一张独立卡片，左侧加 4px 主题色竖线、独立标题，和上面的活动编辑块视觉分隔。</li>
+      <li><b>系列/模板库也折叠</b>：系列管理、门票模板库使用频率低，默认折叠，需要时再展开。</li>
+      <li><b>编辑块内部也分行</b>：活动名称/类型/系列一行；起止日期+时间一行；完成方式/权重/奖励/优先级一行；每行内部元素不折行，整体放不下时整行下移。</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>
