@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Murphy's Workbench · 本端操作日志 2026-08-12</title>
+<style>
+  :root{
+    --fs:15px; --ac:#4F7365; --ac2:#97A6B2; --ink:#222; --line:#e4e8ec;
+    --soft:#f4f7f6; --warn:#b8863b; --ok:#2e8b57;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--soft);color:var(--ink);
+    font:calc(var(--fs)*1)/1.65 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-text-size-adjust:100%}
+  .wrap{max-width:780px;margin:0 auto;padding:18px 14px 60px}
+  .hero{background:var(--ac);color:#fff;border-radius:14px;padding:18px 18px 16px;margin-bottom:16px}
+  .hero h1{margin:0 0 4px;font-size:calc(var(--fs)*1.25);font-weight:700}
+  .hero .sub{opacity:.92;font-size:calc(var(--fs)*0.86)}
+  .hero .meta{margin-top:10px;font-size:calc(var(--fs)*0.8);opacity:.9;line-height:1.9}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 15px;margin:12px 0}
+  .card-h{display:flex;align-items:center;gap:8px;margin:-2px 0 10px}
+  .card-h .n{background:var(--ac);color:#fff;width:24px;height:24px;border-radius:7px;
+    display:flex;align-items:center;justify-content:center;font-size:calc(var(--fs)*0.82);font-weight:700;flex:none}
+  .card-h h2{margin:0;font-size:calc(var(--fs)*1.04);font-weight:700}
+  .tag{display:inline-block;background:var(--soft);border:1px solid var(--line);border-radius:6px;
+    padding:1px 7px;font-size:calc(var(--fs)*0.78);color:#555;margin:1px 4px 1px 0}
+  .tag.ok{background:#eafaf0;border-color:#bfe6cd;color:var(--ok)}
+  .tag.warn{background:#fdf6ea;border-color:#f0dcb8;color:var(--warn)}
+  p{margin:7px 0}
+  ul{margin:7px 0;padding-left:20px}
+  li{margin:4px 0}
+  code{background:var(--soft);border:1px solid var(--line);border-radius:5px;padding:0 5px;
+    font-size:calc(var(--fs)*0.82);word-break:break-all}
+  .kv{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:calc(var(--fs)*0.84)}
+  .kv b{color:#555;font-weight:600}
+  .before,.after{font-size:calc(var(--fs)*0.9);padding:8px 10px;border-radius:8px;margin:6px 0}
+  .before{background:#fdf0f0;border:1px solid #f3d2d2}
+  .after{background:#eef8f1;border:1px solid #cde9d4}
+  .before b,.after b{font-weight:700}
+  .before b{color:#b04a4a}.after b{color:var(--ok)}
+  .links a{color:var(--ac);word-break:break-all}
+  .foot{font-size:calc(var(--fs)*0.78);color:#888;text-align:center;margin-top:24px;line-height:1.8}
+  hr{border:none;border-top:1px dashed var(--line);margin:14px 0}
+  .note{background:#fff8ec;border:1px solid #f0e2c2;border-radius:8px;padding:8px 10px;font-size:calc(var(--fs)*0.86)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>Murphy's Workbench · 本端操作日志</h1>
+    <div class="sub">工作台单文件 HTML PWA ｜ 部署地址 boomgari.github.io</div>
+    <div class="meta">
+      日期：<b>2026-08-12（周三）</b><br>
+      本端设备：公司电脑（Windows）｜ 操作人：Murphy<br>
+      版本跨度：v73 → <b>v74</b>（已部署，commit <code>77c5fa65989b</code>）<br>
+      数据影响：仅改 index.html 源码，浏览器 localStorage 数据零风险
+    </div>
+  </div>
+
+  <!-- 概览 -->
+  <div class="card">
+    <div class="card-h"><span class="n">★</span><h2>今日重点一览</h2></div>
+    <p>本端今日聚焦 <b>V74 UI 优化</b> 一项主线任务，分两段完成：</p>
+    <ul>
+      <li><b>上午段</b>：产出 5 张 V74 草图并推到 GitHub Pages，解决你在另一台设备「看不到草图」的问题（本地预览走 127.0.0.1，跨端打不开）。</li>
+      <li><b>下午段</b>：你确认 5 张草图完美 → 改真实文件、落 V74 全部 5 项改动、部署到 boomgari.github.io，并通过语法+运行时双重校验。</li>
+    </ul>
+    <div class="kv">
+      <span><b>草图文件</b> 5 张</span>
+      <span><b>部署提交</b> 1 次（V74）</span>
+      <span><b>node 校验</b> <span class="tag ok">通过</span></span>
+      <span><b>运行时冒烟</b> <span class="tag ok">0 undefined / 无异常</span></span>
+    </div>
+  </div>
+
+  <!-- A 草图跨设备预览 -->
+  <div class="card">
+    <div class="card-h"><span class="n">A</span><h2>V74 草图跨设备预览（问题修复）</h2></div>
+    <div class="before"><b>问题：</b>你反馈「没看到草图」——根因是草图预览走本地 <code>127.0.0.1</code>，你在手机/平板等另一端打不开。</div>
+    <div class="after"><b>修复：</b>把 4 张 V74 草图 HTML 推到仓库 <code>sketches/</code> 目录（GitHub Pages 静态托管，不动 index.html），得到 4 个公开链接，任意设备可开。</div>
+    <p><b>上传脚本：</b><code>deploy_sketches.py</code>（复用 Contents API PUT；中文路径须 <code>urllib.parse.quote(repo_path, safe='/')</code>，否则 UnicodeEncodeError）。</p>
+    <p><b>提交：</b><span class="tag">6cd1beb</span><span class="tag">ce12d32</span><span class="tag">3d2b407</span><span class="tag">a90fa15</span></p>
+    <p class="links"><b>公开链接（浏览器自动转码中文）：</b><br>
+      https://boomgari.github.io/sketches/V74_列表项与阴阳师本周视图_草图.html<br>
+      https://boomgari.github.io/sketches/V74_阴阳师设置界面_草图.html<br>
+      https://boomgari.github.io/sketches/V74_图标与对号样式_草图.html<br>
+      https://boomgari.github.io/sketches/V74_换肤界面还原_草图.html</p>
+    <div class="note">经验：多端看草图/文档，优先用 GitHub Pages 公开链接而非本地预览，最稳。</div>
+  </div>
+
+  <!-- B 草图⑤追加 -->
+  <div class="card">
+    <div class="card-h"><span class="n">B</span><h2>草图⑤ 追加：子活动折叠 + 对齐规范</h2></div>
+    <p>你确认 ①②③④ 完美后，指出此前<b>只做了大区级折叠，未覆盖区内的每个子活动</b>。追加需求并产出第 5 张草图：</p>
+    <ul>
+      <li>模板界面（<code>gameActivityTpl</code>）与主界面（<code>actCardInner</code>）里，<b>每个单独活动块都可折叠</b>。</li>
+      <li>默认展开；<b>智能默认</b>＝今日该活动已全完成/打卡则自动收起，未完成则展开；手动点 ▶/▼ 后尊重你的选择（视图态记忆，输入不跳回）。</li>
+      <li><b>对齐规范</b>（你强要求防「里出外进」）：全站列表行 <code>align-items:center</code>；复选框固定 20px + 文字 flex:1 + 周期/备注右对齐不换行；折叠箭头/拖拽≡/复选框三者同尺寸同基线；复选框用直线 SVG 对号与文字垂直居中。</li>
+    </ul>
+    <p class="links"><b>草图⑤链接：</b><br>https://boomgari.github.io/sketches/V74_子活动折叠与对齐_草图.html</p>
+  </div>
+
+  <!-- C V74 部署 -->
+  <div class="card">
+    <div class="card-h"><span class="n">C</span><h2>V74 真实文件改动（已部署）</h2></div>
+    <p>你说「这个版本很好，直接部署」→ 按纪律同一轮执行，不再二次确认。本地 <code>Murphy's Workbench.html</code> 由 v73 升 v74（<code>APP_VER='v74'</code>）。以下 5 项改动逐条对应草图：</p>
+
+    <p><span class="tag">①</span> 本周视图三区折叠 + 活动两行化</p>
+    <div class="before"><b>改前：</b>日常/周常/活动三块常驻全展开；活动首行「中型活动/时间/个数」短词却分行显示。</div>
+    <div class="after"><b>改后：</b>三块改可折叠分区（▶/▼ 细线条 chevron，折叠态本地记忆）；活动卡首行「标题行 + 元信息行」两行，元信息行单 flex 不零散折行。</div>
+
+    <p><span class="tag">②</span> 设置界面分区折叠 + 类型管理独立</p>
+    <div class="before"><b>改前：</b>每活动块全展开字段，多个活动挤在一起；类型管理混在周期性活动卡底部小字。</div>
+    <div class="after"><b>改后：</b>每活动块可折叠；类型管理提升为独立醒目卡片（左侧 4px 主色竖条 + 加粗标题「类型与系列管理」）。</div>
+
+    <p><span class="tag">③</span> 直线 SVG 对号 + 细线条图标 + 删 ▲▼</p>
+    <div class="before"><b>改前：</b>对号是字体字形 ✓/√（随字体带弧度）；功能键是 emoji/圆角块，占宽；还有 ▲▼ 上下调整键抢空间。</div>
+    <div class="after"><b>改后：</b>对号换纯 SVG 直线对号（方头无弧，跨设备不变弯）；功能键换细线条图标；删除 ▲▼ 上下键，只留 ≡ 拖拽手柄。</div>
+
+    <p><span class="tag">④</span> 换肤界面还原 v66.8</p>
+    <div class="before"><b>改前（回归根因）：</b>弹窗 <code>previewSkin()</code> 仍指向一张已丢失的 <code>skinPreview</code> 卡，导致悬停色块无反应、「点色块实时看上身」的好看预览消失。</div>
+    <div class="after"><b>改后：</b>把 v66.8 常驻实时预览卡接回弹窗顶部（含招牌「浅底表面」块），悬停色块即时看上身；色板/双色保留 v73 既有。</div>
+
+    <p><span class="tag">⑤</span> 子活动折叠 + 全局对齐规范</p>
+    <div class="before"><b>改前：</b>模板界面与主界面的每个单独活动全铺开，无折叠；部分行未统一中线对齐。</div>
+    <div class="after"><b>改后：</b>每个单独活动都可折叠（默认展开 + 智能默认：doneAll/今日全完成则默认收起）；折叠态存 <code>localStorage.mwbFold</code>（与用户数据 D 分离）；全站 <code>align-items:center</code> 防里出外进。</div>
+
+    <hr>
+    <p><b>折叠状态存储：</b>新增 <code>mwbFold</code>（localStorage key <code>mwbFold</code>），<code>isFolded(k,dflt)</code> / <code>foldToggle(k,dflt)</code>：未显式设置用智能默认 dflt，手动点折后写显式布尔（输入不跳回）。</p>
+  </div>
+
+  <!-- 校验与部署 -->
+  <div class="card">
+    <div class="card-h"><span class="n">✓</span><h2>校验与部署</h2></div>
+    <ul>
+      <li><span class="tag ok">node --check</span> 抽取脚本块语法校验通过。</li>
+      <li><span class="tag ok">运行时冒烟</span> 用 vm + 桩 DOM 实跑 <code>renderGameWeek</code> / <code>renderGameTpl</code> / <code>actCardInner</code>（含注入活动），全部 <b>0 个 undefined</b>、无异常。</li>
+      <li><span class="tag ok">部署</span> <code>deploy_v74.py</code>（复用 git tree 取 SHA，避免大文件 GET 中断）→ PUT <code>index.html</code> 到仓库根。</li>
+      <li>提交：<span class="tag">77c5fa65989baf4ca0094539dedc5a4f99999f7b</span>（消息含「V74」，API 复核通过）。</li>
+      <li>公开生效：https://boomgari.github.io/ （CDN 约 1 分钟生效）。</li>
+    </ul>
+    <div class="note">数据安全：仅改 index.html 源码，浏览器 localStorage 数据未触碰，零风险。</div>
+  </div>
+
+  <!-- 文件清单 -->
+  <div class="card">
+    <div class="card-h"><span class="n">📦</span><h2>本端产出文件清单</h2></div>
+    <div class="kv">
+      <span><b>源码</b> <code>Murphy's Workbench.html</code>（v74）</span>
+      <span><b>草图×5</b> <code>V74_*_草图.html</code></span>
+      <span><b>脚本</b> <code>deploy_sketches.py</code> / <code>deploy_v74.py</code></span>
+      <span><b>测试</b> <code>v74_smoke.js</code></span>
+      <span><b>本日志</b> <code>mwb_session_20260812.html</code></span>
+    </div>
+    <p style="font-size:calc(var(--fs)*0.84);color:#666;margin-top:8px">草图、本日志均已推到仓库，另一端可直接用 GitHub Pages 链接打开；也可把本 HTML 文件直接发给另一端打开。</p>
+  </div>
+
+  <div class="foot">
+    Murphy's Workbench · 本端操作日志 · 2026-08-12<br>
+    跨设备协作约定：结构化笔记以仓库 HTML 为准（本文件即其一），记忆文件不随账号同步。
+  </div>
+
+</div>
+</body>
+</html>
