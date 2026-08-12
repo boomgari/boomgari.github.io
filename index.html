@@ -597,6 +597,30 @@ textarea.inp{min-height:52px;}
   .pl-trrow input:not([type=date]):not([type=number]):not(.datepick){flex:1 1 100%;}
   .pl-mini{max-width:none;flex:1 1 120px;}
 }
+/* V75：自定义复选框（直线对号，跨设备一致） */
+.chk-custom{position:relative;width:20px;height:20px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;margin:0;}
+.chk-custom input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;}
+.chk-custom .chk-vis{width:18px;height:18px;border:1.6px solid var(--border);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;color:var(--accent);}
+.chk-custom input:checked + .chk-vis{background:var(--accent);border-color:var(--accent);color:#fff;}
+.chk-custom .chk-vis svg{display:none;}
+.chk-custom input:checked + .chk-vis svg{display:block;}
+/* V75：按次日常项精简（唯一打卡键 + 状态行 + 静音折叠） */
+.g-reward{display:flex;gap:8px;align-items:flex-start;}
+.g-reward .body{flex:1;min-width:0;}
+.g-reward-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:3px;}
+.g-count-status{font-weight:600;font-size:calc(var(--fs)*0.9);color:var(--text);}
+.link-btn{background:none;border:none;color:var(--muted);font-size:calc(var(--fs)*0.8);cursor:pointer;padding:2px 2px;text-decoration:underline;}
+/* V75：活动分组头手机端堆叠 */
+.act-group-h{flex-wrap:wrap;}
+.act-group-meta{margin-left:auto;display:inline-flex;align-items:center;gap:8px;}
+/* V75：手机端专属断点（荣耀 Magic5 Pro ≈393px，14.5px 缩放） */
+@media(max-width:420px){
+  .act-group-meta{margin-left:0;width:100%;flex-direction:column;align-items:flex-start;gap:2px;margin-top:2px;}
+  .g-metrics{gap:4px 8px;}
+  .g-reward-foot{font-size:calc(var(--fs)*0.85);}
+  .note-btn{padding:4px 6px;}
+  .act-meta{justify-content:flex-start;}
+}
 </style>
 </head>
 <body data-theme="auto">
@@ -2380,10 +2404,12 @@ function isFolded(k,dflt){const v=foldVal(k);return v===null?!!dflt:!!v;}
 function foldToggle(k,dflt){const cur=isFolded(k,dflt);mwbFold[k]=!cur;foldSave();renderGame();}
 /* 直线对号（无弧，跨设备字体不变弯） */
 function chkSvg(){return '<svg class="chk-svg" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8.5 L6.5 12 L13 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"/></svg>';}
+/* 自定义复选框：隐藏原生 input，用直线 SVG 对号，跨设备一致无弧度 */
+function chkBox(checked,onchange){return '<label class="chk-custom"><input type="checkbox" '+(checked?'checked':'')+' onchange="'+onchange+'"><span class="chk-vis">'+chkSvg()+'</span></label>';}
 /* 折叠箭头（细线条 chevron） */
 function foldArr(open){return '<svg class="fold-arr" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="'+(open?'M3 5 L8 10 L13 5':'M5 3 L10 8 L5 13')+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/></svg>';}
 /* 细线条图标：备注 */
-function icoNote(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 4 H16 V14 L13 17 H4 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M13 17 V14 H16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 8 H13 M7 11 H11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';}
+function icoNote(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 4 H16 V14 L13 17 H4 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M13 17 V14 H16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M7 8 H13 M7 11 H11" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>';}
 function renderGameWeek(){
   const progDay=D.game.progress[todayStr()]||{};
   const progWeek=D.game.progress[weekKey()]||{};
@@ -2438,13 +2464,13 @@ function gameDailyCard(wd,prog){
     const drag=dragSpan('daily',t.id,wd);
     let body;
     if(t.flex==='reward'){
-      const goal=+t.goal||0, cnt=+t.count||0;
+      const goal=+t.goal||0, cnt=+t.count||0, doneAll=goal>0&&cnt>=goal;
       const dots=goal?Array.from({length:goal},(_,i)=>`<span class="dot ${i<cnt?'on':''}"></span>`).join(''):'';
       const pct=goal?Math.min(100,Math.round(cnt/goal*100)):0;
       const log=(t.countLog||[]).map((e,i)=>`<div class="trk-row"><span>第${i+1}次</span><span class="hint">${esc(e.time)}</span></div>`).join('');
-      body=`<div style="flex:1;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px"><label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" ${done?'checked':''} onchange="gProg('daily','${t.id}',this.checked)"> <span class="ttitle">${esc(t.name)}</span></label>${dots?`<span class="dots">${dots}</span>`:''}<span class="tag">${cnt}${goal?('/'+goal):''}</span>${goal?`<span class="hint">${done?'${chkSvg()} 已完成':(cnt>0?('已 '+pct+'%'):'待完成')}</span>`:''}<button class="btn ghost sm" onclick="gDailyInc(${wd},'${t.id}')">＋1</button>${cnt>0?`<button class="btn ghost sm" onclick="gDailyDec(${wd},'${t.id}')">－1</button>`:''}${(t.countLog&&t.countLog.length)?`<button class="note-btn" onclick="gameDailyRewardExp['${t.id}']=!gameDailyRewardExp['${t.id}'];renderGame()">${gameDailyRewardExp[t.id]?'收起':'每次时间'}</button>`:''}${(gameDailyRewardExp[t.id]&&t.countLog&&t.countLog.length)?`<div class="trk-list">${log}</div>`:''}</div>`;
+      body=`<div class="g-reward">${chkBox(done,"gProg('daily','${t.id}',this.checked)")}<div class="body"><div class="ttitle">${esc(t.name)}</div><div class="g-reward-foot"><span class="g-count-status">已完成 ${cnt}${goal?(' / '+goal):''} 次</span><button class="btn ghost sm g-checkin" onclick="gDailyInc(${wd},'${t.id}')">打卡</button>${cnt>0?'<button class="link-btn" onclick="gDailyDec(${wd},\'${t.id}\')">撤销</button>':''}${(t.countLog&&t.countLog.length)?`<button class="link-btn" onclick="gameDailyRewardExp['${t.id}']=!gameDailyRewardExp['${t.id}'];renderGame()">${gameDailyRewardExp[t.id]?'收起':'每次时间'}</button>`:''}${(gameDailyRewardExp[t.id]&&t.countLog&&t.countLog.length)?`<div class="trk-list">${log}</div>`:''}</div></div></div>`;
     } else {
-      body=`<input type="checkbox" ${done?'checked':''} onchange="gProg('daily','${t.id}',this.checked)"><div class="body"><div class="ttitle">${esc(t.time?t.time+' ':'')}${esc(t.name)}</div>${ts?`<div class="sub hint">${chkSvg()} ${fmtTime(ts)}</div>`:''}${note?`<div class="sub note-line">${icoNote()} ${esc(note.text)} <span class="hint">${fmtTime(note.time)}</span></div>`:''}</div>`;
+      body=chkBox(done,"gProg('daily','${t.id}',this.checked)")+`<div class="body"><div class="ttitle">${esc(t.time?t.time+' ':'')}${esc(t.name)}</div>${ts?`<div class="sub hint">${chkSvg()} ${fmtTime(ts)}</div>`:''}${note?`<div class="sub note-line">${icoNote()} ${esc(note.text)} <span class="hint">${fmtTime(note.time)}</span></div>`:''}</div>`;
     }
     const noteBox=exp?`<div class="note-edit"><textarea class="inp" id="gn_${t.id}" placeholder="补充备注（如奖励/细节）">${note?esc(note.text):''}</textarea><button class="btn ghost sm" onclick="gameNoteSave('${t.id}')">保存备注</button></div>`:'';
     return `<div class="item g-item ${done?'done':''}">${drag}${gDailyMv(wd,t.id)}${body}<button class="note-btn" title="备注" onclick="gameNoteToggle('${t.id}')">${icoNote()}</button><button class="del" title="删除此条" onclick="gDelDaily(${wd},'${t.id}')">×</button></div>${noteBox}`;
@@ -2476,7 +2502,7 @@ function gameWeeklyCard(prog){
       const cnt=+t.count||0,goal=+t.goal||0,reached=goal>0&&cnt>=goal;
       const status=reached?('<span class="tag done">已达成'+goal+'次</span>'):(goal?('<span class="hint">还差 '+(goal-cnt)+' 次</span>'):'<span class="hint">记录次数</span>');
       const note=reached?('<div class="sub hint">前'+goal+'次奖励已拿满，后续场次仅普通金币</div>'):'';
-      sub='<div class="sub">已打 '+cnt+(goal?(' / '+goal):'')+' 次 '+status+'</div>'+note
+      sub='<div class="sub">已打 '+cnt+(goal?(' / '+goal):'')+' 次</div>'+(goal&&!reached?('<div class="sub hint">还差 '+(goal-cnt)+' 次</div>'):(reached?'<div class="sub hint">已达成目标次数</div>':''))+note
         +'<div class="g-metrics">'
         +'<span class="gm">次数<input type="number" class="inp" value="'+(cnt||'')+'" style="width:66px" onchange="gWeeklySet(\''+t.id+'\',\'count\',+this.value);renderGame()"></span>'
         +'<span class="gm">目标<input type="number" class="inp" placeholder="可选" value="'+(goal||'')+'" style="width:78px" onchange="gWeeklySet(\''+t.id+'\',\'goal\',+this.value);renderGame()"></span>'
@@ -2488,9 +2514,9 @@ function gameWeeklyCard(prog){
     const ts=(prog.weekly_ts||{})[t.id];
     const note=gameNote(t.id);
     const exp=gameNoteExp[t.id];
-    const check=ty==='text'?('<input type="checkbox" '+(done?'checked':'')+' onchange="gProg(\'weekly\',\''+t.id+'\',this.checked)">') : (done?'<span class="tag done">${chkSvg()} 已完成</span>':'<span class="hint">进行中</span>');
+    const check=ty==='text'?chkBox(done,"gProg('weekly','"+t.id+"',this.checked)") : (done?'<span class="tag done">'+chkSvg()+' 已完成</span>':'<span class="hint">进行中</span>');
     const noteBox=exp?('<div class="note-edit"><textarea class="inp" id="gn_'+t.id+'" placeholder="补充备注（奖励/细节）">'+(note?esc(note.text):'')+'</textarea><button class="btn ghost sm" onclick="gameNoteSave(\''+t.id+'\')">保存备注</button></div>'):'';
-    return '<div class="item g-item '+(done?'done':'')+'">'+drag+gWeeklyMv(t.id)+check+'<div class="body"><div class="ttitle">'+esc(t.name)+'</div>'+sub+(ts?('<div class="sub hint">✓ '+fmtTime(ts)+'</div>'):'')+(note?('<div class="sub note-line">📝 '+esc(note.text)+' <span class="hint">'+fmtTime(note.time)+'</span></div>'):'')+'</div><button class="del" title="删除此条" onclick="gDelWeekly(\''+t.id+'\')">×</button><button class="note-btn" title="备注" onclick="gameNoteToggle(\''+t.id+'\')">${icoNote()}</button></div>'+noteBox;
+    return '<div class="item g-item '+(done?'done':'')+'">'+drag+gWeeklyMv(t.id)+check+'<div class="body"><div class="ttitle">'+esc(t.name)+'</div>'+sub+(ts?('<div class="sub hint">✓ '+fmtTime(ts)+'</div>'):'')+(note?('<div class="sub note-line">📝 '+esc(note.text)+' <span class="hint">'+fmtTime(note.time)+'</span></div>'):'')+'</div><button class="del" title="删除此条" onclick="gDelWeekly(\''+t.id+'\')">×</button><button class="note-btn" title="备注" onclick="gameNoteToggle(\''+t.id+'\')">'+icoNote()+'序列</button></div>'+noteBox;
   }).join('');
   return items
     +'<div class="emptybox">💡 惠比寿：某些活动本周没做但已提前存好，下周做同样活动会自动补领上周奖励。</div>';
@@ -2556,7 +2582,7 @@ function jjCard(t,drag){
     <button class="btn ghost sm" ${(jj.count>0)?'':'disabled style="opacity:.4"'} onclick="jjDec('${t.id}')">－1</button>
     <input class="inp" id="jj_${t.id}" value="${jj.count||''}" style="width:64px;text-align:center;font-size:calc(var(--fs)*1.1)" onchange="jjSet('${t.id}',this.value)">
     <span class="hint">/ 30</span>
-    ${full?'<button class="btn ghost sm" onclick="jjDone(\''+t.id+'\')">'+(jj.done?'已清${chkSvg()}':'需尽快打完${chkSvg()}')+'</button>':''}
+    ${full?'<button class="btn ghost sm" onclick="jjDone(\''+t.id+'\')">'+(jj.done?'已清'+chkSvg():'需尽快打完'+chkSvg())+'</button>':''}
     ${(jj.log&&jj.log.length)?`<button class="note-btn" onclick="gameJjExp['${t.id}']=!gameJjExp['${t.id}'];renderGame()">${gameJjExp[t.id]?'收起':'每次时间'}</button>`:''}
   </div>${ (gameJjExp[t.id]&&jj.log&&jj.log.length)?`<div class="trk-list">${log}</div>`:'' }`;
   return `<div class="item g-item trk ${full?'jj-full':''}">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">满 30 自动出现勾选（需尽快打完）；每 ＋1 自动记一次时间</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${input}</div></div>`;
@@ -2576,7 +2602,7 @@ function gameActivityCard(prog){
     let gs=null,ge=null;
     list.forEach(a=>{if(a.start&&(!gs||a.start<gs))gs=a.start;if(a.end&&(!ge||a.end>ge))ge=a.end;});
     const span=(gs?fmtDt(gs):'')+(gs&&ge?' – ':'')+(ge?fmtDt(ge):'');
-    html+=`<div class="act-group"><div class="act-group-h"><span class="dot"></span><b>${esc(g)}</b>${span?`<span class="hint">${span}</span>`:''}<span class="spacer"></span><span class="hint">${list.length} 个</span></div>`;
+    html+=`<div class="act-group"><div class="act-group-h"><span class="dot"></span><b>${esc(g)}</b><span class="act-group-meta">${span?`<span class="hint">${span}</span>`:''}<span class="hint">${list.length} 个</span></span></div>`;
     list.forEach(a=>{ html+=actCardInner(a,prog); });
     const wsum=list.reduce((s,a)=>s+((+a.weight>0)?+a.weight:1),0);
     const wpct=wsum?Math.round(list.reduce((s,a)=>{const w=(+a.weight>0)?+a.weight:1;return s+w*actProgress(a).pct;},0)/wsum):0;
@@ -2604,7 +2630,7 @@ function actCardInner(a,prog){
       const cnt=actTaskCountEff(a,t);
       ctrl=`<div class="body" style="flex:1;min-width:60px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div></div><button class="btn ghost sm" onclick="gActTaskCount('${a.id}','${t.id}',-1)">－1</button><span style="min-width:48px;text-align:center;font-weight:600">${cnt}/${goal}</span><button class="btn ghost sm" onclick="gActTaskCount('${a.id}','${t.id}',1)">＋1</button><input class="cycle-n" type="number" min="0" value="${goal}" title="子任务计数目标(0=勾选)" style="width:50px" onchange="gActTaskGoalSet('${a.id}','${t.id}',this.value)">`;
     } else {
-      ctrl=`<input type="checkbox" ${done?'checked':''} onchange="gProgAct('${a.id}','${t.id}',this.checked)"><div class="body" style="flex:1;min-width:90px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div>${ts?`<div class="sub hint">${chkSvg()} ${fmtTime(ts)}</div>`:''}${nt?`<div class="sub note-line">${icoNote()} ${esc(nt.text)} <span class="hint">${fmtTime(nt.time)}</span></div>`:''}</div>`;
+      ctrl=chkBox(done,"gProgAct('${a.id}','${t.id}',this.checked)")+`<div class="body" style="flex:1;min-width:90px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div>${ts?`<div class="sub hint">${chkSvg()} ${fmtTime(ts)}</div>`:''}${nt?`<div class="sub note-line">${icoNote()} ${esc(nt.text)} <span class="hint">${fmtTime(nt.time)}</span></div>`:''}</div>`;
     }
     return `<div class="item g-item ${done?'done':''}" style="padding:7px 8px;margin-bottom:5px;flex-wrap:wrap;gap:4px">${ctrl}<select class="cycle-sel" title="完成周期" onchange="gActTaskCycle('${a.id}','${t.id}',this.value)"><option value="daily" ${cyc==='daily'?'selected':''}>每天</option><option value="ndays" ${cyc==='ndays'?'selected':''}>每${t.cycleN||3}天</option><option value="once" ${cyc==='once'?'selected':''}>一次</option></select>${cyc==='ndays'?`<input class="cycle-n" type="number" min="2" value="${t.cycleN||3}" title="每 N 天" onchange="gActTaskCycleN('${a.id}','${t.id}',this.value)">`:''}<button class="note-btn" title="备注" onclick="gameNoteToggle('${key}')">${icoNote()}</button></div>${nb}`;
   }).join('');
@@ -2628,13 +2654,13 @@ function actCardInner(a,prog){
   }
   progHtml=bars.join('');
   const statusTag = st? `<span class="tag ${st.cls}">${st.txt}</span>` : (ttotal?`<span class="hint">子项 ${tdone}/${ttotal}</span>`:'');
-  const doneChk = (p.ty==='binary')? `<input type="checkbox" ${((D.game.actDone||{})[a.id])?'checked':''} onchange="gActDone('${a.id}',this.checked)" title="整个活动完成">`:'';
+  const doneChk = (p.ty==='binary')? chkBox(((D.game.actDone||{})[a.id]),"gActDone('${a.id}',this.checked)") :'';
   const tempBtn = (!p.doneAll)? `<button class="btn ghost sm" onclick="gActTempDone('${a.id}')" title="标记今天暂时完成">今日完成</button>`:'';
   const drag=dragSpan('activity',a.id);
   const ats=(D.game.actDoneTs||{})[a.id];
   const anote=gameNote(a.id);const aexp=gameNoteExp[a.id];
   const aNoteBox=aexp?`<div class="note-edit"><textarea class="inp" id="gn_${a.id}" placeholder="活动备注（今日进度/掉落/心得）">${anote?esc(anote.text):''}</textarea><button class="btn ghost sm" onclick="gameNoteSave('${a.id}')">保存备注</button></div>`:'';
-  const countCtrl=(a.progType==='count')?`<div class="row" style="align-items:center;gap:6px;margin:4px 0;flex-wrap:wrap"><span class="tag">${esc(a.countLabel||'数量')}</span><button class="btn ghost sm" onclick="gActCountInc('${a.id}',-1)">－1</button><span style="min-width:54px;text-align:center;font-weight:600">${(+a.countNow||0)}/${(+a.countTarget||0)}</span><button class="btn ghost sm" onclick="gActCountInc('${a.id}',1)">＋1</button><span class="hint">累计计数型</span>${(+a.countTarget>0 && +a.countNow>=(+a.countTarget))?'<span class="tag done">已达成${chkSvg()}</span>':''}</div><div class="progbar ${((+a.countTarget>0 && +a.countNow>=(+a.countTarget))?'ok':'')}"><i style="width:${((+a.countTarget>0)?Math.min(100,Math.round((+a.countNow||0)/(+a.countTarget)*100)):0)}%"></i></div><div class="act-sum">${esc(a.countLabel||'数量')} 进度 ${(+a.countNow||0)}/${(+a.countTarget||0)}${(+a.countTarget>0)?(' · '+Math.min(100,Math.round((+a.countNow||0)/(+a.countTarget)*100))+'%'):''}${(+a.countTarget>0 && +a.countNow>=(+a.countTarget))?' · 已达成${chkSvg()}':''}</div>`:'';
+  const countCtrl=(a.progType==='count')?`<div class="row" style="align-items:center;gap:6px;margin:4px 0;flex-wrap:wrap"><span class="tag">${esc(a.countLabel||'数量')}</span><button class="btn ghost sm" onclick="gActCountInc('${a.id}',-1)">－1</button><span style="min-width:54px;text-align:center;font-weight:600">${(+a.countNow||0)}/${(+a.countTarget||0)}</span><button class="btn ghost sm" onclick="gActCountInc('${a.id}',1)">＋1</button><span class="hint">累计计数型</span>${(+a.countTarget>0 && +a.countNow>=(+a.countTarget))?'<span class="tag done">已达成'+chkSvg()+'</span>':''}</div><div class="progbar ${((+a.countTarget>0 && +a.countNow>=(+a.countTarget))?'ok':'')}"><i style="width:${((+a.countTarget>0)?Math.min(100,Math.round((+a.countNow||0)/(+a.countTarget)*100)):0)}%"></i></div><div class="act-sum">${esc(a.countLabel||'数量')} 进度 ${(+a.countNow||0)}/${(+a.countTarget||0)}${(+a.countTarget>0)?(' · '+Math.min(100,Math.round((+a.countNow||0)/(+a.countTarget)*100))+'%'):''}${(+a.countTarget>0 && +a.countNow>=(+a.countTarget))?' · 已达成'+chkSvg():''}</div>`:'';
   const fk='act_main_'+a.id;
   const smartA=p.doneAll;
   const folded=isFolded(fk,smartA);
@@ -2645,7 +2671,6 @@ function actCardInner(a,prog){
       ${doneChk}
       <b class="act-name">${p.doneAll?'<span style="text-decoration:line-through;opacity:.7">':''}${esc(a.name)}${p.doneAll?'</span>':''}</b>
       <span class="spacer"></span>
-      <span class="hint act-mini">${a.type?esc(a.type):''}${a.reward?(' · '+esc(a.reward)):''}</span>
       <button class="del" onclick="event.stopPropagation();delAct('${a.id}')">×</button>
     </div>
     ${folded?'':`<div class="fold-c">
@@ -2736,8 +2761,8 @@ function actProgress(a){
 }
 function actStatus(a){
   const p=actProgress(a);
-  if(p.content&&p.content.pct>=100){const hasDaily=(a.tasks||[]).some(t=>(t.cycle||'daily')==='daily');return {cls:'done',txt:(hasDaily?'今日已全部完成${chkSvg()}':'全部完成${chkSvg()}')};}
-  if(p.doneAll) return {cls:'done',txt:'全部完成${chkSvg()}'};
+  if(p.content&&p.content.pct>=100){const hasDaily=(a.tasks||[]).some(t=>(t.cycle||'daily')==='daily');return {cls:'done',txt:(hasDaily?'今日已全部完成'+chkSvg():'全部完成'+chkSvg())};}
+  if(p.doneAll) return {cls:'done',txt:'全部完成'+chkSvg()};
   if(p.time&&p.time.done>=p.time.total) return {cls:'end',txt:'已到期'};
   if((a.tempDone||'')===todayStr()) return {cls:'temp',txt:'今日已打卡'};
   return null;
@@ -2811,7 +2836,7 @@ function gameTplRow(t){
       ${drag}${gDailyMv(gameTplDay,t.id)}
       <input type="text" class="inp timepick" value="${esc(t.time||'')}" readonly placeholder="时间" onclick="openTP(this,'${t.time||''}','gSetTime','${t.id}')" style="flex:0 0 110px">
       <input type="text" class="inp" value="${esc(t.name)}" oninput="gTplSet('${t.id}','name',this.value)" style="flex:2;min-width:130px" placeholder="任务名">
-      <label style="font-size:calc(var(--fs)*0.8);color:var(--muted)"><input type="checkbox" ${t.flex==='reward'?'checked':''} onchange="gTplSet('${t.id}','flex',this.checked?'reward':'')"> 灵活(记数量)</label>
+      <label style="font-size:calc(var(--fs)*0.8);color:var(--muted)"><input type="checkbox" ${t.flex==='reward'?'checked':''} onchange="gTplSet('${t.id}','flex',this.checked?'reward':'')"> 灵活(记数量)</label>${t.flex==='reward'?`<label style="font-size:calc(var(--fs)*0.8);color:var(--muted)">上限<input type="number" value="${+t.goal||''}" style="width:46px" onchange="gTplSet('${t.id}','goal',+this.value)">次</label>`:''}
       <button class="del" onclick="gDelRow('${t.id}')">×</button>
     </div>
   </div>`;
@@ -3872,7 +3897,7 @@ function renderLifeNote(){
   const entries=D.note.entries||[];
   const order=noteOrder();
   return `<div class="card">
-    <div class="card-h"><h2>📒 生活小记</h2><span class="spacer"></span><span class="chip sm ${noteSortMode?'on':''}" onclick="noteSortToggle()" style="cursor:pointer">${noteSortMode?'完成排序${chkSvg()}':'⇅ 排序'}</span></div>
+    <div class="card-h"><h2>📒 生活小记</h2><span class="spacer"></span><span class="chip sm ${noteSortMode?'on':''}" onclick="noteSortToggle()" style="cursor:pointer">${noteSortMode?'完成排序'+chkSvg():'⇅ 排序'}</span></div>
     <div class="row" style="margin-bottom:8px;flex-wrap:wrap">${order.map(t=>`<span class="chip ${noteSelType===t?'on':''} ${noteSortMode?'drag-chip':''}" ${noteSortMode?`draggable="true" ondragstart="noteDrag='${t}'" ondragover="event.preventDefault()" ondrop="noteReorder(noteDrag,'${t}')"`:''} onclick="${noteSortMode?'':`noteSel('${t}')`}">${noteSortMode?'≡ ':''}${t}</span>`).join('')}</div>
     ${noteSortMode?'<div class="hint" style="margin-bottom:8px">拖拽分类右侧 ≡ 可调整顺序，完成后点「完成排序」。</div>':''}
     <textarea id="nf_text" placeholder="此刻想记点什么…（选对应分类可填更多细节）" style="min-height:54px" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();noteAdd()}"></textarea>
@@ -3950,7 +3975,7 @@ function psOpen(sel){
   if(document.getElementById('psOverlay'))return;
   const opts=Array.from(sel.options).map(o=>({v:o.value,l:o.textContent}));
   const cur=sel.value;
-  const items=opts.map(o=>`<div class="ps-item ${o.v===cur?'on':''}" data-v="${esc(o.v)}">${esc(o.l)}${o.v===cur?'${chkSvg()}':''}</div>`).join('');
+  const items=opts.map(o=>`<div class="ps-item ${o.v===cur?'on':''}" data-v="${esc(o.v)}">${esc(o.l)}${o.v===cur?chkSvg():''}</div>`).join('');
   const ov=document.createElement('div');ov.id='psOverlay';ov.className='ps-overlay';
   ov.innerHTML=`<div class="ps-pop" onclick="event.stopPropagation()"><div class="ps-list">${items}</div><div class="ps-actions"><button class="btn ghost" onclick="closePS()">取消</button></div></div>`;
   document.body.appendChild(ov);
@@ -4066,7 +4091,7 @@ function renderChecklist(){
     // 展开态才渲染子项区（含输入框），修复「无子项时点不开添加子项」
     const subsHtml=exp?`<div style="margin-top:6px;padding-left:26px">
       ${subs.length?`<div style="font-size:calc(var(--fs)*0.75);color:var(--accent);margin-bottom:4px">🔁 以下 ${subs.length} 个成员每日循环（每天自动重置勾选）</div>`:''}
-      ${subs.map(s=>{const sd=done[x.id+'__'+s.id];const st=ts[x.id+'__'+s.id];return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;white-space:nowrap"><label style="display:flex;align-items:center;gap:6px;flex:1;min-width:0"><input type="checkbox" ${sd?'checked':''} onchange="chkSubToggle('${x.id}','${s.id}',this.checked)"><span style="font-size:calc(var(--fs)*0.867);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name)}${sd?'${chkSvg()}':''}</span></label><span style="font-size:calc(var(--fs)*0.75);color:var(--muted);flex:none">${st?fmtTime(st):''}</span><button class="btn ghost sm" style="flex:none" onclick="chkSubDel('${x.id}','${s.id}')">×</button></div>`;}).join('')}
+      ${subs.map(s=>{const sd=done[x.id+'__'+s.id];const st=ts[x.id+'__'+s.id];return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;white-space:nowrap"><label style="display:flex;align-items:center;gap:6px;flex:1;min-width:0"><input type="checkbox" ${sd?'checked':''} onchange="chkSubToggle('${x.id}','${s.id}',this.checked)"><span style="font-size:calc(var(--fs)*0.867);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name)}${sd?chkSvg():''}</span></label><span style="font-size:calc(var(--fs)*0.75);color:var(--muted);flex:none">${st?fmtTime(st):''}</span><button class="btn ghost sm" style="flex:none" onclick="chkSubDel('${x.id}','${s.id}')">×</button></div>`;}).join('')}
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input class="inp" id="cksub_${x.id}" placeholder="加子项（如人名）" style="flex:1;min-width:120px;font-size:calc(var(--fs)*0.867)" onkeydown="if(event.key==='Enter')chkSubAdd('${x.id}')"><label style="display:inline-flex;align-items:center;gap:3px;font-size:calc(var(--fs)*0.8);color:var(--muted);white-space:nowrap;cursor:pointer"><input type="checkbox" id="cksub_loop_${x.id}" checked> 每日循环</label><button class="btn ghost sm" onclick="chkSubAdd('${x.id}')">＋</button></div>
     </div>`:'';
     const mainTs=subs.length?'':ts[x.id];
@@ -4618,7 +4643,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v74';
+const APP_VER='v75';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -4870,7 +4895,7 @@ async function refreshCloudStat(){
     let tip='';
     if(rRev>lRev)tip=' <span style="color:#b8860b">← 云端更新，点「立即同步」取下来</span>';
     else if(rRev<lRev)tip=' <span style="color:#2d8659">← 本机更新，点「立即上传」推上去</span>';
-    else tip=' <span style="color:#2d8659">← 两端一致${chkSvg()}</span>';
+    else tip=' <span style="color:#2d8659">← 两端一致'+chkSvg()+'</span>';
     el.innerHTML='<b>云端</b>：v'+rRev+' · 最后由 <b>'+esc(data._meta.lastDevName||'未知设备')+'</b> 于 '+fmtTime(data._meta.updatedAt)+' 上传'+tip;
   }catch(e){
     el.innerHTML='<b>云端</b>：读取超时（api.github.com 偶发卡顿，可稍后重试）';
@@ -4946,7 +4971,7 @@ async function enableGitHubRepo(){
     toast('已与云端 v'+rRev+' 合并（本机 v'+lRev+'），两端记录都保留 → v'+(D._meta.rev||0));
   }
   const r=await cloudPush({force:true});
-  if(r.ok){renderSyncModal();toast('GitHub 仓库同步已开启${chkSvg()} 现在任何设备开链接即用');}
+  if(r.ok){renderSyncModal();toast('GitHub 仓库同步已开启'+chkSvg()+' 现在任何设备开链接即用');}
   else if(r.reason==='conflict'){renderSyncModal();toast('云端已有更新数据，已自动同步');}
   else{toast('上传失败：检查仓库地址 / 令牌需 repo 权限 / 网络');}
 }
@@ -5140,8 +5165,8 @@ async function mirrorToServer(){
     const r=await fetch('/api/data',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:D})});
     if(!r.ok)return false;
     const j=await r.json().catch(()=>({}));
-    if(j&&j.nutstore&&j.nutstore.ok)toast('已推送到坚果云${chkSvg()}');
-    if(j&&j.git&&j.git.ok)toast('已提交并推送到 GitHub${chkSvg()}');
+    if(j&&j.nutstore&&j.nutstore.ok)toast('已推送到坚果云'+chkSvg());
+    if(j&&j.git&&j.git.ok)toast('已提交并推送到 GitHub'+chkSvg());
     return true;
   }catch(e){return false;}
 }
@@ -5165,7 +5190,7 @@ async function apiGitInit(){
   const cfg=Object.assign({},BACKUP_CFG);cfg.git={enabled:true,repo:repo,token:token};
   BACKUP_CFG=cfg;await saveBackupCfg(cfg);
   toast('已保存，正在初始化并推送…');
-  try{const r=await fetch('/api/gitinit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg.git)});const j=await r.json();if(j&&j.ok)toast('GitHub 仓库已初始化并推送${chkSvg()}');else toast('初始化失败：'+(j&&j.err||'未知错误'));}catch(e){toast('请求失败，确认 server.js 在运行');}
+  try{const r=await fetch('/api/gitinit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg.git)});const j=await r.json();if(j&&j.ok)toast('GitHub 仓库已初始化并推送'+chkSvg());else toast('初始化失败：'+(j&&j.err||'未知错误'));}catch(e){toast('请求失败，确认 server.js 在运行');}
   renderSyncModal();
 }
 async function apiNutstoreTest(){
