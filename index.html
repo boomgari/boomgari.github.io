@@ -2383,11 +2383,10 @@ function studyDelLib(id){if(!confirm('删除该资料方案？'))return;D.studyL
 let gameView='week', gameTplDay=0, gameDrag=null;
 const YYS_ACT_TYPES_DEFAULT=['爬塔/海域探索','为崽而战','首领挑战/全服BOSS','抽卡UP/召唤','百鬼夜行','协同斗技','真蛇/秘魂','斗技PVP','逢魔之时','限时副本','其他'];
 function renderGame(){
-  const libN=(D.game.actArchive||[]).length;
   let html=`<div class="tabs">
     <div class="tab ${gameView==='week'?'on':''}" onclick="gameView='week';renderGame()">本周视图</div>
     <div class="tab ${gameView==='tpl'?'on':''}" onclick="gameView='tpl';renderGame()">日常/周常设置</div>
-    <div class="tab ${gameView==='lib'?'on':''}" onclick="gameView='lib';renderGame()">模板库${libN?`<span class="badge">${libN}</span>`:''}</div>
+    <div class="tab ${gameView==='lib'?'on':''}" onclick="gameView='lib';renderGame()">模板库</div>
   </div>`;
   if(gameView==='week')html+=renderGameWeek();
   else if(gameView==='tpl')html+=renderGameTpl();
@@ -2409,6 +2408,20 @@ function chkBox(checked,onchange){return '<label class="chk-custom"><input type=
 function foldArr(open){return '<svg class="fold-arr" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="'+(open?'M3 5 L8 10 L13 5':'M5 3 L10 8 L5 13')+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/></svg>';}
 /* 细线条图标：备注 */
 function icoNote(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 4 H16 V14 L13 17 H4 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M13 17 V14 H16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M7 8 H13 M7 11 H11" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>';}
+/* 细线条图标：铅笔（重命名） */
+function icoPencil(){return '<svg class="ico" viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="M13 3 L16 6 L6 16 L3 16 L3 13 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="miter"/><path d="M11 5 L14 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg>';}
+/* 折叠卡片：节级标题可点击展开/收起（区别于条目级折叠） */
+function foldCard(title,key,dflt,inner,cls){
+  const folded=isFolded(key,dflt);
+  return `<div class="card ${cls||''}">
+    <div class="fold-h" onclick="foldToggle('${key}',${dflt?1:0})" style="margin-bottom:${folded?'0':'10px'}">
+      <span class="arr">${foldArr(!folded)}</span>
+      <h2 style="font-size:calc(var(--fs)*1.033);font-weight:700;margin:0">${title}</h2>
+      <span class="spacer"></span>
+    </div>
+    ${folded?'':`<div class="fold-c">${inner}</div>`}
+  </div>`;
+}
 function renderGameWeek(){
   const progDay=D.game.progress[todayStr()]||{};
   const progWeek=D.game.progress[weekKey()]||{};
@@ -2814,19 +2827,18 @@ function renderGameTpl(){
   const days=['周一','周二','周三','周四','周五','周六','周日'];
   const dayBtns=days.map((d,i)=>`<span class="chip ${gameTplDay===i?'on':''}" onclick="gameTplDay=${i};renderGame()">${d}</span>`).join('');
   const rows=(D.game.daily[gameTplDay]||[]).map(t=>gameTplRow(t)).join('');
-  return `<div class="card">
-    <div class="card-h"><h2>每日日常设置（设一次即模板）</h2></div>
-    <div class="row" style="margin-bottom:10px">${dayBtns}</div>
+  const dailyInner=`<div class="row" style="margin-bottom:10px">${dayBtns}</div>
     <div id="gRows">${rows}</div>
     <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap">
       <button class="btn ghost sm" onclick="gAddRow()">＋ 添加日常</button>
       <button class="btn ghost sm" onclick="gSeedDaily(false)">导入标准日常（本日）</button>
       <button class="btn ghost sm" onclick="gSeedDaily(true)">导入标准日常（全周）</button>
     </div>
-    <div class="hint" style="margin-top:6px">导入只会补齐缺少的条目（按名称去重），不会覆盖你已有的设置；顺序可用左侧 ≡ 拖拽调整。寄养已单独做成主界面计次卡，不在此列表。</div>
-  </div>
-  ${gameWeeklyTpl()}
-  ${gameActivityTpl()}`;
+    <div class="hint" style="margin-top:6px">导入只会补齐缺少的条目（按名称去重），不会覆盖你已有的设置；顺序可用左侧 ≡ 拖拽调整。寄养已单独做成主界面计次卡，不在此列表。</div>`;
+  return foldCard('周期性活动','gw_act',false,gameActivityTpl())
+    + foldCard('每日日常设置','gw_daily',true,dailyInner)
+    + foldCard('周常设置','gw_weekly',true,gameWeeklyTpl())
+    + foldCard('类型与系列管理','gw_typemgr',true,gameTypeMgrTpl(),'type-mgr');
 }
 function gameTplRow(t){
   const drag=dragSpan('daily',t.id,gameTplDay);
@@ -2905,11 +2917,7 @@ function gameWeeklyTpl(){
       ${extra}
     </div><button class="del" onclick="gDelWeekly('${t.id}')">×</button></div>`;
   }).join('');
-  return `<div class="card"><div class="card-h"><h2>周常设置</h2></div>
-    <div class="hint">${esc(D.game.weeklyHint||'')}</div>
-    <details style="margin-top:6px"><summary style="cursor:pointer;font-size:calc(var(--fs)*0.85);color:var(--muted)">✎ 编辑建议顺序 / 简介</summary>
-    <textarea class="inp" onchange="gSetWeeklyHint(this.value)" style="width:100%;min-height:54px;margin-top:4px">${esc(D.game.weeklyHint||'')}</textarea></details>
-    ${rows}
+  return `${rows}
     <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">
       <button class="btn ghost sm" onclick="gAddWeekly('text')">＋ 普通</button>
       <button class="btn ghost sm" onclick="gAddWeekly('count')">＋ 按次</button>
@@ -2919,7 +2927,7 @@ function gameWeeklyTpl(){
       <button class="btn ghost sm" onclick="gAddWeekly('jiejie')">＋ 结界突破券</button>
       <button class="btn ghost sm" onclick="gSeedWeekly()">导入标准周常</button>
     </div>
-    <div class="hint" style="margin-top:6px">导入按名称/类型去重，只补齐缺的；顺序可用 ≡ 拖拽。</div></div>`;
+    <div class="hint" style="margin-top:6px">导入按名称/类型去重，只补齐缺的；顺序可用 ≡ 拖拽。</div>`;
 }
 function gAddWeekly(type){const t={id:uid(),name:'',shop:false,type:type||'text',count:0,goal:0,score:0,icon:'',reward:''};
   if(type==='points'){t.goal=600;t.reward='积分累计，达目标自动完成';}
@@ -3023,17 +3031,17 @@ function gameActivityTpl(){
       </div>`}
     </div>`;
   }).join('');
-  const typeChips=D.game.actTypes.map(t=>`<span class="chip sm" onclick="gActDelType('${esc(t)}')" title="点击删除该类型">${esc(t)} <button class="mvb" onclick="event.stopPropagation();gActRenameType('${esc(t)}')" title="重命名">✎</button> ×</span>`).join('');
-  const seriesChips=D.game.series.map(s=>`<span class="chip sm" onclick="gActDelSeries('${esc(s)}')" title="点击删除该系列">${esc(s)} ×</span>`).join('');
-  const tplChips=D.game.actTpl.map(t=>`<span class="chip sm" onclick="gActTplDel('${esc(t.id)}')" title="删除模板">${esc(t.name)} ×</span>`).join('');
   const archivedN=(D.game.actArchive||[]).length;
   const archHint=archivedN?`<div class="hint" style="margin:8px 0 0">📦 已自动归档 ${archivedN} 个过期活动至「模板库」页签，可一键引入复用。</div>`:'';
-  return `<div class="card"><div class="card-h"><h2>周期性活动</h2></div>${rows}
+  return `${rows}
     ${archHint}
-    <button class="btn ghost sm" onclick="gAddAct()">＋ 新增活动</button>
-  </div>
-  <div class="card type-mgr"><div class="card-h type-mgr-h"><h2>类型与系列管理</h2></div>
-    <div class="hint" style="margin-bottom:8px;white-space:normal;overflow:visible">类型管理（可不限数量增删；已用该类型的活动不会被删除）：</div>
+    <button class="btn ghost sm" onclick="gAddAct()">＋ 新增活动</button>`;
+}
+function gameTypeMgrTpl(){
+  const typeChips=D.game.actTypes.map(t=>`<span class="chip sm" onclick="gActDelType('${esc(t)}')" title="点击删除该类型">${esc(t)} <button class="mvb" onclick="event.stopPropagation();gActRenameType('${esc(t)}')" title="重命名">${icoPencil()}</button> ×</span>`).join('');
+  const seriesChips=D.game.series.map(s=>`<span class="chip sm" onclick="gActDelSeries('${esc(s)}')" title="点击删除该系列">${esc(s)} ×</span>`).join('');
+  const tplChips=D.game.actTpl.map(t=>`<span class="chip sm" onclick="gActTplDel('${esc(t.id)}')" title="删除模板">${esc(t.name)} ×</span>`).join('');
+  return `<div class="hint" style="margin-bottom:8px;white-space:normal;overflow:visible">类型管理（可不限数量增删；已用该类型的活动不会被删除）：</div>
     <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
       <input id="newActType" placeholder="新类型名" style="flex:1;min-width:120px">
       <button class="btn ghost sm" onclick="gActAddType()">＋ 添加类型</button>
@@ -3046,8 +3054,7 @@ function gameActivityTpl(){
     </div>
     <div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:6px">${seriesChips}</div>
     <div class="hint" style="margin-top:8px;white-space:normal;overflow:visible">💡 门票模板库（如「超鬼王 350+210」）：在门票型活动里点「存为模板」，之后新活动一键套用并自动算总门票。下方可删除已存模板。</div>
-    <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${tplChips||'<span class="hint">暂无模板</span>'}</div>
-  </div>`;
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${tplChips||'<span class="hint">暂无模板</span>'}</div>`;
 }
 function gAddAct(){D.game.activities.push({id:uid(),name:'',type:'其他',series:'',start:todayStr()+'T00:00',end:todayStr()+'T23:59',reward:'',priority:'',link:'',flex:[],tasks:[],progType:'binary',tk:{given:0,bought:0,consumed:0,phase2:0,perDay:0},dl:{target:0,done:0},weight:1,countLabel:'碎片',countTarget:0,countNow:0});save();renderGame();}
 function gActAddType(){const i=document.getElementById('newActType');const v=(i?i.value:'').trim();if(!v)return;if(!D.game.actTypes.includes(v))D.game.actTypes.push(v);if(i)i.value='';save();renderGame();}
@@ -3095,15 +3102,16 @@ function gActCountSet(aid,key,val){const a=gActFind(aid);if(!a||a.progType!=='co
 function gActCountInc(aid,delta){const a=gActFind(aid);if(!a||a.progType!=='count')return;a.countNow=Math.max(0,(+a.countNow||0)+delta);save();renderNav();renderGame();}
 function renderGameLib(){
   const arch=(D.game.actArchive||[]).slice().reverse();
-  let html=`<div class="card"><div class="card-h"><h2>📦 活动模板库（已结束的活动自动归档于此）</h2></div>`;
+  let html=`<div class="card"><div class="card-h"><h2>模板库（已结束的活动自动归档于此）</h2></div>`;
   if(!arch.length)html+=`<div class="empty"><div class="em">📭</div>暂无归档活动。活动结束后会自动出现在这里，方便同类活动再次一键引入。</div>`;
   arch.forEach(a=>{
     const tk=(a.tasks&&a.tasks.length)?a.tasks.map(t=>`<span class="tag">${esc(t.name)}${(+t.goal>1)?(' ×'+t.goal):''}</span>`).join(' '):'<span class="hint">无子任务</span>';
     html+=`<div class="item" style="flex-direction:column;gap:6px;align-items:stretch">
+      <b style="flex:1 1 100%;min-width:0;word-break:break-word;line-height:1.4">${esc(a.name||'(未命名)')}</b>
       <div class="row c" style="flex-wrap:wrap;gap:6px">
-        <b style="flex:1;min-width:0">${esc(a.name||'(未命名)')}</b>
         ${a.type?`<span class="tag">${esc(a.type)}</span>`:''}
         ${a.series?`<span class="tag alt">${esc(a.series)}</span>`:''}
+        <span class="spacer"></span>
         <button class="btn ghost sm" onclick="gActFromLib('${a.id}')">＋ 引入为新活动</button>
         <button class="del" onclick="gActDelLib('${a.id}')">×</button>
       </div>
@@ -4642,7 +4650,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.3';
+const APP_VER='v75.4';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
