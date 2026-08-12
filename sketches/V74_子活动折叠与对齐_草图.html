@@ -1,0 +1,157 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>V74 草图⑤ · 子活动折叠 + 对齐规范</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f4f5f7;color:#1f2329;padding:18px}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-size:19px;margin:0 0 4px} .sub{color:#7a8089;font-size:13px;margin-bottom:14px;line-height:1.5}
+.note{background:#fff;border:1px solid #e6e8eb;border-left:4px solid #97A6B2;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#444;margin-bottom:16px;line-height:1.75}
+.note b{color:#2b3038}
+.card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:16px}
+.card h2{font-size:14px;margin:0 0 4px}
+.card .desc{font-size:12.5px;color:#7a8089;line-height:1.6;margin:0 0 12px}
+.row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.col{flex:1;min-width:300px}
+.col h3{font-size:12px;margin:0 0 10px;color:#7a8089;font-weight:700;letter-spacing:.5px}
+/* 折叠卡 */
+.acard{border:1px solid #e3e6ea;border-radius:12px;margin-bottom:10px;overflow:hidden;background:#fff}
+.acard .ahead{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;background:#fafbfc}
+.acard .ahead:hover{background:#f2f5f7}
+.fold{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:#7a8089;font-size:11px;flex:none}
+.drag{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:#aab;font-size:15px;flex:none}
+.aname{font-weight:700;font-size:13.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.atag{font-size:11px;color:#5a6472;background:#eef1f4;border-radius:10px;padding:2px 9px;flex:none;white-space:nowrap}
+.asum{font-size:11px;color:#999;flex:none;white-space:nowrap}
+.delx{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border:none;background:#f3e3e1;color:#c0392b;border-radius:7px;font-size:15px;cursor:pointer;flex:none}
+.abody{padding:12px;border-top:1px solid #eef0f2}
+.abody .field{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:12.5px;flex-wrap:wrap}
+.abody .field label{color:#777;flex:none}
+.abody input,.abody select{padding:6px 9px;border:1px solid #d8dbe0;border-radius:8px;font-size:12.5px}
+.abody .ta{width:100%;min-height:54px;border:1px solid #d8dbe0;border-radius:8px;padding:8px;font-size:12.5px;font-family:inherit;resize:vertical}
+.collapsed .abody{display:none}
+.collapsed .ahead{background:#fff}
+/* 任务行（对齐示范） */
+.task{display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid #e3e6ea;border-radius:9px;margin:5px 0;background:#fff}
+.chk{width:20px;height:20px;border:2px solid #97A6B2;border-radius:5px;flex:none;display:inline-flex;align-items:center;justify-content:center}
+.chk.on{background:#97A6B2;border-color:#97A6B2}
+.chk.on svg{display:block}
+.tname{flex:1;min-width:60px;font-size:13px;line-height:1.3}
+.tctrl{display:flex;align-items:center;gap:6px;flex:none}
+.cyc{border:1px solid #d8dbe0;border-radius:7px;padding:4px 7px;font-size:12px;color:#5a6472;background:#fff}
+.notebtn{width:28px;height:28px;border:none;background:#eef1f4;border-radius:7px;color:#5a6472;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;font-size:12px}
+.mtag{font-size:11px;color:#5a6472;background:#eef1f4;border-radius:10px;padding:2px 9px}
+.mhint{color:#999}
+.nowbad{border:1px dashed #c98;background:#fdf8f3}
+.nowbad .task{align-items:flex-start}
+.nowbad .chk{margin-top:2px}
+.warn{font-size:11.5px;color:#b5632a;margin-top:6px;line-height:1.6}
+.foot{font-size:11.5px;color:#888;line-height:1.7;margin-top:8px}
+</style></head>
+<body><div class="wrap">
+<h1>V74 草图⑤ · 子活动折叠（模板+主界面）＋ 对齐规范</h1>
+<div class="sub">你确认 ①②③④ 完美；本页补充"每个子活动也能折叠"这一项（之前只做了大区折叠），并立一条全局对齐规范防止"里出外进"。<b>默认展开；智能默认：今日该活动已全部完成/打卡则默认收起。</b></div>
+<div class="note">
+<b>智能默认折叠判定（文字描述）：</b>打开设置/主界面时，对每个活动算一次默认态——<br>
+① 整体已完成（actProgress.doneAll，如 binary 已勾、门票耗尽、累计达标）→ <b>收起</b>；<br>
+② 有子任务且<b>今日周期内的子项已全部完成</b>（daily/ndays/once 各自按周期判定）→ <b>收起</b>；<br>
+③ 打卡型（daily）已满足 target → <b>收起</b>；<br>
+④ 其余 → <b>展开</b>。<br>
+手动点 ▶/▼ 后尊重用户选择，不再被智能逻辑覆盖（视图态记忆，输入不跳回）。
+</div>
+
+<!-- 模板界面 -->
+<div class="card">
+  <h2>① 模板界面（gameActivityTpl）：每个活动块可折叠</h2>
+  <p class="desc">左"现在"=4 个活动全展开字段挤在一起；右"建议"=每个活动是可折叠卡，表头常驻、字段可收起（示例：活动A 已收起、活动B 展开、活动C 因今日全完成默认收起）。</p>
+  <div class="row">
+    <div class="col nowbad">
+      <h3>现在 · 4 活动全展开（挤兑）</h3>
+      <div class="acard"><div class="abody" style="border-top:none">
+        <div class="field"><label>名称</label><input value="超鬼王" style="flex:1"></div>
+        <div class="field"><label>类型</label><select><option>大型</option></select><label>系列</label><select><option>未分组</option></select></div>
+        <div class="field"><label>开始</label><input value="08-05"><label>结束</label><input value="08-20"></div>
+        <div class="field"><label>奖励</label><input value="青吉鬼"><label>权重</label><input value="1" style="width:48px"></div>
+        <textarea class="ta">小纸人
+石距
+年兽</textarea>
+      </div></div>
+      <div class="acard"><div class="abody" style="border-top:none">
+        <div class="field"><label>名称</label><input value="斗技夕"><style></style></div>
+        <div class="field"><label>开始</label><input value="08-10"><label>结束</label><input value="08-15"></div>
+        <textarea class="ta">赢一场
+赢三场</textarea>
+      </div></div>
+      <div class="warn">4 个活动 × 多字段，滚动半天找不到要改的那个。</div>
+    </div>
+    <div class="col">
+      <h3>建议 · 可折叠卡（默认展开 + 智能收起）</h3>
+      <!-- 收起示例 -->
+      <div class="acard collapsed" onclick="this.classList.toggle('collapsed')">
+        <div class="ahead"><span class="fold">▶</span><span class="drag">≡</span><span class="aname">超鬼王</span><span class="atag">大型</span><span class="asum">子任务3 · 门票型</span><span class="delx">×</span></div>
+        <div class="abody"><div class="field"><label>名称</label><input value="超鬼王" style="flex:1"></div><div class="field"><label>类型</label><select><option>大型</option></select><label>系列</label><select><option>未分组</option></select></div><div class="field"><label>开始</label><input value="08-05"><label>结束</label><input value="08-20"></div><div class="field"><label>奖励</label><input value="青吉鬼"><label>权重</label><input value="1" style="width:48px"></div><textarea class="ta">小纸人
+石距
+年兽</textarea></div>
+      </div>
+      <!-- 展开示例 -->
+      <div class="acard" onclick="this.classList.toggle('collapsed')">
+        <div class="ahead"><span class="fold">▼</span><span class="drag">≡</span><span class="aname">斗技夕</span><span class="atag">中型</span><span class="asum">子任务2</span><span class="delx">×</span></div>
+        <div class="abody"><div class="field"><label>名称</label><input value="斗技夕" style="flex:1"></div><div class="field"><label>开始</label><input value="08-10"><label>结束</label><input value="08-15"></div><textarea class="ta">赢一场
+赢三场</textarea><button class="notebtn" style="border:1px solid #d8dbe0;background:#fff">＋ 灵活行</button></div>
+      </div>
+      <!-- 智能收起示例 -->
+      <div class="acard collapsed" onclick="this.classList.toggle('collapsed')">
+        <div class="ahead"><span class="fold">▶</span><span class="drag">≡</span><span class="aname">每日花合战</span><span class="atag">日常</span><span class="asum" style="color:#2e7d32">今日已完成 ✓</span><span class="delx">×</span></div>
+        <div class="abody"><div class="field">…编辑字段（默认收起，因今日已全完成）…</div></div>
+      </div>
+      <div class="foot">点任意卡头即展开/收起；表头始终显示名称+类型+摘要，一眼定位。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 主界面 -->
+<div class="card">
+  <h2>② 主界面活动卡（actCardInner）：卡内子内容可折叠</h2>
+  <p class="desc">左"现在"=子任务清单+进度条全铺开；右"建议"=卡头加 ▶/▼，收起只留表头+摘要行，展开才显示子任务/进度/备注。</p>
+  <div class="row">
+    <div class="col nowbad">
+      <h3>现在 · 卡内全展开</h3>
+      <div class="acard"><div class="ahead" style="background:#fff;cursor:default"><span class="drag">≡</span><span class="aname">超鬼王</span><span class="delx">×</span></div>
+        <div class="abody" style="border-top:1px solid #eef0f2">
+          <div class="meta"><span class="mtag">大型</span><span class="mtag">青吉鬼</span><span class="mhint">08-05 ~ 08-20</span></div>
+          <div class="task"><span class="chk"></span><span class="tname">小纸人</span><span class="tctrl"><span class="cyc">每天</span><span class="notebtn">📝</span></span></div>
+          <div class="task"><span class="chk on"><svg viewBox="0 0 24 24" width="12" height="12"><path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter"/></svg></span><span class="tname">石距</span><span class="tctrl"><span class="cyc">每天</span><span class="notebtn">📝</span></span></div>
+          <div class="task"><span class="chk"></span><span class="tname">年兽</span><span class="tctrl"><span class="cyc">每天</span><span class="notebtn">📝</span></span></div>
+          <div style="height:8px;background:#eee;border-radius:5px;margin:8px 0 4px;overflow:hidden"><div style="height:100%;width:33%;background:#97A6B2"></div></div>
+          <div class="mhint" style="font-size:11px">内容进度 33% · 1/3 项</div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <h3>建议 · 可折叠（收起态示范）</h3>
+      <div class="acard collapsed">
+        <div class="ahead" onclick="this.parentElement.classList.toggle('collapsed')"><span class="fold">▶</span><span class="drag">≡</span><span class="aname">超鬼王</span><span class="delx">×</span></div>
+        <div class="abody"><div class="meta"><span class="mtag">大型</span><span class="mtag">青吉鬼</span><span class="mhint">08-05 ~ 08-20</span></div>
+          <div class="task"><span class="chk"></span><span class="tname">小纸人</span><span class="tctrl"><span class="cyc">每天</span><span class="notebtn">📝</span></span></div>
+          <div class="task"><span class="chk on"><svg viewBox="0 0 24 24" width="12" height="12"><path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter"/></svg></span><span class="tname">石距</span><span class="tctrl"><span class="cyc">每天</span><span class="notebtn">📝</span></span></div>
+          <div style="height:8px;background:#eee;border-radius:5px;margin:8px 0 4px;overflow:hidden"><div style="height:100%;width:33%;background:#97A6B2"></div></div>
+          <div class="mhint" style="font-size:11px">内容进度 33% · 1/3 项</div>
+        </div>
+      </div>
+      <div class="foot">收起态：只显示「▶ 超鬼王 ×」一行，列表不抢空间；点 ▶ 展开看子任务。今日全完成的活动默认收起。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 对齐规范 -->
+<div class="card">
+  <h2>③ 对齐规范（防"里出外进"，全局适用）</h2>
+  <p class="desc">所有行 <code>align-items:center</code>；复选框/图标/文字同一水平中线；子任务行不零散折行。下方为对齐后的正确示范。</p>
+  <div class="task"><span class="chk"></span><span class="tname">小纸人（勾选后显示直线对号，与文字垂直居中）</span><span class="tctrl"><span class="cyc">每天</span><span class="notebtn">📝</span></span></div>
+  <div class="task"><span class="chk on"><svg viewBox="0 0 24 24" width="12" height="12"><path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter"/></svg></span><span class="tname">石距</span><span class="tctrl"><span class="cyc">每3天</span><span class="notebtn">📝</span></span></div>
+  <div class="foot">要点：① 复选框 20px 固定、文字 flex:1、周期/备注右对齐且不换行；② 折叠箭头▶▼、拖拽≡、复选框三者同尺寸同基线、左起点一致；③ 展开内容相对表头统一左缩进（12px），层级清晰不乱。V74 全站（活动卡、日常/周常、设置）统一套用此对齐。</div>
+</div>
+
+<div class="note" style="border-left-color:#B5A642">
+<b>确认即落地：</b>草图⑤与已确认完美的 ①②③④ 一起并入 V74。改真实文件时：模板块/活动卡包一层可折叠结构 + 模块级 <code>actFold{}</code> 记忆态 + <code>actSmartFold(a)</code> 算默认；并对全站列表行补一条"align-items:center + 复选框/图标同基线"的 CSS 纪律。未部署，等你确认。
+</div>
+
+</div></body></html>
