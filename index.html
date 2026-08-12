@@ -785,6 +785,8 @@ function defaultData(){
       actTypes:YYS_ACT_TYPES_DEFAULT.slice(),
       series:[],
       actTpl:[],
+      actArchive:[],
+      actSubCount:{},
       weeklyHint:'建议顺序：图鉴分享 → 荣誉商店兑换 → 勋章商店兑换 → 寮黑包兑换 → 秘闻副本 → 秘闻分享 → 六道之门×2 → 协同对弈 → 真蛇×2 → 百鬼棋局 → 结界突破券检查。每行可切换「性质」：普通(勾选完成) / 按次积累(记次数，达目标自动完成) / 积分累计(次数+积分，达目标自动完成)。'
     },
     note:{entries:[],water:{cup:350,log:{}},mood:'',weather:'',sleep:{},moodLog:{},weatherLog:{},sleepLog:{},checklist:{items:[],done:{}},temp:{items:[]},listen:{sessions:[],active:null}},
@@ -827,7 +829,7 @@ function load(){
   if(!D.fitness.actionLib)D.fitness.actionLib=[];
   if(!D.studyLib)D.studyLib=[];
   if(!D.game||typeof D.game!=='object')D.game=def.game;
-  D.game=migrateGame(D.game,def);dedupGameNames();migrateWeeklyProgress();migrateWeeklyV64();
+  D.game=migrateGame(D.game,def);dedupGameNames();migrateWeeklyProgress();migrateWeeklyV64();archiveExpiredGame();
   if(!D.note||typeof D.note!=='object')D.note=def.note;
   if(!Array.isArray(D.note.entries))D.note.entries=[];
   if(!D.note.water||typeof D.note.water!=='object'||Array.isArray(D.note.water))D.note.water={};
@@ -900,6 +902,21 @@ function dedupGameNames(){
     }
   }
 }
+function archiveExpiredGame(){
+  if(!D.game||!Array.isArray(D.game.activities))return;
+  if(!Array.isArray(D.game.actArchive))D.game.actArchive=[];
+  const now=new Date();
+  let changed=false;const remain=[];
+  (D.game.activities||[]).forEach(a=>{
+    const e=a.end?new Date(a.end):null;
+    if(e&&e<now){
+      if(!D.game.actArchive.some(x=>x.id===a.id)){
+        const cp=JSON.parse(JSON.stringify(a));cp.archivedAt=nowISO();D.game.actArchive.push(cp);changed=true;
+      }
+    } else remain.push(a);
+  });
+  if(changed){D.game.activities=remain;try{persistLocal();}catch(e){}}
+}
 function migrateGame(g,def){
   if(!g||typeof g!=='object'){return JSON.parse(JSON.stringify(def.game));}
   if(!g.daily||typeof g.daily!=='object'){g.daily={0:[],1:[],2:[],3:[],4:[],5:[],6:[]};}
@@ -929,10 +946,11 @@ function migrateGame(g,def){
   });
   if(!Array.isArray(g.activities))g.activities=[];
   g.activities=g.activities.map(a=>{a=a||{};
-    const tasks=Array.isArray(a.tasks)?a.tasks.map(t=>typeof t==='string'?{id:uid(),name:t}:{id:(t&&t.id)||uid(),name:(t&&(t.name||t.title))||''}):
-      (Array.isArray(a.taskList)?a.taskList.map(x=>({id:uid(),name:typeof x==='string'?x:(x&&x.name)||''})):[]);
+    const tasks=Array.isArray(a.tasks)?a.tasks.map(t=>typeof t==='string'?{id:uid(),name:t,goal:0}:{id:(t&&t.id)||uid(),name:(t&&(t.name||t.title))||'',goal:(t&&t.goal)?+t.goal:0}):
+      (Array.isArray(a.taskList)?a.taskList.map(x=>({id:uid(),name:typeof x==='string'?x:(x&&x.name)||'',goal:0})):[]);
     const normDt=(s,end)=>{if(!s)return '';if(!s.includes('T'))s=s+(end?'T23:59':'T00:00');return s;};
     const na={id:a.id||uid(),name:a.name||a.title||'',type:a.type||'其他',start:normDt(a.start||a.startDate||'',false),end:normDt(a.end||a.endDate||'',true),series:a.series||'',flex:Array.isArray(a.flex)?a.flex:[],reward:a.reward||'',priority:a.priority||'',link:a.link||'',tasks:tasks};
+    na.countLabel=a.countLabel||'碎片';na.countTarget=+a.countTarget||0;na.countNow=+a.countNow||0;
     // 进度模型：ticket=门票/计数型 · daily=每日进入型 · binary=二元/灵活型（默认）
     na.progType=a.progType||'binary';
     na.tk=(a.tk&&typeof a.tk==='object')?a.tk:{given:0,bought:0,consumed:0,phase2:0,perDay:0};
@@ -943,6 +961,8 @@ function migrateGame(g,def){
   if(!Array.isArray(g.actTypes)||!g.actTypes.length)g.actTypes=YYS_ACT_TYPES_DEFAULT.slice();
   if(!Array.isArray(g.series))g.series=[];
   if(!Array.isArray(g.actTpl))g.actTpl=[];
+  if(!Array.isArray(g.actArchive))g.actArchive=[];
+  if(!g.actSubCount||typeof g.actSubCount!=='object')g.actSubCount={};
   if(!g.actDone||typeof g.actDone!=='object')g.actDone={};
   if(!g.actTaskLast||typeof g.actTaskLast!=='object')g.actTaskLast={};
   // 重建 actTaskLast（每个子任务取最近完成日）；来源：各天 per-day 完成记录为主，旧 actTaskDone 兼容转为今日。日常类只认“当日”完成，故次日自动归零、不再永久全完成。
@@ -2294,12 +2314,15 @@ function studyDelLib(id){if(!confirm('删除该资料方案？'))return;D.studyL
 let gameView='week', gameTplDay=0, gameDrag=null;
 const YYS_ACT_TYPES_DEFAULT=['爬塔/海域探索','为崽而战','首领挑战/全服BOSS','抽卡UP/召唤','百鬼夜行','协同斗技','真蛇/秘魂','斗技PVP','逢魔之时','限时副本','其他'];
 function renderGame(){
+  const libN=(D.game.actArchive||[]).length;
   let html=`<div class="tabs">
     <div class="tab ${gameView==='week'?'on':''}" onclick="gameView='week';renderGame()">本周视图</div>
     <div class="tab ${gameView==='tpl'?'on':''}" onclick="gameView='tpl';renderGame()">日常/周常设置</div>
+    <div class="tab ${gameView==='lib'?'on':''}" onclick="gameView='lib';renderGame()">模板库${libN?`<span class="badge">${libN}</span>`:''}</div>
   </div>`;
   if(gameView==='week')html+=renderGameWeek();
-  else html+=renderGameTpl();
+  else if(gameView==='tpl')html+=renderGameTpl();
+  else if(gameView==='lib')html+=renderGameLib();
   $('#content').innerHTML=html;
 }
 function renderGameWeek(){
@@ -2499,16 +2522,24 @@ function fmtDt(s){return (s||'').replace('T',' ');}
 function actCardInner(a,prog){
   const p=actProgress(a);
   const st=actStatus(a);
-  const tdone=(a.tasks||[]).filter(t=>actTaskDoneEff(a,t)).length;
+  const tdone=(a.tasks||[]).filter(t=>actTaskComplete(a,t)).length;
   const ttotal=(a.tasks||[]).length;
   const tasks=a.tasks.map(t=>{
     const key=a.id+'_'+t.id;
-    const done=!!actTaskDoneEff(a,t);
+    const goal=+t.goal||0;
     const cyc=t.cycle||'daily';
-    const ts=(prog.activity_ts||{})[key];
+    const done=goal>1? (actTaskCountEff(a,t)>=goal) : !!actTaskDoneEff(a,t);
+    const ts=(goal>1)?null:(prog.activity_ts||{})[key];
     const nt=gameNote(key);const ex=gameNoteExp[key];
     const nb=ex?`<div class="note-edit"><textarea class="inp" id="gn_${key}" placeholder="补充备注（奖励/细节）">${nt?esc(nt.text):''}</textarea><button class="btn ghost sm" onclick="gameNoteSave('${key}')">保存备注</button></div>`:'';
-    return `<div class="item g-item ${done?'done':''}" style="padding:7px 8px;margin-bottom:5px;flex-wrap:wrap;gap:4px"><input type="checkbox" ${done?'checked':''} onchange="gProgAct('${a.id}','${t.id}',this.checked)"><div class="body" style="flex:1;min-width:90px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div>${ts?`<div class="sub hint">✓ ${fmtTime(ts)}</div>`:''}${nt?`<div class="sub note-line">📝 ${esc(nt.text)} <span class="hint">${fmtTime(nt.time)}</span></div>`:''}</div><select class="cycle-sel" title="完成周期" onchange="gActTaskCycle('${a.id}','${t.id}',this.value)"><option value="daily" ${cyc==='daily'?'selected':''}>每天</option><option value="ndays" ${cyc==='ndays'?'selected':''}>每${t.cycleN||3}天</option><option value="once" ${cyc==='once'?'selected':''}>一次</option></select>${cyc==='ndays'?`<input class="cycle-n" type="number" min="2" value="${t.cycleN||3}" title="每 N 天" onchange="gActTaskCycleN('${a.id}','${t.id}',this.value)">`:''}<button class="note-btn" title="备注" onclick="gameNoteToggle('${key}')">📝</button></div>${nb}`;
+    let ctrl;
+    if(goal>1){
+      const cnt=actTaskCountEff(a,t);
+      ctrl=`<div class="body" style="flex:1;min-width:60px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div></div><button class="btn ghost sm" onclick="gActTaskCount('${a.id}','${t.id}',-1)">－1</button><span style="min-width:48px;text-align:center;font-weight:600">${cnt}/${goal}</span><button class="btn ghost sm" onclick="gActTaskCount('${a.id}','${t.id}',1)">＋1</button><input class="cycle-n" type="number" min="0" value="${goal}" title="子任务计数目标(0=勾选)" style="width:50px" onchange="gActTaskGoalSet('${a.id}','${t.id}',this.value)">`;
+    } else {
+      ctrl=`<input type="checkbox" ${done?'checked':''} onchange="gProgAct('${a.id}','${t.id}',this.checked)"><div class="body" style="flex:1;min-width:90px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div>${ts?`<div class="sub hint">✓ ${fmtTime(ts)}</div>`:''}${nt?`<div class="sub note-line">📝 ${esc(nt.text)} <span class="hint">${fmtTime(nt.time)}</span></div>`:''}</div>`;
+    }
+    return `<div class="item g-item ${done?'done':''}" style="padding:7px 8px;margin-bottom:5px;flex-wrap:wrap;gap:4px">${ctrl}<select class="cycle-sel" title="完成周期" onchange="gActTaskCycle('${a.id}','${t.id}',this.value)"><option value="daily" ${cyc==='daily'?'selected':''}>每天</option><option value="ndays" ${cyc==='ndays'?'selected':''}>每${t.cycleN||3}天</option><option value="once" ${cyc==='once'?'selected':''}>一次</option></select>${cyc==='ndays'?`<input class="cycle-n" type="number" min="2" value="${t.cycleN||3}" title="每 N 天" onchange="gActTaskCycleN('${a.id}','${t.id}',this.value)">`:''}<button class="note-btn" title="备注" onclick="gameNoteToggle('${key}')">📝</button></div>${nb}`;
   }).join('');
   const flex=(a.flex||[]).map((f,i)=>`<span class="tag" style="display:inline-flex;align-items:center;gap:4px">${esc(f.k||'字段')}:<input value="${esc(f.v||'')}" placeholder="值" style="width:62px;border:none;background:transparent;font-size:calc(var(--fs)*0.8);color:inherit;padding:0" onchange="gActFlexSet('${a.id}',${i},'v',this.value)"></span>`).join('');
   let progHtml='';const bars=[];
@@ -2536,12 +2567,14 @@ function actCardInner(a,prog){
   const ats=(D.game.actDoneTs||{})[a.id];
   const anote=gameNote(a.id);const aexp=gameNoteExp[a.id];
   const aNoteBox=aexp?`<div class="note-edit"><textarea class="inp" id="gn_${a.id}" placeholder="活动备注（今日进度/掉落/心得）">${anote?esc(anote.text):''}</textarea><button class="btn ghost sm" onclick="gameNoteSave('${a.id}')">保存备注</button></div>`:'';
+  const countCtrl=(a.progType==='count')?`<div class="row" style="align-items:center;gap:6px;margin:4px 0;flex-wrap:wrap"><span class="tag">${esc(a.countLabel||'数量')}</span><button class="btn ghost sm" onclick="gActCountInc('${a.id}',-1)">－1</button><span style="min-width:54px;text-align:center;font-weight:600">${(+a.countNow||0)}/${(+a.countTarget||0)}</span><button class="btn ghost sm" onclick="gActCountInc('${a.id}',1)">＋1</button><span class="hint">累计计数型</span>${(+a.countTarget>0 && +a.countNow>=(+a.countTarget))?'<span class="tag done">已达成✓</span>':''}</div><div class="progbar ${((+a.countTarget>0 && +a.countNow>=(+a.countTarget))?'ok':'')}"><i style="width:${((+a.countTarget>0)?Math.min(100,Math.round((+a.countNow||0)/(+a.countTarget)*100)):0)}%"></i></div><div class="act-sum">${esc(a.countLabel||'数量')} 进度 ${(+a.countNow||0)}/${(+a.countTarget||0)}${(+a.countTarget>0)?(' · '+Math.min(100,Math.round((+a.countNow||0)/(+a.countTarget)*100))+'%'):''}${(+a.countTarget>0 && +a.countNow>=(+a.countTarget))?' · 已达成✓':''}</div>`:'';
   return `<div class="card" style="margin:6px 0 8px;${p.doneAll?'opacity:.55':''}"><div class="row c" style="flex-wrap:nowrap"><div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">${drag}${gActMv(a.id)}${doneChk}<b style="${p.doneAll?'text-decoration:line-through;opacity:.7':''};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.name)}</b></div><button class="del" onclick="delAct('${a.id}')">×</button></div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px">${statusTag} ${a.type?`<span class="tag">${esc(a.type)}</span>`:''} ${a.reward?`<span class="tag alt">${esc(a.reward)}</span>`:''} ${a.priority?`<span class="tag">${esc(a.priority)}</span>`:''} <span class="spacer"></span><span class="hint">${fmtDt(a.start)} ~ ${fmtDt(a.end)}</span> ${tempBtn} <button class="note-btn" title="备注" onclick="gameNoteToggle('${a.id}')">📝</button></div>
     ${ats?`<div class="sub hint">✓ 完成于 ${fmtTime(ats)}</div>`:''}
     ${anote?`<div class="sub note-line">📝 ${esc(anote.text)} <span class="hint">${fmtTime(anote.time)}</span></div>`:''}
     ${aNoteBox}
     ${a.link?`<div class="sub"><a href="${esc(a.link)}" target="_blank">攻略链接</a></div>`:''}
     ${flex?`<div class="meta-grid" style="margin-top:4px">${flex}</div>`:''}
+    ${countCtrl}
     ${progHtml}
     ${tasks||''}</div>`;
 }
@@ -2587,25 +2620,34 @@ function actProgress(a){
     done=Math.max(0,Math.min(total,done));
     time={done,total,pct: total>0?Math.round(done/total*100):0};
   }
-  // 内容进度（按子任务勾选占比，活动级持久完成）
+  // 内容进度（按子任务勾选/计数占比，活动级持久完成）
   let content=null;
   const tasks=a.tasks||[];
   if(tasks.length){
-    const cd=tasks.filter(t=>actTaskDoneEff(a,t)).length;
+    const cd=tasks.filter(t=>actTaskComplete(a,t)).length;
     content={done:cd,total:tasks.length,pct: tasks.length?Math.round(cd/tasks.length*100):0};
   }
-  // 聚合 pct（用于系列总进度条/角标）：优先内容，其次时间，再退化到原始逻辑
+  // 累计计数型：活动级进度（集齐数量兑换）
+  let count=null;
+  if(ty==='count'){
+    const lbl=a.countLabel||'数量'; const tgt=+a.countTarget||0; const now=+a.countNow||0;
+    const cpct= tgt>0?Math.min(100,Math.round(now/tgt*100)):0;
+    count={label:lbl,target:tgt,now,done:tgt>0&&now>=tgt,pct:cpct};
+  }
+  // 聚合 pct（用于系列总进度条/角标）：优先内容，其次时间，再累计计数，再退化到原始逻辑
   let pct;
   if(content) pct=content.pct;
   else if(time) pct=time.pct;
+  else if(ty==='count'){ pct= count&&count.target>0?count.pct:0; }
   else if(ty==='daily'){const dl=a.dl||{target:0,done:0};const target=+dl.target||0,done=+dl.done||0;pct= target>0?Math.min(100,Math.round(done/target*100)):(done>0?100:0);}
   else pct=(((D.game.actDone||{})[a.id])?100:0);
-  // 真正“完成”才用于置灰（内容全完 / binary勾选 / 门票耗尽）
+  // 真正“完成”才用于置灰（内容全完 / 累计达标 / binary勾选 / 门票耗尽）
   let doneAll=false;
   if(content&&content.pct>=100)doneAll=true;
+  else if(ty==='count'){ doneAll=!!(count&&count.done); }
   else if(ty==='binary')doneAll=!!((D.game.actDone||{})[a.id]);
   else if(ty==='ticket'){const tk=a.tk||{};const total=(+tk.given||0)+(+tk.bought||0);doneAll=(total>0&&(+tk.consumed||0)>=total);}
-  return {pct,ty,time,content,doneAll,dl:(a.dl||{target:0,done:0})};
+  return {pct,ty,time,content,count,doneAll,dl:(a.dl||{target:0,done:0})};
 }
 function actStatus(a){
   const p=actProgress(a);
@@ -2640,7 +2682,7 @@ function gWeeklySet(tid,key,val){const t=gWeeklyFind(tid);if(!t)return;t[key]=va
   save();}
 function gSetWeeklyHint(v){D.game.weeklyHint=v;save();renderGame();}
 function gActFind(aid){return D.game.activities.find(x=>x.id===aid);}
-function gActSet(aid,key,val){const a=gActFind(aid);if(!a)return;a[key]=val;save();}
+function gActSet(aid,key,val){const a=gActFind(aid);if(!a)return;a[key]=val;if(key==='progType'){if(val==='count'){if(!a.countLabel)a.countLabel='碎片';if(a.countTarget==null)a.countTarget=0;if(a.countNow==null)a.countNow=0;}if(val==='daily'){a.dl=a.dl||{target:0,done:0};}}save();}
 function gActDT(arg,val){
   const p=String(arg||'').split('|');const a=gActFind(p[0]);if(!a)return;
   const key=p[1],part=p[2];
@@ -2782,9 +2824,10 @@ function gDelWeekly(id){D.game.weekly=D.game.weekly.filter(t=>t.id!==id);save();
 function gameActivityTpl(){
   const typeOpts=sel=>D.game.actTypes.map(o=>`<option ${sel===o?'selected':''}>${esc(o)}</option>`).join('');
   const seriesOpts=sel=>['未分组',...D.game.series].map(o=>`<option ${sel===(o==='未分组'?'':o)?'selected':''}>${esc(o)}</option>`).join('');
-  const PT_LABEL={binary:'二元/灵活(勾选完成)',ticket:'门票型(消耗门票)',daily:'每日进入型(按天打卡)'};
-  const ptSel=a=>`<select onchange="gActSet('${a.id}','progType',this.value);renderGame()" style="flex:0 0 auto;font-size:calc(var(--fs)*0.8)">${['binary','ticket','daily'].map(o=>`<option value="${o}" ${(a.progType||'binary')===o?'selected':''}>${PT_LABEL[o]}</option>`).join('')}</select>`;
-  const rows=D.game.activities.map(a=>{
+  const PT_LABEL={binary:'勾选完成(灵活)',ticket:'门票消耗',daily:'每日进入',count:'累计计数(集齐数量)'};
+  const ptSel=a=>`<select onchange="gActSet('${a.id}','progType',this.value);renderGame()" style="flex:0 0 auto;font-size:calc(var(--fs)*0.8)">${['binary','ticket','daily','count'].map(o=>`<option value="${o}" ${(a.progType||'binary')===o?'selected':''}>${PT_LABEL[o]}</option>`).join('')}</select>`;
+  const actsNow=D.game.activities.filter(a=>{const e=a.end?new Date(a.end):null;return !e||e>=new Date();});
+  const rows=actsNow.map(a=>{
     const ty=a.progType||'binary';
     let extra='';
     if(ty==='ticket'){
@@ -2805,6 +2848,15 @@ function gameActivityTpl(){
       <div class="hint" style="width:100%">总门票 ${total} · 已消耗 ${+tk.consumed||0} · 剩余 ${remaining}${days?(' · 按上限约还需 '+days+' 天'):''}</div>`;
     } else if(ty==='daily'){
       extra=`<div class="hint" style="width:100%">进度已自动计算：填了起止日期→按日历天数（时间进度）；加了子任务→按勾选占比（内容进度）。无需手动填天数，也不会再出现 0/0。</div>`;
+    } else if(ty==='count'){
+      extra=`<div class="row" style="width:100%;margin:4px 0;gap:6px;flex-wrap:wrap">
+        <label style="font-size:calc(var(--fs)*0.8)">计数标签 <input type="text" value="${esc(a.countLabel||'碎片')}" style="width:90px" onchange="gActCountSet('${a.id}','label',this.value)"></label>
+        <label style="font-size:calc(var(--fs)*0.8)">目标数量 <input type="number" value="${+a.countTarget||''}" style="width:62px" onchange="gActCountSet('${a.id}','target',+this.value)"></label>
+        <span class="tag">当前 ${+a.countNow||0}</span>
+        <button class="btn ghost sm" onclick="gActCountInc('${a.id}',1)">＋1</button>
+        <button class="btn ghost sm" onclick="gActCountInc('${a.id}',-1)">－1</button>
+      </div>
+      <div class="hint" style="width:100%">累计计数型：活动期间集齐目标数量（如 25 碎片兑换奖励）。下方子任务可给单项设「计数目标」，按周期各自累计。</div>`;
     }
     return `<div class="item" style="align-items:stretch;flex-direction:column;gap:6px">
     <div class="row c" style="width:100%;flex-wrap:wrap;gap:6px">
@@ -2823,6 +2875,7 @@ function gameActivityTpl(){
       <input class="timepick" readonly value="${esc((a.end||'').slice(11,16))}" placeholder="时间" style="flex:0 0 auto;width:96px" onclick="openTP(this,this.value,'gActDT','${a.id}|end|t')">
     </div>
     <div class="row" style="width:100%;margin:0;flex-wrap:wrap;gap:6px">
+      <span class="hint" style="flex:0 0 auto">完成方式</span>
       ${ptSel(a)}
       <label style="font-size:calc(var(--fs)*0.8)">权重 <input type="number" value="${+a.weight||1}" style="width:48px" onchange="gActSet('${a.id}','weight',+this.value)"></label>
       <input type="text" placeholder="奖励" value="${esc(a.reward||'')}" oninput="gActSet('${a.id}','reward',this.value)" style="flex:1;min-width:90px">
@@ -2853,7 +2906,10 @@ function gameActivityTpl(){
   const typeChips=D.game.actTypes.map(t=>`<span class="chip sm" onclick="gActDelType('${esc(t)}')" title="点击删除该类型">${esc(t)} <button class="mvb" onclick="event.stopPropagation();gActRenameType('${esc(t)}')" title="重命名">✎</button> ×</span>`).join('');
   const seriesChips=D.game.series.map(s=>`<span class="chip sm" onclick="gActDelSeries('${esc(s)}')" title="点击删除该系列">${esc(s)} ×</span>`).join('');
   const tplChips=D.game.actTpl.map(t=>`<span class="chip sm" onclick="gActTplDel('${esc(t.id)}')" title="删除模板">${esc(t.name)} ×</span>`).join('');
+  const archivedN=(D.game.actArchive||[]).length;
+  const archHint=archivedN?`<div class="hint" style="margin:8px 0 0">📦 已自动归档 ${archivedN} 个过期活动至「模板库」页签，可一键引入复用。</div>`:'';
   return `<div class="card"><div class="card-h"><h2>周期性活动</h2></div>${rows}
+    ${archHint}
     <button class="btn ghost sm" onclick="gAddAct()">＋ 新增活动</button>
     <div class="hint" style="margin-top:10px;white-space:normal;overflow:visible">类型管理（可不限数量增删；已用该类型的活动不会被删除）：</div>
     <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px">
@@ -2871,7 +2927,7 @@ function gameActivityTpl(){
     <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${tplChips||'<span class="hint">暂无模板</span>'}</div>
   </div>`;
 }
-function gAddAct(){D.game.activities.push({id:uid(),name:'',type:'其他',series:'',start:todayStr()+'T00:00',end:todayStr()+'T23:59',reward:'',priority:'',link:'',flex:[],tasks:[],progType:'binary',tk:{given:0,bought:0,consumed:0,phase2:0,perDay:0},dl:{target:0,done:0},weight:1});save();renderGame();}
+function gAddAct(){D.game.activities.push({id:uid(),name:'',type:'其他',series:'',start:todayStr()+'T00:00',end:todayStr()+'T23:59',reward:'',priority:'',link:'',flex:[],tasks:[],progType:'binary',tk:{given:0,bought:0,consumed:0,phase2:0,perDay:0},dl:{target:0,done:0},weight:1,countLabel:'碎片',countTarget:0,countNow:0});save();renderGame();}
 function gActAddType(){const i=document.getElementById('newActType');const v=(i?i.value:'').trim();if(!v)return;if(!D.game.actTypes.includes(v))D.game.actTypes.push(v);if(i)i.value='';save();renderGame();}
 function gActDelType(t){if(!confirm('删除类型「'+t+'」？\n（已用该类型的活动不会被删除，仅失去该快捷选项）'))return;D.game.actTypes=D.game.actTypes.filter(x=>x!==t);save();renderGame();}
 function gActRenameType(old){const v=prompt('重命名活动类型：',old);if(v===null)return;const n=v.trim();if(!n||n===old)return;const i=D.game.actTypes.indexOf(old);if(i>=0)D.game.actTypes[i]=n;(D.game.activities||[]).forEach(a=>{if(a.type===old)a.type=n;});save();renderGame();}
@@ -2881,6 +2937,88 @@ function gActFlexAdd(aid){const a=gActFind(aid);if(!a)return;a.flex=a.flex||[];a
 function gActFlexSet(aid,i,k,v){const a=gActFind(aid);if(!a||!a.flex||!a.flex[i])return;a.flex[i][k]=v;save();}
 function gActFlexDel(aid,i){const a=gActFind(aid);if(!a||!a.flex)return;a.flex.splice(i,1);save();renderGame();}
 function delAct(id){if(!confirm('删除该活动？'))return;D.game.activities=D.game.activities.filter(a=>a.id!==id);save();renderGame();}
+/* ===== v73：累计计数型 + 子任务计数目标 + 活动模板库 ===== */
+function actSubPeriod(a,t){
+  const cyc=t.cycle||'daily';
+  if(cyc==='once')return 'once';
+  if(cyc==='ndays'){const N=Math.max(1,+t.cycleN||3);const anchor=a.start?a.start.slice(0,10):'2000-01-01';return 'n'+Math.floor(Math.max(0,daysBetween(anchor,todayStr()))/N);}
+  return todayStr();
+}
+function actTaskCountEff(a,t){
+  const key=a.id+'_'+t.id;
+  const sc=(D.game.actSubCount||{})[key];
+  if(!sc)return 0;
+  if(sc.period!==actSubPeriod(a,t))return 0;
+  return +sc.count||0;
+}
+function actTaskComplete(a,t){
+  const goal=+t.goal||0;
+  if(goal>1)return actTaskCountEff(a,t)>=goal;
+  return actTaskDoneEff(a,t);
+}
+function gActTaskCount(aid,tid,delta){
+  const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  D.game.actSubCount=D.game.actSubCount||{};
+  const key=a.id+'_'+tid;const per=actSubPeriod(a,t);
+  const sc=D.game.actSubCount[key]=D.game.actSubCount[key]||{period:per,count:0};
+  if(sc.period!==per){sc.period=per;sc.count=0;}
+  sc.count=Math.max(0,(+sc.count||0)+delta);
+  save();renderNav();renderGame();
+}
+function gActTaskGoalSet(aid,tid,v){
+  const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  t.goal=Math.max(0,+v||0);save();renderGame();
+}
+function gActCountSet(aid,key,val){const a=gActFind(aid);if(!a||a.progType!=='count')return;if(key==='label')a.countLabel=val;else if(key==='target')a.countTarget=Math.max(0,+val||0);else if(key==='now')a.countNow=Math.max(0,+val||0);save();renderNav();renderGame();}
+function gActCountInc(aid,delta){const a=gActFind(aid);if(!a||a.progType!=='count')return;a.countNow=Math.max(0,(+a.countNow||0)+delta);save();renderNav();renderGame();}
+function renderGameLib(){
+  const arch=(D.game.actArchive||[]).slice().reverse();
+  let html=`<div class="card"><div class="card-h"><h2>📦 活动模板库（已结束的活动自动归档于此）</h2></div>`;
+  if(!arch.length)html+=`<div class="empty"><div class="em">📭</div>暂无归档活动。活动结束后会自动出现在这里，方便同类活动再次一键引入。</div>`;
+  arch.forEach(a=>{
+    const tk=(a.tasks&&a.tasks.length)?a.tasks.map(t=>`<span class="tag">${esc(t.name)}${(+t.goal>1)?(' ×'+t.goal):''}</span>`).join(' '):'<span class="hint">无子任务</span>';
+    html+=`<div class="item" style="flex-direction:column;gap:6px;align-items:stretch">
+      <div class="row c" style="flex-wrap:wrap;gap:6px">
+        <b style="flex:1;min-width:0">${esc(a.name||'(未命名)')}</b>
+        ${a.type?`<span class="tag">${esc(a.type)}</span>`:''}
+        ${a.series?`<span class="tag alt">${esc(a.series)}</span>`:''}
+        <button class="btn ghost sm" onclick="gActFromLib('${a.id}')">＋ 引入为新活动</button>
+        <button class="del" onclick="gActDelLib('${a.id}')">×</button>
+      </div>
+      <div class="meta-grid"><span class="hint">原起止：${fmtDt(a.start)} ~ ${fmtDt(a.end)}</span>${a.archivedAt?`<span class="hint">归档于 ${fmtDt(a.archivedAt)}</span>`:''}</div>
+      <div class="meta-grid"><span class="hint">子任务：</span>${tk}</div>
+      ${a.reward?`<div class="sub"><span class="tag alt">${esc(a.reward)}</span></div>`:''}
+    </div>`;
+  });
+  html+=`<div class="hint" style="margin-top:10px">引入为新活动会复制名称、类型、系列、子任务与完成方式，并把起止日期重置为「今天 00:00 ~ 今天 23:59」，之后你可逐项修改以适配最新情况。</div>`;
+  html+=`</div>`;
+  return html;
+}
+function gActFromLib(libid){
+  const src=(D.game.actArchive||[]).find(x=>x.id===libid);
+  if(!src)return;
+  const na=JSON.parse(JSON.stringify(src));
+  na.id=uid();
+  na.start=todayStr()+'T00:00';
+  na.end=todayStr()+'T23:59';
+  na.archivedAt=undefined;
+  na.countNow=0;
+  na.actDone={};na.actTaskLast={};
+  na.tasks=(na.tasks||[]).map(t=>({id:uid(),name:t.name,cycle:t.cycle||'daily',cycleN:t.cycleN||3,goal:+t.goal||0}));
+  na.progType=na.progType||'binary';
+  na.flex=(na.flex||[]).map(f=>({k:f.k||'',v:f.v||''}));
+  delete na.actTaskDone;
+  D.game.activities=D.game.activities||[];
+  D.game.activities.push(na);
+  if(D.game.actSubCount){na.tasks.forEach(t=>{delete D.game.actSubCount[na.id+'_'+t.id];});}
+  save();gameView='week';renderGame();
+  toast('已从模板库引入「'+(na.name||'活动')+'」，日期已重置为今天，可在「日常/周常设置」调整。');
+}
+function gActDelLib(libid){
+  if(!confirm('从模板库删除该归档活动？\n（仅删除模板，不影响已引入的活动）'))return;
+  D.game.actArchive=(D.game.actArchive||[]).filter(x=>x.id!==libid);
+  save();renderGame();
+}
 
 /* ================= 观影记录 ================= */
 let movieFilter='全部';
@@ -4382,7 +4520,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v72';
+const APP_VER='v73';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
