@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>V75.5 问题修复草图</title>
+<style>
+  :root{--fs:15px;--ac:#4F7365;--ink:#222;--line:#e4e8ec;--soft:#f4f7f6;--bad:#b04a4a;--ok:#2e8b57}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--soft);color:var(--ink);font:calc(var(--fs)*1)/1.65 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:780px;margin:0 auto;padding:18px 14px 60px}
+  .hero{background:var(--ac);color:#fff;border-radius:14px;padding:18px;margin-bottom:16px}
+  .hero h1{margin:0 0 4px;font-size:calc(var(--fs)*1.25)}
+  .hero .sub{opacity:.92;font-size:calc(var(--fs)*0.86)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 15px;margin:12px 0}
+  .card-h{display:flex;align-items:center;gap:8px;margin:-2px 0 10px}
+  .card-h .n{background:var(--ac);color:#fff;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:calc(var(--fs)*0.82);font-weight:700;flex:none}
+  .card-h h2{margin:0;font-size:calc(var(--fs)*1.04);font-weight:700}
+  .tag{display:inline-block;background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:calc(var(--fs)*0.78);color:#555;margin:1px 4px 1px 0}
+  .tag.ok{background:#eafaf0;border-color:#bfe6cd;color:var(--ok)}
+  .tag.bad{background:#fdf0f0;border-color:#f3d2d2;color:var(--bad)}
+  p{margin:7px 0}
+  ul{margin:7px 0;padding-left:20px}
+  li{margin:4px 0}
+  code{background:var(--soft);border:1px solid var(--line);border-radius:5px;padding:0 5px;font-size:calc(var(--fs)*0.82);word-break:break-all}
+  .before,.after{font-size:calc(var(--fs)*0.9);padding:10px;border-radius:8px;margin:8px 0;line-height:1.7}
+  .before{background:#fdf0f0;border:1px solid #f3d2d2}
+  .after{background:#eef8f1;border:1px solid #cde9d4}
+  .before b{color:var(--bad)}.after b{color:var(--ok)}
+  .phone{max-width:320px;margin:10px auto;border:2px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}
+  .p-head{height:28px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:12px;color:#888}
+  .p-body{padding:12px}
+  .p-tabs{display:flex;gap:6px;margin-bottom:10px}
+  .p-tab{flex:1;text-align:center;padding:6px 0;background:var(--soft);border-radius:8px;font-size:calc(var(--fs)*0.85)}
+  .p-tab.on{background:var(--ac);color:#fff}
+  .p-card{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}
+  .p-title{font-weight:700;margin-bottom:4px}
+  .p-sub{font-size:calc(var(--fs)*0.8);color:#666}
+  .p-row{display:flex;align-items:center;gap:8px;margin:4px 0}
+  .pill{background:var(--soft);border-radius:6px;padding:2px 8px;font-size:calc(var(--fs)*0.78)}
+  .p-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .p-btn{font-size:calc(var(--fs)*0.78);padding:3px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
+  .undefined{font-size:calc(var(--fs)*1.2);font-weight:700;text-align:center;padding:30px 0;color:var(--bad)}
+  .foot{font-size:calc(var(--fs)*0.78);color:#888;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>V75.5 · 两个问题修复草图</h1>
+    <div class="sub">在 v75.5 部署前必须先修的两个 bug：从长计议模板重复、工作记录 undefined</div>
+  </div>
+
+  <!-- 问题一 -->
+  <div class="card">
+    <div class="card-h"><span class="n">1</span><h2>从长计议 · 归档区「五一洛阳行」重复 9 次</h2></div>
+    <p><span class="tag bad">问题</span> 截图显示归档标签页里，同一条「五一洛阳行（示例·已归档）」出现了 9 次，用户确认完全相同。</p>
+    <p><b>根因定位：</b></p>
+    <ul>
+      <li><code>init()</code> 在 <code>load()</code> 之后自动调用 <code>planSeedLuoyang(true)</code> 播种「洛阳范本示例」。</li>
+      <li>播种函数用 <code>D._meta.planSeedLuoyang</code> 做标记，但早期版本可能未正确写标 / 标丢失，导致同一范本被多次导入。</li>
+      <li>虽然 v75.4 的 <code>planSeedLuoyang</code> 内部已有「已存在则不重复导入」的二次检查，但用户本地历史数据里已经积累了 9 条。</li>
+    </ul>
+
+    <div class="before">
+      <b>修复前（现状）</b><br>
+      归档列表滚动时出现 N 条一模一样的「五一洛阳行（示例·已归档）」，占空间、干扰查看真实归档。
+    </div>
+
+    <div class="after">
+      <b>修复后</b><br>
+      启动时执行一次性清理：若检测到多条标题含「五一洛阳行」且状态为已归档的事项，只保留一条，删除其余。清理完成后写 <code>D._meta.planCleanLuoyang20250813=true</code> 标记，避免误删用户后来手动创建的同名事项。
+    </div>
+
+    <div class="phone">
+      <div class="p-head">荣耀 Magic5 Pro 示意</div>
+      <div class="p-body">
+        <div class="p-tabs"><div class="p-tab">筹备中</div><div class="p-tab on">归档 9</div><div class="p-tab">模板库</div><div class="p-tab">备选库</div></div>
+        <p style="font-size:13px;color:#666;margin:0 0 8px">修复前：9 条重复</p>
+        <div class="p-card"><div class="p-title">五一洛阳行（示例·已归档）</div><div class="p-sub">2026-05-01 → 2026-05-03 · 共 3 天</div><div class="p-acts"><button class="p-btn">打开</button><button class="p-btn">复活</button></div></div>
+        <div class="p-card"><div class="p-title">五一洛阳行（示例·已归档）</div><div class="p-sub">2026-05-01 → 2026-05-03 · 共 3 天</div><div class="p-acts"><button class="p-btn">打开</button><button class="p-btn">复活</button></div></div>
+        <div style="text-align:center;color:#999;font-size:13px">… 还有 7 条相同 …</div>
+        <hr style="border:none;border-top:1px dashed var(--line);margin:14px 0">
+        <p style="font-size:13px;color:#666;margin:0 0 8px">修复后：仅保留 1 条</p>
+        <div class="p-card"><div class="p-title">五一洛阳行（示例·已归档）</div><div class="p-sub">2026-05-01 → 2026-05-03 · 共 3 天</div><div class="p-acts"><button class="p-btn">打开</button><button class="p-btn">复活</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 问题二 -->
+  <div class="card">
+    <div class="card-h"><span class="n">2</span><h2>工作台账 ·「工作记录」标签页显示 undefined</h2></div>
+    <p><span class="tag bad">问题</span> 截图显示点进「工作记录」标签后，内容区只显示一个 <code>undefined</code>，无法录入、查看、编辑。</p>
+    <p><b>根因定位：</b></p>
+    <ul>
+      <li><code>renderWork()</code> 里写：<code>else if(workTab==='log'){html+=renderWorkLog();}</code></li>
+      <li>但 <code>renderWorkLog()</code>  internally 自己执行了 <code>$('#content').innerHTML=html</code>，并没有把 HTML 作为返回值。</li>
+      <li>因此 <code>html += undefined</code>，最终页面上出现「undefined」字符串，且真正的工作记录内容被覆盖。</li>
+    </ul>
+
+    <div class="before">
+      <b>修复前（现状）</b><br>
+      点「工作记录」→ 页面中央显示 <code>undefined</code>；速记/详细表单的输入框、历史记录全看不到，无法新增。
+    </div>
+
+    <div class="after">
+      <b>修复后</b><br>
+      让 <code>renderWorkLog()</code> 把生成的 HTML <b>return</b> 出来，由 <code>renderWork()</code> 统一写入 <code>$('#content').innerHTML</code>。工作记录页正常显示「速记/详细」切换、输入表单、历史记录列表，编辑/删除按钮可用。
+    </div>
+
+    <div class="phone">
+      <div class="p-head">荣耀 Magic5 Pro 示意</div>
+      <div class="p-body">
+        <div class="p-tabs"><div class="p-tab">待办列表</div><div class="p-tab on">工作记录</div><div class="p-tab">统计</div></div>
+        <p style="font-size:13px;color:#666;margin:0 0 8px">修复前</p>
+        <div class="undefined">undefined</div>
+        <hr style="border:none;border-top:1px dashed var(--line);margin:14px 0">
+        <p style="font-size:13px;color:#666;margin:0 0 8px">修复后</p>
+        <div class="p-row">
+          <span class="pill on" style="background:var(--ac);color:#fff">⚡ 速记</span>
+          <span class="pill">📝 详细</span>
+          <span style="flex:1"></span>
+          <span class="pill">全部类型 ▾</span>
+        </div>
+        <div class="p-card">
+          <div class="p-title">速记一笔</div>
+          <div class="p-sub" style="margin:4px 0">今天做了啥（一句话）</div>
+          <div style="border:1px solid var(--line);border-radius:6px;padding:6px;font-size:13px;color:#999">例：提前做完竞品分析</div>
+          <button class="p-btn" style="margin-top:6px;background:var(--ac);color:#fff;border-color:var(--ac)">记一笔</button>
+        </div>
+        <div class="p-card">
+          <div class="p-row"><b>提前做完竞品分析</b><span class="pill" style="background:var(--ac);color:#fff">提前完成</span></div>
+          <div class="p-sub">2026.08.13 09:30 · 项目部 · 2h</div>
+        </div>
+      </div>
+    </div>
+
+    <p><b>关于「工作记录」原有功能要求（从本端记忆复原）：</b></p>
+    <ul>
+      <li>独立页签：待办列表 / 工作记录 / 统计。</li>
+      <li>两种录入模式：⚡ 速记（一句话，自动取当前时间）、📝 详细（完成时间 datetime-local、类型、标题、详情、关联项目/部门、耗时、自定义项）。</li>
+      <li>历史记录按完成时间倒序，显示类型标签、时间、项目、耗时、详情、自定义项。</li>
+      <li>支持编辑（弹窗）和删除；编辑字段与 <code>EDIT_SCHEMA.log</code> 一致。</li>
+      <li>统计页按工作记录类型画环形图、按月份筛选。</li>
+    </ul>
+    <p>v75.4 源码里这些字段与 <code>EDIT_SCHEMA.log</code> 均已存在，只是渲染函数返回值写错导致页面显示 <code>undefined</code>。修复后即可全部恢复。</p>
+  </div>
+
+  <div class="foot">下一步：确认本草图后，在 v75.4 规范源上实现两个修复 + v75.5 折叠/图标改造，跑通 _t.js 后部署。</div>
+
+</div>
+</body>
+</html>
