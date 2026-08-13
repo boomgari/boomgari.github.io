@@ -762,15 +762,15 @@ const KEY='workbuddy_data';
 let D, currentModule='work';
 
 const NAV=[
-  {id:'note',name:'日常小记',ic:icoNote()},
-  {id:'work',name:'工作台账',ic:icoWork()},
-  {id:'fitness',name:'健身打卡',ic:icoFitness()},
-  {id:'study',name:'学习计划',ic:icoStudy()},
-  {id:'game',name:'痒痒鼠来咯',ic:icoGame()},
-  {id:'plan',name:'从长计议',ic:icoPlan()},
-  {id:'movie',name:'观影记录',ic:icoMovie()},
-  {id:'quarter',name:'季度期望',ic:icoQuarter()},
-  {id:'wish',name:'心愿单',ic:icoWish()}
+  {id:'note',name:'日常小记',ic:'🌅'},
+  {id:'work',name:'工作台账',ic:'📋'},
+  {id:'fitness',name:'健身打卡',ic:'💪'},
+  {id:'study',name:'学习计划',ic:'🎓'},
+  {id:'game',name:'痒痒鼠来咯',ic:'🎮'},
+  {id:'plan',name:'从长计议',ic:'🗺️'},
+  {id:'movie',name:'观影记录',ic:'🎬'},
+  {id:'quarter',name:'季度期望',ic:'🚩'},
+  {id:'wish',name:'心愿单',ic:'❤️'}
 ];
 
 function emptyWeekTpl(){return [[],[],[],[],[],[],[]];}
@@ -1906,7 +1906,7 @@ function renderFitToday(){
     <div class="stat-card"><div class="n">${totalTimes}</div><div class="l">累计总次数</div></div>
   </div>
   <div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="fitResetToday()">重置今日</button></div>
-  ${rec.items.length?items:`<div class="empty"><div class="em">${icoFitness()}</div>${wn}暂无计划，去「周模板」设置或下方自由添加</div>`}
+  ${rec.items.length?items:`<div class="empty"><div class="em">💪</div>${wn}暂无计划，去「周模板」设置或下方自由添加</div>`}
   ${foldCard('自由添加（仅今日）','fit_free',0,`
     <div class="row">
       <div class="field"><label>名称</label><input type="text" id="ff_name"></div>
@@ -2235,7 +2235,7 @@ function renderStudy(){
   html+=`<div class="row" style="margin-bottom:12px">${['全部'].concat(studyAllTypes()).map(t=>`<span class="chip ${studyFilter===t?'on':''}" onclick="studyFilter='${t}';renderStudy()">${t}</span>`).join('')}</div>
   <div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="clearDone('study')">清空已完成</button></div>`;
   const list=D.study.filter(x=>studyFilter==='全部'||x.type===studyFilter);
-  if(list.length===0)html+=`<div class="empty"><div class="em">${icoStudy()}</div>暂无学习计划</div>`;
+  if(list.length===0)html+=`<div class="empty"><div class="em">🎓</div>暂无学习计划</div>`;
   list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
   list.forEach(it=>html+=studyItem(it));
   html+=studyForm();
@@ -2687,7 +2687,7 @@ function jjDone(id){const t=gWeeklyFind(id);if(!t||!t.jj)return;t.jj.done=!t.jj.
 function gameActivityCard(prog){
   const acts=D.game.activities.filter(a=>{const s=new Date(a.end||'2099-12-31');s.setHours(23,59,59);return new Date()<=s;});
   let html='';
-  if(acts.length===0)html+=`<div class="empty"><div class="em">${icoGame()}</div>暂无进行中活动，去「日常/周常设置」新增</div>`;
+  if(acts.length===0)html+=`<div class="empty"><div class="em">🎮</div>暂无进行中活动，去「日常/周常设置」新增</div>`;
   const groups={};
   acts.forEach(a=>{const g=(a.series&&a.series!=='未分组')?a.series:'未分组';(groups[g]=groups[g]||[]).push(a);});
   Object.keys(groups).forEach(g=>{
@@ -3259,7 +3259,7 @@ function renderMovie(){
   const seqMap={};Object.entries(byName).forEach(([n,arr])=>arr.forEach((it,i)=>{seqMap[it.id]={seq:i+1,total:arr.length};}));
   // 按录入时间从新到旧
   list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  if(list.length===0)html+=`<div class="empty"><div class="em">${icoMovie()}</div>暂无观影记录</div>`;
+  if(list.length===0)html+=`<div class="empty"><div class="em">🎬</div>暂无观影记录</div>`;
   list.forEach(it=>html+=movieItem(it,seqMap[it.id]));
   html+=movieForm();
   $('#content').innerHTML=html;
@@ -3495,7 +3495,7 @@ function renderWish(){
     html+=`<div class="row" style="margin-bottom:10px">${cats.map(c=>`<span class="chip ${wishFilter===c?'on':''}" onclick="wishFilter='${c}';renderWish()">${c}</span>`).join('')}</div>`;
     html+=`<div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="clearAll('wish')">清空全部</button></div>`;
     const list=D.wish.filter(x=>wishFilter==='全部'||x.category===wishFilter);
-    if(list.length===0)html+=`<div class="empty"><div class="em">${icoWish()}</div>暂无心愿</div>`;
+    if(list.length===0)html+=`<div class="empty"><div class="em">❤️</div>暂无心愿</div>`;
     list.forEach(it=>html+=wishItem(it));
     html+=wishForm();
   }else if(wishStat==='time'){html+=wishTimeStat();}
@@ -4143,11 +4143,11 @@ function renderTodayOverview(){
   const gDone=gDaily.filter(x=>(prog.daily||{})[x.id]).length;
   const gPct=gDaily.length?Math.round(gDone/gDaily.length*100):0;
   const rows=[
-    {ic:icoWork(),name:'工作台账',color:'var(--accent)',val:`进行中 ${doingN} · 今日完成 ${doneTodayN}`,pct:workPct,on:doingN>0||doneTodayN>0},
-    {ic:icoFitness(),name:'健身打卡',color:'var(--accent)',val:fitTotal?`今日 ${fitDone}/${fitTotal} 次`:'今日无计划',pct:fitPct,on:fitDone>0},
-    {ic:icoStudy(),name:'学习计划',color:'var(--accent)',val:studyN?`今日 ${studyN} 项${studyMins?(' · 约 '+studyMins+' 分'):''}`:'今日未学',pct:0,on:studyN>0},
-    {ic:icoMovie(),name:'观影记录',color:'var(--accent)',val:mv.length?`今日 ${mv.length} 部${mvNames?'：'+mvNames:''}`:'今日未看',pct:0,on:mv.length>0},
-    {ic:icoGame(),name:'痒痒鼠来咯',color:'var(--accent)',val:gDaily.length?`今日 ${gDone}/${gDaily.length}`:'今日无日常',pct:gPct,on:gDone>0}
+    {ic:'📋',name:'工作台账',color:'var(--accent)',val:`进行中 ${doingN} · 今日完成 ${doneTodayN}`,pct:workPct,on:doingN>0||doneTodayN>0},
+    {ic:'💪',name:'健身打卡',color:'var(--accent)',val:fitTotal?`今日 ${fitDone}/${fitTotal} 次`:'今日无计划',pct:fitPct,on:fitDone>0},
+    {ic:'🎓',name:'学习计划',color:'var(--accent)',val:studyN?`今日 ${studyN} 项${studyMins?(' · 约 '+studyMins+' 分'):''}`:'今日未学',pct:0,on:studyN>0},
+    {ic:'🎬',name:'观影记录',color:'var(--accent)',val:mv.length?`今日 ${mv.length} 部${mvNames?'：'+mvNames:''}`:'今日未看',pct:0,on:mv.length>0},
+    {ic:'🎮',name:'痒痒鼠来咯',color:'var(--accent)',val:gDaily.length?`今日 ${gDone}/${gDaily.length}`:'今日无日常',pct:gPct,on:gDone>0}
   ];
   const rowsHtml=rows.map(r=>`<div class="ov-row">
     <span class="ov-ic" style="background:${r.color}">${r.ic}</span>
@@ -4723,7 +4723,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.5.1';
+const APP_VER='v75.5.2';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -5473,7 +5473,7 @@ function renderPlan(){
   const list=src.filter(x=>planFilter==='全部'||x.type===planFilter)
     .sort((a,b)=>(a.start||'9999').localeCompare(b.start||'9999')||b.createdAt-a.createdAt);
   if(planTab==='live')html+=`<div class="row" style="margin:2px 0 10px"><button class="btn ghost sm" onclick="planSeedLuoyang()">🧳 导入洛阳范本示例</button><span class="hint" style="align-self:center">含一份已归档样例 + 一套可复用出游模板（金额清零）</span></div>`;
-  if(!list.length)html+=`<div class="empty"><div class="em">${icoPlan()}</div>${planTab==='live'?'还没有筹备中的事项':'归档区是空的'}</div>`;
+  if(!list.length)html+=`<div class="empty"><div class="em">🗺️</div>${planTab==='live'?'还没有筹备中的事项':'归档区是空的'}</div>`;
   list.forEach(it=>{planFix(it);html+=planCard(it);});
   if(planTab==='live')html+=planNewForm();
   $('#content').innerHTML=html;
