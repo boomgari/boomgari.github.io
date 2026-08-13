@@ -78,6 +78,10 @@ body[data-theme="dual"] .nav-item.active{background:linear-gradient(90deg,var(--
 .card-h{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
 .card-h h2{font-size:calc(var(--fs)*1.033);font-weight:700;}
 .card-h .spacer{margin-left:auto;}
+.card-h{cursor:pointer}
+.card.collapsed > *:not(.card-h){display:none}
+.card-h > .arr{margin-right:6px;display:inline-flex;align-items:center;color:var(--c-text2,#999);flex:none}
+.fold-arr{width:14px;height:14px;display:block}
 .hint{font-size:calc(var(--fs)*0.8);color:var(--muted);line-height:1.5;}
 .row{display:flex;gap:10px;flex-wrap:wrap;}
 .row.c{align-items:center;}
@@ -758,15 +762,15 @@ const KEY='workbuddy_data';
 let D, currentModule='work';
 
 const NAV=[
-  {id:'note',name:'日常小记',ic:'🌅'},
-  {id:'work',name:'工作台账',ic:'📋'},
-  {id:'fitness',name:'健身打卡',ic:'💪'},
-  {id:'study',name:'学习计划',ic:'🎓'},
-  {id:'game',name:'痒痒鼠来咯',ic:'🎮'},
-  {id:'plan',name:'从长计议',ic:'🗺️'},
-  {id:'movie',name:'观影记录',ic:'🎬'},
-  {id:'quarter',name:'季度期望',ic:'🚩'},
-  {id:'wish',name:'心愿单',ic:'❤️'}
+  {id:'note',name:'日常小记',ic:icoNote()},
+  {id:'work',name:'工作台账',ic:icoWork()},
+  {id:'fitness',name:'健身打卡',ic:icoFitness()},
+  {id:'study',name:'学习计划',ic:icoStudy()},
+  {id:'game',name:'痒痒鼠来咯',ic:icoGame()},
+  {id:'plan',name:'从长计议',ic:icoPlan()},
+  {id:'movie',name:'观影记录',ic:icoMovie()},
+  {id:'quarter',name:'季度期望',ic:icoQuarter()},
+  {id:'wish',name:'心愿单',ic:icoWish()}
 ];
 
 function emptyWeekTpl(){return [[],[],[],[],[],[],[]];}
@@ -1641,8 +1645,7 @@ function workItem(it){
   </div>`;
 }
 function workForm(){
-  return `<div class="card">
-    <div class="card-h"><h2>➕ 添加待办</h2></div>
+  return `<div class="card"><div class="card-h"><h2>➕ 添加待办</h2></div>
     <div class="field"><label>工作类型 *</label>
       <div class="row">${workTypes.map(t=>`<span class="chip ${t==='常规工作'?'on':''}" data-wt onclick="selWT(this,'${t}')">${t}</span>`).join('')}</div>
       <input type="hidden" id="wf_workType" value="常规工作">
@@ -1688,10 +1691,10 @@ function archiveAllDone(){const n=D.work.filter(x=>x.done&&!x.archived).length;i
 let logMode='quick', logFilter='全部';
 function renderWorkLog(){
   let html=`<div class="row" style="margin-bottom:10px;flex-wrap:wrap;gap:6px;align-items:center">
-    <span class="chip ${logMode==='quick'?'on':''}" onclick="logMode='quick';renderWorkLog()">⚡ 速记</span>
-    <span class="chip ${logMode==='detail'?'on':''}" onclick="logMode='detail';renderWorkLog()">📝 详细</span>
+    <span class="chip ${logMode==='quick'?'on':''}" onclick="logMode='quick';renderWork()">⚡ 速记</span>
+    <span class="chip ${logMode==='detail'?'on':''}" onclick="logMode='detail';renderWork()">📝 详细</span>
     <span style="flex:1"></span>
-    <select onchange="logFilter=this.value;renderWorkLog()" style="font-size:calc(var(--fs)*0.85)">
+    <select onchange="logFilter=this.value;renderWork()" style="font-size:calc(var(--fs)*0.85)">
       <option value="全部">全部类型</option>${LOG_TYPES.map(t=>`<option value="${t}" ${logFilter===t?'selected':''}>${t}</option>`).join('')}
     </select>
   </div>`;
@@ -1714,7 +1717,7 @@ function renderWorkLog(){
       </div>
     </div>`;
   });
-  $('#content').innerHTML=html;
+  return html;
 }
 function logForm(){
   if(logMode==='quick'){
@@ -1741,7 +1744,7 @@ function curHM(){const d=new Date();const p=n=>String(n).padStart(2,'0');return 
 function addLog(){
   const title=$('#lf_title').value.trim();if(!title){toast('请填写标题');return;}
   const it={id:uid(),title,type:logMode==='quick'?'其他':$('#lf_type').value,detail:$('#lf_detail')?$('#lf_detail').value:'',project:$('#lf_project')?$('#lf_project').value:'',effort:$('#lf_effort')?$('#lf_effort').value:'',custom:$('#lf_custom')?$('#lf_custom').value:'',doneAt:logMode==='quick'?(todayStr()+'T'+curHM()):$('#lf_doneAt').value};
-  D.logs.unshift(it);save();renderNav();renderWorkLog();toast('已记录');
+  D.logs.unshift(it);save();renderNav();renderWork();toast('已记录');
 }
 function delLog(id){if(!confirm('删除这条工作记录？'))return;const i=(D.logs||[]).findIndex(x=>x.id===id);if(i>=0){D.logs.splice(i,1);save();renderNav();renderWorkLog();toast('已删除');}}
 
@@ -1903,9 +1906,8 @@ function renderFitToday(){
     <div class="stat-card"><div class="n">${totalTimes}</div><div class="l">累计总次数</div></div>
   </div>
   <div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="fitResetToday()">重置今日</button></div>
-  ${rec.items.length?items:`<div class="empty"><div class="em">💪</div>${wn}暂无计划，去「周模板」设置或下方自由添加</div>`}
-  <div class="card">
-    <div class="card-h"><h2>自由添加（仅今日）</h2></div>
+  ${rec.items.length?items:`<div class="empty"><div class="em">${icoFitness()}</div>${wn}暂无计划，去「周模板」设置或下方自由添加</div>`}
+  ${foldCard('自由添加（仅今日）','fit_free',0,`
     <div class="row">
       <div class="field"><label>名称</label><input type="text" id="ff_name"></div>
       <div class="field"><label>类型</label><select id="ff_type">${fitAllTypes().map(t=>`<option>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="fitAddType()">＋</button> <button class="btn ghost sm" onclick="fitRenameType($('#ff_type').value)">✎</button> <button class="btn ghost sm" onclick="fitDelType($('#ff_type').value)">🗑</button></div>
@@ -1917,10 +1919,8 @@ function renderFitToday(){
       <button class="btn ghost sm" onclick="fitSaveSchemeFromFree()">存为方案</button>
       <span class="hint">引用后自动带入名称/类型/动作明细；「存为方案」把当前录入沉淀进动作方案库</span>
     </div>
-    <button class="btn" onclick="fitAddFree()">添加</button>
-  </div>
-  <div class="card">
-    <div class="card-h"><h2>今日备注 / 课程链接</h2></div>
+    <button class="btn" onclick="fitAddFree()">添加</button>`)}
+  ${foldCard('今日备注 / 课程链接','fit_note',0,`
     <textarea id="ff_note" onchange="fitRecSet('note',this.value)" placeholder="粘贴B站/Keep视频链接或当日感受">${esc(rec.note)}</textarea>
     <div class="card-h" style="margin-top:12px"><h2>今日饮食简记</h2></div>
     <div class="row">
@@ -1929,8 +1929,8 @@ function renderFitToday(){
       <div class="field"><label>晚餐</label><input type="text" id="ff_di" value="${esc(rec.diet.dinner||'')}" onchange="fitRecSet('diet.dinner',this.value)"></div>
     </div>
     <div class="field"><label>总卡路里估算</label><input type="number" id="ff_cal" value="${esc(rec.diet.cal||'')}" onchange="fitRecSet('diet.cal',this.value)"></div>
-    <div class="hint">📱 从薄荷健康等应用手动复制数据填入（无API对接）</div>
-  </div>`;
+    <div class="hint">📱 从薄荷健康等应用手动复制数据填入（无API对接）</div>`)}
+  `;
 }
 function fitToggle(i,done){D.fitness.today[i].done=done;save();renderNav();renderFitness();}
 let fitEditIdx=-1;
@@ -2139,8 +2139,7 @@ function renderFitTpl(){
     <div class="tab on" onclick="fitView='tpl';fitTplManual=false;renderFitness()">周模板</div>
     <div class="tab" onclick="fitView='lib';renderFitness()">动作方案库</div>
   </div>
-  <div class="card">
-    <div class="card-h"><h2>周模板设置</h2></div>
+  <div class="card"><div class="card-h"><h2>周模板设置</h2></div>
     <div class="hint">模板类型：${tplBtns} （默认按单双周自动匹配，可固定）</div>
     <div class="row" style="margin:10px 0">${dayBtns}</div>
     <div id="tplRows">${rows}</div>
@@ -2236,7 +2235,7 @@ function renderStudy(){
   html+=`<div class="row" style="margin-bottom:12px">${['全部'].concat(studyAllTypes()).map(t=>`<span class="chip ${studyFilter===t?'on':''}" onclick="studyFilter='${t}';renderStudy()">${t}</span>`).join('')}</div>
   <div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="clearDone('study')">清空已完成</button></div>`;
   const list=D.study.filter(x=>studyFilter==='全部'||x.type===studyFilter);
-  if(list.length===0)html+=`<div class="empty"><div class="em">🎓</div>暂无学习计划</div>`;
+  if(list.length===0)html+=`<div class="empty"><div class="em">${icoStudy()}</div>暂无学习计划</div>`;
   list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
   list.forEach(it=>html+=studyItem(it));
   html+=studyForm();
@@ -2273,8 +2272,7 @@ function studyItem(it){
   </div>`;
 }
 function studyForm(){
-  return `<div class="card">
-    <div class="card-h"><h2>➕ 添加学习计划</h2></div>
+  return `<div class="card"><div class="card-h"><h2>➕ 添加学习计划</h2></div>
     <div class="field"><label>计划类型 *</label>
       <select id="sf_type" onchange="studyDyn()">${studyAllTypes().map(t=>`<option>${t}</option>`).join('')}</select>
       <button class="btn ghost sm" onclick="studyAddType()">＋类型</button>
@@ -2399,7 +2397,7 @@ let mwbFold={};
 function foldSave(){try{localStorage.setItem('mwbFold',JSON.stringify(mwbFold));}catch(e){}}
 function foldVal(k){return (k in mwbFold)?mwbFold[k]:null;}
 function isFolded(k,dflt){const v=foldVal(k);return v===null?!!dflt:!!v;}
-function foldToggle(k,dflt){const cur=isFolded(k,dflt);mwbFold[k]=!cur;foldSave();renderGame();}
+function foldToggle(k,dflt){const cur=isFolded(k,dflt);mwbFold[k]=!cur;foldSave();(currentModule==='game'?renderGame():renderModule());}
 /* 直线对号（无弧，跨设备字体不变弯） */
 function chkSvg(){return '<svg class="chk-svg" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8.5 L6.5 12 L13 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"/></svg>';}
 /* 自定义复选框：隐藏原生 input，用直线 SVG 对号，跨设备一致无弧度 */
@@ -2410,6 +2408,31 @@ function foldArr(open){return '<svg class="fold-arr" viewBox="0 0 16 16" width="
 function icoNote(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 4 H16 V14 L13 17 H4 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M13 17 V14 H16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M7 8 H13 M7 11 H11" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>';}
 /* 细线条图标：铅笔（重命名） */
 function icoPencil(){return '<svg class="ico" viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="M13 3 L16 6 L6 16 L3 16 L3 13 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="miter"/><path d="M11 5 L14 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg>';}
+/* ===== 统一细线条图标库（currentColor 描边 / miter·square 连接 / 无圆角弧线，跨设备一致） ===== */
+function icoWork(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="4" y="3" width="12" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M7 7 H13 M7 10 H13 M7 13 H11" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>';}
+function icoFitness(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 7 H5 V13 H3 Z M15 7 H17 V13 H15 Z M5 10 H15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
+function icoStudy(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 8 L10 5 L17 8 L10 11 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M6 9.5 V13.5 C6 14.5 14 14.5 14 13.5 V9.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M17 8 V12" stroke="currentColor" stroke-width="1.4"/></svg>';}
+function icoGame(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="3" y="8" width="14" height="7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><circle cx="7" cy="11.5" r="0.8" fill="currentColor"/><path d="M13 10.5 h2 M14 9.5 v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="square"/></svg>';}
+function icoPlan(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 4 L8 6 L12 4 L16 6 V16 L12 14 L8 16 L4 14 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M8 6 V16 M12 4 V14" stroke="currentColor" stroke-width="1.1"/></svg>';}
+function icoMovie(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="3" y="4" width="14" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M7 4 V16 M13 4 V16 M3 8 H7 M3 12 H7 M13 8 H17 M13 12 H17" stroke="currentColor" stroke-width="1.1"/></svg>';}
+function icoQuarter(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 3 V17 M5 3 H15 L13 6 L15 9 H5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/></svg>';}
+function icoWish(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 16 C5 12.5 5 7.5 8 7.5 C9.5 7.5 10 8.5 10 9.5 C10 8.5 10.5 7.5 12 7.5 C15 7.5 15 12.5 10 16 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/></svg>';}
+function icoBox(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 7 H16 V16 H4 Z M4 7 V4 H16 V7 M7 10 H13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
+function icoTrash(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 6 H15 M7 6 V4 H13 V6 M6 6 V16 H14 V6 M9 9 V13 M11 9 V13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
+function icoChart(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 16 V4 M4 16 H17 M7 16 V11 M11 16 V7 M15 16 V9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
+function icoCal(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="4" y="5" width="12" height="11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M4 8 H16 M7 3 V6 M13 3 V6 M7 11 H9 M13 11 H15" stroke="currentColor" stroke-width="1.3" stroke-linecap="square"/></svg>';}
+function icoBook(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 4 H11 V16 H5 Z M11 4 H15 V16 H11 M5 4 V16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/></svg>';}
+function icoBolt(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M11 3 L6 11 H10 L9 17 L14 9 H10 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/></svg>';}
+function icoWater(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 3 C10 3 5 9 5 13 a5 5 0 0 0 10 0 C15 9 10 3 10 3 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/></svg>';}
+function icoEmpty(){return '<svg class="ico" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><rect x="5" y="5" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="2 2"/></svg>';}
+function icoStar(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 4 L12 8 L16 8.5 L13 11.5 L14 15.5 L10 13 L6 15.5 L7 11.5 L4 8.5 L8 8 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="miter"/></svg>';}
+function icoPin(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 3 L13 8 V12 H7 V8 Z M10 12 V16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/></svg>';}
+function icoTrain(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="4" y="5" width="12" height="9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/><path d="M7 14 L5 17 M13 14 L15 17 M4 9 H16" stroke="currentColor" stroke-width="1.3" stroke-linecap="square"/><circle cx="8" cy="11" r="0.8" fill="currentColor"/><circle cx="12" cy="11" r="0.8" fill="currentColor"/></svg>';}
+function icoWeather(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5 15 a3 3 0 0 1 0-5 a3 3 0 0 1 5 1 M13 11 h4 M13 14 h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>';}
+function icoBag(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M6 8 V6 a4 4 0 0 1 8 0 V8 M5 8 H15 V16 H5 Z M8 8 V10 M12 8 V10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/></svg>';}
+function icoHotel(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="4" y="5" width="12" height="11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/><path d="M6 8 H8 M6 11 H8 M12 8 H14 M12 11 H14 M4 5 V3 H16 V5" stroke="currentColor" stroke-width="1.2" stroke-linecap="square"/></svg>';}
+function icoTicket(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 7 H16 V10 a1.5 1.5 0 0 0 0 3 V13 H4 V10 a1.5 1.5 0 0 0 0-3 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/><path d="M10 7 V13" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 2"/></svg>';}
+function icoDoc(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 3 H12 L15 6 V17 H5 Z M12 3 V6 H15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/><path d="M8 9 H12 M8 12 H12" stroke="currentColor" stroke-width="1.2" stroke-linecap="square"/></svg>';}
 /* 折叠卡片：节级标题可点击展开/收起（区别于条目级折叠） */
 function foldCard(title,key,dflt,inner,cls){
   const folded=isFolded(key,dflt);
@@ -2421,6 +2444,58 @@ function foldCard(title,key,dflt,inner,cls){
     </div>
     ${folded?'':`<div class="fold-c">${inner}</div>`}
   </div>`;
+}
+/* 折叠卡片（保形版）：保留原 card-h 全部内容（标题/提示/按钮），仅增加折叠能力 */
+function foldCard2(head,key,dflt,inner,cls){
+  const folded=isFolded(key,dflt);
+  return `<div class="card ${cls||''}">
+    <div class="fold-h" onclick="foldToggle('${key}',${dflt?1:0})" style="margin-bottom:${folded?'0':'10px'}">
+      <span class="arr">${foldArr(!folded)}</span>
+      ${head}
+    </div>
+    ${folded?'':`<div class="fold-c">${inner}</div>`}
+  </div>`;
+}
+/* 区块折叠（非侵入式）：仅给 .card-h 增加点击折叠，绝不改写卡片内部，零回归风险 */
+let _wiring=false;
+function wireFold(){
+  if(_wiring)return; _wiring=true;
+  try{
+    const ctx=currentModule==='plan'?('plan_'+(typeof planTab!=='undefined'?planTab:'main'))
+            :currentModule==='game'?('game_'+(typeof gameView!=='undefined'?gameView:'week'))
+            :currentModule;
+    const cards=document.querySelectorAll('#content .card');
+    let idx=0;
+    cards.forEach(card=>{
+      let h=null;
+      for(const c of card.children){if(c.classList&&c.classList.contains('card-h')){h=c;break;}}
+      if(!h)return;
+      const key=ctx+'_c'+(idx++);
+      let arr=null;
+      for(const c of h.children){if(c.classList&&c.classList.contains('arr')){arr=c;break;}}
+      if(!arr){
+        arr=document.createElement('span');
+        arr.className='arr';
+        h.insertBefore(arr,h.firstChild);
+      }
+      arr.innerHTML=foldArr(!isFolded(key,false));
+      h.style.cursor='pointer';
+      if(!h.dataset.foldWired){
+        h.dataset.foldWired='1';
+        h.addEventListener('click',function(e){
+          try{
+            if(e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,.chip,.btn'))return;
+          }catch(_){}
+          const cur=isFolded(key,false);
+          mwbFold[key]=!cur; foldSave();
+          card.classList.toggle('collapsed',!cur);
+          const a=h.querySelector('.arr'); if(a)a.innerHTML=foldArr(cur);
+        });
+      }
+      if(isFolded(key,false))card.classList.add('collapsed');
+    });
+  }catch(e){}
+  _wiring=false;
 }
 function renderGameWeek(){
   const progDay=D.game.progress[todayStr()]||{};
@@ -2606,7 +2681,7 @@ function jjDone(id){const t=gWeeklyFind(id);if(!t||!t.jj)return;t.jj.done=!t.jj.
 function gameActivityCard(prog){
   const acts=D.game.activities.filter(a=>{const s=new Date(a.end||'2099-12-31');s.setHours(23,59,59);return new Date()<=s;});
   let html='';
-  if(acts.length===0)html+=`<div class="empty"><div class="em">🎮</div>暂无进行中活动，去「日常/周常设置」新增</div>`;
+  if(acts.length===0)html+=`<div class="empty"><div class="em">${icoGame()}</div>暂无进行中活动，去「日常/周常设置」新增</div>`;
   const groups={};
   acts.forEach(a=>{const g=(a.series&&a.series!=='未分组')?a.series:'未分组';(groups[g]=groups[g]||[]).push(a);});
   Object.keys(groups).forEach(g=>{
@@ -3178,7 +3253,7 @@ function renderMovie(){
   const seqMap={};Object.entries(byName).forEach(([n,arr])=>arr.forEach((it,i)=>{seqMap[it.id]={seq:i+1,total:arr.length};}));
   // 按录入时间从新到旧
   list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  if(list.length===0)html+=`<div class="empty"><div class="em">🎬</div>暂无观影记录</div>`;
+  if(list.length===0)html+=`<div class="empty"><div class="em">${icoMovie()}</div>暂无观影记录</div>`;
   list.forEach(it=>html+=movieItem(it,seqMap[it.id]));
   html+=movieForm();
   $('#content').innerHTML=html;
@@ -3233,15 +3308,14 @@ function renderMovieStats(){
   });
   html+=`<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">${movieAllTypes().map(c=>`<span style="font-size:calc(var(--fs)*0.733);color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${movieCatColor(c)};margin-right:3px"></span>${c}</span>`).join('')}</div></div>`;
   const series=Object.entries(byName).map(([n,o])=>{const sorted=o.list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));return {name:n,cat:o.cat,total:o.list.length,last:sorted[0]?sorted[0].date:''};}).filter(s=>s.total>0).sort((a,b)=>(b.last||'').localeCompare(a.last||''));
-  html+=`<div class="card" style="margin-top:14px"><div class="card-h"><h2>📚 系列总览（同剧不同集归并）</h2></div>`;
+  html+=`<div class="card"><div class="card-h"><h2>📚 系列总览（同剧不同集归并）</h2></div>`;
   if(series.length===0)html+=`<div class="hint">暂无数据</div>`;
   else series.forEach(s=>{html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:var(--bw) solid var(--border);font-size:calc(var(--fs)*0.867)"><span class="tag">${esc(s.cat)}</span><b style="flex:1">${esc(s.name)}</b><span class="hint">共 ${s.total} 集/部 · 最近 ${fmtDate(s.last)}</span></div>`;});
   html+=`</div>`;
   $('#content').innerHTML=html;
 }
 function movieForm(){
-  return `<div class="card">
-    <div class="card-h"><h2>➕ 记录观影</h2></div>
+  return `<div class="card"><div class="card-h"><h2>➕ 记录观影</h2></div>
     <div class="field"><label>名称 *</label><input type="text" id="mf_name" onkeydown="if(event.key==='Enter')addMovie()"></div>
     <div class="row">
       <div class="field"><label>类别</label><select id="mf_cat" onchange="movieCatChg()">${movieAllTypes().map(c=>`<option>${c}</option>`).join('')}</select> <button class="btn ghost sm" onclick="movieAddType()">＋</button> <button class="btn ghost sm" onclick="movieRenameType($('#mf_cat').value)">✎</button> <button class="btn ghost sm" onclick="movieDelType($('#mf_cat').value)">🗑</button></div>
@@ -3304,7 +3378,7 @@ function renderQuarter(){
   SEASONS.forEach(s=>{
     const items=D.quarter.filter(x=>x.season===s);
     if(items.length===0)return;
-    html+=`<div class="card"><div class="card-h" style="border-left:4px solid ${SEASON_COLOR[SEASON_KEY[s]]};padding-left:8px"><h2>${s}</h2><span class="spacer"></span></div>`;
+    html+=`<div class="card"><div class="card-h"><h2>${s}</h2><span class="spacer"></span></div>`;
     items.forEach(it=>html+=quarterItem(it));
     html+=`</div>`;
   });
@@ -3334,8 +3408,7 @@ function quarterItem(it){
   </div>`;
 }
 function quarterForm(){
-  return `<div class="card">
-    <div class="card-h"><h2>➕ 新增期望</h2></div>
+  return `<div class="card"><div class="card-h"><h2>➕ 新增期望</h2></div>
     <div class="row">
       <div class="field"><label>季节</label><select id="qf_season">${SEASONS.map(s=>`<option>${s}</option>`).join('')}</select></div>
       <div class="field"><label>目标类型</label><select id="qf_type" onchange="qTypeChg()">${Q_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>
@@ -3416,7 +3489,7 @@ function renderWish(){
     html+=`<div class="row" style="margin-bottom:10px">${cats.map(c=>`<span class="chip ${wishFilter===c?'on':''}" onclick="wishFilter='${c}';renderWish()">${c}</span>`).join('')}</div>`;
     html+=`<div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="clearAll('wish')">清空全部</button></div>`;
     const list=D.wish.filter(x=>wishFilter==='全部'||x.category===wishFilter);
-    if(list.length===0)html+=`<div class="empty"><div class="em">❤️</div>暂无心愿</div>`;
+    if(list.length===0)html+=`<div class="empty"><div class="em">${icoWish()}</div>暂无心愿</div>`;
     list.forEach(it=>html+=wishItem(it));
     html+=wishForm();
   }else if(wishStat==='time'){html+=wishTimeStat();}
@@ -3503,8 +3576,7 @@ function wishChart(id){const it=D.wish.find(x=>x.id===id);
   renderWishChartModal(series);
 }
 function wishForm(){
-  return `<div class="card">
-    <div class="card-h"><h2>➕ 添加心愿</h2></div>
+  return `<div class="card"><div class="card-h"><h2>➕ 添加心愿</h2></div>
     <div class="field"><label>物品名 *</label><input type="text" id="wf2_name" oninput="wishAutoCat(this.value)" onkeydown="if(event.key==='Enter')addWish()" placeholder="如 大疆 Action 6 / 平板 / 背包"></div>
     <div class="row">
       <div class="field"><label>分类（自动归类，可改）</label><input type="text" id="wf2_cat" list="wishcats" onchange="wishSpecHint()" oninput="wishSpecHint()"><datalist id="wishcats">${WISH_CATS.map(c=>`<option>${c}</option>`).join('')}</datalist></div>
@@ -3802,8 +3874,7 @@ function renderTemp(){
   }).join(''):'<div class="hint">这个筛选下暂时没有待办～</div>';
   const cnt={all:items.length,today:items.filter(isToday).length,future:items.filter(isFuture).length,over:items.filter(isOver).length};
   const tabs=[['all','全部'],['today','今天'],['future','以后'],['over','逾期']].map(([k,l])=>`<span class="chip ${tempFilter===k?'on':''}" onclick="tempSetFilter('${k}')">${l} ${cnt[k]}</span>`).join('');
-  return `<div class="card">
-    <div class="card-h"><h2>📝 临时待办</h2><span class="spacer"></span><span class="hint">${items.filter(x=>x.done).length}/${items.length} 完成</span></div>
+  return `${foldCard("📝 临时待办", "fc_3", false, `
     <div class="row" style="gap:4px;margin-bottom:8px">${tabs}</div>
     <div class="field" style="margin-bottom:6px"><input class="inp" id="tp_text" placeholder="要做的小事…（可留到以后的日期）" onkeydown="if(event.key==='Enter')tempAdd()"></div>
     <div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px">
@@ -3814,7 +3885,7 @@ function renderTemp(){
     </div>
     ${list}
     <div class="hint" style="margin-top:6px">不填日期＝今天；填未来日期的事（如 8-20 送典藏皮肤）会自动排到「以后」，到期当天回到「今天」。</div>
-  </div>`;
+  `)}`;
 }
 function tempAdd(){const el=document.getElementById('tp_text');const t=el?el.value.trim():'';if(!t){toast('填点什么');return;}
   const tm=document.getElementById('tp_time');const pl=document.getElementById('tp_place');const dt=document.getElementById('tp_date');
@@ -3890,21 +3961,19 @@ function renderListen(){
       <button class="del" onclick="listenDel('${s.id}')">×</button>
     </div>`;
   }).join(''):'<div class="hint">今天还没记听的内容～</div>';
-  return `<div class="card">
-    <div class="card-h"><h2>🎧 听</h2><span class="spacer"></span><span class="hint">今天 ${todays.length} 段 · 约 ${(todayMins/60).toFixed(1)} 小时</span>${openChip}</div>
+  return `${foldCard("🎧 听", "fc_4", false, `
     <div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px">${platTabs}</div>
     ${body}
     <div style="margin-top:12px;border-top:0.5px solid #E6E8EB;padding-top:10px">
       <div class="hint" style="margin-bottom:6px">今天已记</div>
       ${listHtml}
     </div>
-  </div>`;
+  `)}`;
 }
 function renderLifeNote(){
   const entries=D.note.entries||[];
   const order=noteOrder();
-  return `<div class="card">
-    <div class="card-h"><h2>📒 生活小记</h2><span class="spacer"></span><span class="chip sm ${noteSortMode?'on':''}" onclick="noteSortToggle()" style="cursor:pointer">${noteSortMode?'完成排序'+chkSvg():'⇅ 排序'}</span></div>
+  return `<div class="card"><div class="card-h"><h2>📒 生活小记</h2><span class="spacer"></span><span class="chip sm ${noteSortMode?'on':''}" onclick="noteSortToggle()" style="cursor:pointer">${noteSortMode?'完成排序'+chkSvg():'⇅ 排序'}</span></div>
     <div class="row" style="margin-bottom:8px;flex-wrap:wrap">${order.map(t=>`<span class="chip ${noteSelType===t?'on':''} ${noteSortMode?'drag-chip':''}" ${noteSortMode?`draggable="true" ondragstart="noteDrag='${t}'" ondragover="event.preventDefault()" ondrop="noteReorder(noteDrag,'${t}')"`:''} onclick="${noteSortMode?'':`noteSel('${t}')`}">${noteSortMode?'≡ ':''}${t}</span>`).join('')}</div>
     ${noteSortMode?'<div class="hint" style="margin-bottom:8px">拖拽分类右侧 ≡ 可调整顺序，完成后点「完成排序」。</div>':''}
     <textarea id="nf_text" placeholder="此刻想记点什么…（选对应分类可填更多细节）" style="min-height:54px" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();noteAdd()}"></textarea>
@@ -4068,11 +4137,11 @@ function renderTodayOverview(){
   const gDone=gDaily.filter(x=>(prog.daily||{})[x.id]).length;
   const gPct=gDaily.length?Math.round(gDone/gDaily.length*100):0;
   const rows=[
-    {ic:'📋',name:'工作台账',color:'var(--accent)',val:`进行中 ${doingN} · 今日完成 ${doneTodayN}`,pct:workPct,on:doingN>0||doneTodayN>0},
-    {ic:'💪',name:'健身打卡',color:'var(--accent)',val:fitTotal?`今日 ${fitDone}/${fitTotal} 次`:'今日无计划',pct:fitPct,on:fitDone>0},
-    {ic:'🎓',name:'学习计划',color:'var(--accent)',val:studyN?`今日 ${studyN} 项${studyMins?(' · 约 '+studyMins+' 分'):''}`:'今日未学',pct:0,on:studyN>0},
-    {ic:'🎬',name:'观影记录',color:'var(--accent)',val:mv.length?`今日 ${mv.length} 部${mvNames?'：'+mvNames:''}`:'今日未看',pct:0,on:mv.length>0},
-    {ic:'🎮',name:'痒痒鼠来咯',color:'var(--accent)',val:gDaily.length?`今日 ${gDone}/${gDaily.length}`:'今日无日常',pct:gPct,on:gDone>0}
+    {ic:icoWork(),name:'工作台账',color:'var(--accent)',val:`进行中 ${doingN} · 今日完成 ${doneTodayN}`,pct:workPct,on:doingN>0||doneTodayN>0},
+    {ic:icoFitness(),name:'健身打卡',color:'var(--accent)',val:fitTotal?`今日 ${fitDone}/${fitTotal} 次`:'今日无计划',pct:fitPct,on:fitDone>0},
+    {ic:icoStudy(),name:'学习计划',color:'var(--accent)',val:studyN?`今日 ${studyN} 项${studyMins?(' · 约 '+studyMins+' 分'):''}`:'今日未学',pct:0,on:studyN>0},
+    {ic:icoMovie(),name:'观影记录',color:'var(--accent)',val:mv.length?`今日 ${mv.length} 部${mvNames?'：'+mvNames:''}`:'今日未看',pct:0,on:mv.length>0},
+    {ic:icoGame(),name:'痒痒鼠来咯',color:'var(--accent)',val:gDaily.length?`今日 ${gDone}/${gDaily.length}`:'今日无日常',pct:gPct,on:gDone>0}
   ];
   const rowsHtml=rows.map(r=>`<div class="ov-row">
     <span class="ov-ic" style="background:${r.color}">${r.ic}</span>
@@ -4081,7 +4150,7 @@ function renderTodayOverview(){
     ${r.pct?`<span class="ov-bar"><i style="width:${r.pct}%"></i></span>`:''}
   </div>`).join('');
   return `<div class="ov-card">
-    <div class="ov-head"><span>📅 今日总览</span><span class="ov-date">${fmtDate(new Date())}</span></div>
+    <div class="ov-head"><span>${icoCal()} 今日总览</span><span class="ov-date">${fmtDate(new Date())}</span></div>
     ${rowsHtml}
   </div>`;
 }
@@ -4112,8 +4181,7 @@ function renderChecklist(){
       <button class="btn ghost sm" onclick="openEdit('checklist','${x.id}')">✏️ 编辑</button>
       <button class="del" onclick="chkDel('${x.id}')">×</button>
     </div>`;}).join(''):'<div class="hint">还没有每日必做事项，在下面添加一行（如：抖音续火）</div>';
-  return `<div class="card">
-    <div class="card-h"><h2>✅ 每日打卡</h2><span class="spacer"></span><span class="hint">${doneN}/${items.length} 完成</span></div>
+  return `${foldCard("✅ 每日打卡", "fc_5", false, `
     <div class="pbar" style="margin-bottom:10px"><i style="width:${pct}%"></i></div>
     ${list}
     <div class="row" style="margin-top:10px;align-items:flex-end">
@@ -4121,7 +4189,7 @@ function renderChecklist(){
       <button class="btn" onclick="chkAdd()">添加</button>
     </div>
     <div class="hint" style="margin-top:6px">事项每天自动重置为未完成；勾选只记录当天。需要按人/按对象细分时，点「＋ 添加子项」。</div>
-  </div>`;
+  `)}`;
 }
 function chkToggle(id,v){const t=todayStr();const cl=D.note.checklist;cl.done[t]=cl.done[t]||{};cl.doneTs=cl.doneTs||{};cl.doneTs[t]=cl.doneTs[t]||{};const it=(cl.items||[]).find(x=>x.id===id);
   const mark=(k)=>{if(v)cl.doneTs[t][k]=nowISO();else delete cl.doneTs[t][k];};
@@ -4174,14 +4242,13 @@ function renderNoteStats(){
   const wPos=waterVals.filter(v=>v>0);const waterAvg=wPos.length?Math.round(wPos.reduce((s,v)=>s+v,0)/wPos.length):0;
   const sPos=sleepVals.filter(v=>v>0);const sleepAvgM=sPos.length?Math.round(sPos.reduce((s,v)=>s+v,0)/sPos.length):0;
   const fmtSleep=m=>m?Math.floor(m/60)+'h'+String(m%60).padStart(2,'0'):'—';
-  return `<div class="card">
-    <div class="card-h"><h2>📊 状态统计</h2></div>
+  return `${foldCard("📊 状态统计", "fc_6", false, `
     ${toggle}
     <div style="font-weight:600;margin-bottom:2px">😊 心情占比</div>${ratioHtml(moodCount,'#C49A6C')}
     <div style="font-weight:600;margin:12px 0 2px">🌦 天气占比</div>${ratioHtml(weatherCount,'#7B9DBD')}
     <div style="font-weight:600;margin:12px 0 4px">💧 饮水量 <span class="hint">（${r==='year'?'月均日饮':'每日'}·平均 ${waterAvg}ml）</span></div>${miniBar(waterVals,v=>v+'ml','#4F9C92')}
     <div style="font-weight:600;margin:12px 0 4px">🛏 睡眠时长 <span class="hint">（${r==='year'?'月均':'每日'}·平均 ${fmtSleep(sleepAvgM)}）</span></div>${miniBar(sleepVals,fmtSleep,'#7A5C84')}
-  </div>`;
+  `)}`;
 }
 
 /* ================= 通用操作 ================= */
@@ -4650,7 +4717,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.4';
+const APP_VER='v75.5';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -5227,10 +5294,20 @@ async function init(){
   applySyncFromURL();
   dailyResetCheck();refreshSleepToday();ensureFitToday();
   try{ if(!D._meta.planSeedLuoyang && planRoot().items.length===0 && planRoot().tpl.length===0) planSeedLuoyang(true); }catch(e){}
+  try{ planCleanLuoyang(); }catch(e){}
   currentModule=(D._meta&&D._meta.activeModule)||'note';
   // 主题
   bootTheme();
   renderNav();renderModule();renderTopDate();renderSyncRow();renderVer();applyFs();applyFw();applyFont();initSelectUpgrade();setupTouchDrag();
+  // 非侵入式区块折叠：监听 #content 变化自动给 .card-h 接线点击折叠（绝不改写卡片内部）
+  try{
+    const _ce=document.getElementById('content');
+    if(_ce){
+      const _obs=new MutationObserver(()=>wireFold());
+      _obs.observe(_ce,{childList:true,subtree:true});
+      wireFold();
+    }
+  }catch(e){}
   // 跨日检测
   setInterval(()=>{if(D._meta.lastResetDate!==todayStr()){dailyResetCheck();ensureFitToday();renderModule();}},60000);
   // 切回前台同步 + 切后台立即上传（避免后台定时器被挂起导致没传上）
@@ -5270,9 +5347,9 @@ function planCfgFor(type){ return PLAN_CFG[type]||PLAN_CFG['自定义']; }
 function planAddType(){ const v=prompt('新增事项类型（如：婚礼筹备、宠物安置）：',''); if(v===null)return; const n=v.trim(); if(!n)return; const c=planCustomTypes(); if(!c.includes(n))c.push(n); save(); renderPlan(); }
 function planRenameType(old){ if(PLAN_TYPES.indexOf(old)>=0){toast('内置类型不可改名');return;} const v=prompt('重命名类型：',old); if(v===null)return; const n=v.trim(); if(!n||n===old)return; const c=planCustomTypes(); const i=c.indexOf(old); if(i>=0)c[i]=n; (D.plan.items||[]).forEach(it=>{if(it.type===old)it.type=n;}); save(); renderPlan(); }
 function planDelType(old){ if(PLAN_TYPES.indexOf(old)>=0){toast('内置类型不可删除');return;} if(!confirm('删除类型「'+old+'」？\n（已用该类型的计划会改回「自定义」配置）'))return; const c=planCustomTypes(); const i=c.indexOf(old); if(i>=0)c.splice(i,1); (D.plan.items||[]).forEach(it=>{if(it.type===old)it.type='自定义';}); save(); renderPlan(); }
-const PLAN_TYPE_IC={'出游':'🧳','考试备考':'📖','搬家':'📦','装修':'🔨','大额采购':'🛒','证件办理':'📄','自定义':'📌'};
+const PLAN_TYPE_IC={'出游':icoPlan(),'考试备考':icoBook(),'搬家':icoBox(),'装修':icoBolt(),'大额采购':icoBag(),'证件办理':icoDoc(),'自定义':icoPin()};
 const PLAN_PREP_NAMES={trans:'往返大交通',weather:'天气与穿衣',goods:'物品清单',stay:'住宿安排',ticket:'票务预约'};
-const PLAN_PREP_IC={trans:'🚄',weather:'🌤',goods:'🎒',stay:'🏨',ticket:'🎫'};
+const PLAN_PREP_IC={trans:icoTrain(),weather:icoWeather(),goods:icoBag(),stay:icoHotel(),ticket:icoTicket()};
 const PLAN_CFG={
  '出游':      {prep:['trans','weather','goods','stay','ticket'],sched:1,ledger:2,lib:['餐饮','景点','住宿','交通','票务']},
  '考试备考':  {prep:['goods'],sched:1,ledger:1,lib:['资料','物品']},
@@ -5386,11 +5463,11 @@ function renderPlan(){
   if(planTab==='lib'){html+=planLibPage(null);$('#content').innerHTML=html;return;}
   const src=planTab==='live'?live:arch;
   const types=['全部'].concat(planAllTypes());
-  html+=`<div class="row" style="margin-bottom:10px">${types.map(t=>`<span class="chip ${planFilter===t?'on':''}" onclick="planFilter='${t}';renderPlan()">${t==='全部'?'全部':PLAN_TYPE_IC[t]+' '+t}</span>`).join('')}</div>`;
+  html+=`<div class="row" style="margin-bottom:10px">${types.map(t=>`<span class="chip ${planFilter===t?'on':''}" onclick="planFilter='${t}';renderPlan()">${t==='全部'?'全部':(PLAN_TYPE_IC[t]||icoPin())+' '+t}</span>`).join('')}</div>`;
   const list=src.filter(x=>planFilter==='全部'||x.type===planFilter)
     .sort((a,b)=>(a.start||'9999').localeCompare(b.start||'9999')||b.createdAt-a.createdAt);
   if(planTab==='live')html+=`<div class="row" style="margin:2px 0 10px"><button class="btn ghost sm" onclick="planSeedLuoyang()">🧳 导入洛阳范本示例</button><span class="hint" style="align-self:center">含一份已归档样例 + 一套可复用出游模板（金额清零）</span></div>`;
-  if(!list.length)html+=`<div class="empty"><div class="em">🗺️</div>${planTab==='live'?'还没有筹备中的事项':'归档区是空的'}</div>`;
+  if(!list.length)html+=`<div class="empty"><div class="em">${icoPlan()}</div>${planTab==='live'?'还没有筹备中的事项':'归档区是空的'}</div>`;
   list.forEach(it=>{planFix(it);html+=planCard(it);});
   if(planTab==='live')html+=planNewForm();
   $('#content').innerHTML=html;
@@ -5407,7 +5484,7 @@ function planCard(it){
   const mem=it.members.map(m=>`<span class="pl-mem" title="${esc(m.identity||'')}">${esc(m.name||m.code)}</span>`).join('');
   return `<div class="card pl-card ${it.status==='archived'?'arch':''}">
     <div class="pl-h" onclick="planGo('${it.id}')">
-      <span class="pl-ic">${PLAN_TYPE_IC[it.type]||'📌'}</span>
+      <span class="pl-ic">${PLAN_TYPE_IC[it.type]||icoPin()}</span>
       <div class="pl-h-t">
         <div class="pl-title">${esc(it.title||'（未命名事项）')}<span class="tag">${esc(it.type)}</span>${it.place?`<span class="tag alt">${esc(it.place)}</span>`:''}</div>
         <div class="pl-sub">${period}${cd}</div>
@@ -5446,8 +5523,7 @@ function planStat(it){
   return {days:(it.days||[]).length,rows,rowDone,prep,prepDone,planned,actual};
 }
 function planNewForm(){
-  return `<div class="card">
-    <div class="card-h"><h2>＋ 新建事项</h2></div>
+  return `<div class="card"><div class="card-h"><h2>＋ 新建事项</h2></div>
     <div class="row">
       <div class="field" style="flex:2;min-width:200px"><label>事项标题 *</label><input id="pl_title" placeholder="如：十一洛阳行 / 二建备考"></div>
       <div class="field"><label>事项类型</label><select id="pl_type">${planAllTypes().map(t=>`<option ${planNewType===t?'selected':''}>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="planAddType()">＋</button> <button class="btn ghost sm" onclick="planRenameType($('#pl_type').value)">✎</button> <button class="btn ghost sm" onclick="planDelType($('#pl_type').value)">🗑</button></div>
@@ -5487,7 +5563,7 @@ function renderPlanDetail(it){
   if(!secs.some(s=>s[0]===planSec))planSec='overview';
   let html=`<div class="pl-bar">
     <button class="btn ghost sm" onclick="planBack()">‹ 返回列表</button>
-    <div class="pl-bar-t">${PLAN_TYPE_IC[it.type]||'📌'} ${esc(it.title||'未命名事项')}${it.status==='archived'?'<span class="tag">已归档</span>':''}</div>
+    <div class="pl-bar-t">${PLAN_TYPE_IC[it.type]||icoPin()} ${esc(it.title||'未命名事项')}${it.status==='archived'?'<span class="tag">已归档</span>':''}</div>
     <button class="btn ghost sm" onclick="planUndo()" title="撤销上一步（保留 20 步）">↶ 撤销</button>
   </div>
   <div class="pl-secbar">${secs.map(s=>`<div class="pl-sec ${planSec===s[0]?'on':''}" onclick="planSec='${s[0]}';renderPlan()"><span>${s[2]}</span>${s[1]}</div>`).join('')}</div>`;
@@ -5515,8 +5591,7 @@ function planOverview(it){
   else if(it.start&&it.end&&today>=it.start&&today<=it.end){cdTxt='进行中 · 第 '+(dDiff(it.start,today)+1)+' 天 / 共 '+(dDiff(it.start,it.end)+1)+' 天';cdCls='on';}
   else if(it.end&&today>it.end){cdTxt='已结束 '+dDiff(it.end,today)+' 天';cdCls='off';}
   const bal=planBalance(it);
-  let html=`<div class="card">
-    <div class="card-h"><h2>📊 概览</h2><span class="spacer"></span><span class="pl-cd2 ${cdCls}">${cdTxt}</span></div>
+  let html=`<div class="card"><div class="card-h"><h2>📊 概览</h2><span class="spacer"></span><span class="pl-cd2 ${cdCls}">${cdTxt}</span></div>
     <div class="row">
       <div class="field" style="flex:2;min-width:180px"><label>事项标题</label><input value="${esc(it.title)}" onchange="planSet('${it.id}','title',this.value)"></div>
       <div class="field"><label>事项类型</label><select onchange="planTypeChange('${it.id}',this.value)">${planAllTypes().map(t=>`<option ${it.type===t?'selected':''}>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="planAddType()">＋</button> <button class="btn ghost sm" onclick="planRenameType('${it.type}')">✎</button> <button class="btn ghost sm" onclick="planDelType('${it.type}')">🗑</button></div>
@@ -5539,16 +5614,14 @@ function planOverview(it){
   </div>`;
 
   // 同行人
-  html+=`<div class="card">
-    <div class="card-h"><h2>👥 同行人</h2><span class="spacer"></span><button class="btn ghost sm" onclick="planMemAdd('${it.id}')">＋ 添加</button></div>
+  html+=`<div class="card"><div class="card-h"><h2>👥 同行人</h2><span class="spacer"></span><button class="btn ghost sm" onclick="planMemAdd('${it.id}')">＋ 添加</button></div>
     <div class="pl-memgrid ${it.members.length>2?'col':''}">${it.members.map((m,i)=>planMemCard(it,m,i)).join('')}</div>
     <div class="hint">2 人时左右并排；3 人及以上自动改为纵向卡片，避免手机上横向挤压。「身份」会决定票价默认走成人还是学生。</div>
   </div>`;
 
   // 预算 / 结余
   if(cfg.ledger){
-    html+=`<div class="card">
-      <div class="card-h"><h2>💰 预算总览</h2><span class="spacer"></span><button class="btn ghost sm" onclick="planSec='ledger';renderPlan()">进入账本 ›</button></div>
+    html+=`<div class="card"><div class="card-h"><h2>💰 预算总览</h2><span class="spacer"></span><button class="btn ghost sm" onclick="planSec='ledger';renderPlan()">进入账本 ›</button></div>
       <div class="pl-baltable">
         <div class="pl-balhead"><span>成员</span><span>应分摊</span><span>已垫付</span><span>已转账</span><span>结余</span></div>
         ${it.members.map(m=>{const b=bal.per[m.id]||{share:0,paid:0,trans:0,net:0};
@@ -6278,8 +6351,7 @@ function planLibPage(it){
     (planLibPlace==='全部'||e.place===planLibPlace)&&
     (!q||[e.name,e.place,e.note,e.addr].some(x=>(x||'').indexOf(q)>=0)));
   const suggestPlace=it&&it.place?it.place:'';
-  let html=`<div class="card">
-    <div class="card-h"><h2>📚 备选库<span class="hint">全局共享 · 按地点标签复用</span></h2><span class="spacer"></span>
+  let html=`<div class="card"><div class="card-h"><h2>📚 备选库<span class="hint">全局共享 · 按地点标签复用</span></h2><span class="spacer"></span>
       <button class="btn ghost sm" onclick="planLibAdd('${esc(suggestPlace)}')">＋ 新条目</button></div>
     <div class="row" style="margin-bottom:6px">${cats.map(c=>`<span class="chip ${planLibCat===c?'on':''}" onclick="planLibCat='${c}';renderPlan()">${c}</span>`).join('')}</div>
     <div class="row c" style="margin-bottom:8px">
@@ -6592,8 +6664,24 @@ function planSeedLuoyang(silent){
   save(silent?false:undefined);renderPlan();renderNav();
   if(!silent)toast('已导入「五一洛阳行」示例（已归档）+ 出游模板');
 }
+/* 一次性清理：旧版本（无 planSeedLuoyang 守卫）在每次版本更新时重复播种，
+   导致「五一洛阳行（示例·已归档）」在归档页出现多份完全相同的副本。
+   本迁移只匹配精确的种子标题/模板名，保留 1 份、删除其余，不动用户自建的真实出游。 */
+function planCleanLuoyang(){
+  if(D._meta&&D._meta.planCleanLuoyang20250813)return;
+  const P=planRoot();
+  const IT_TITLE='五一洛阳行（示例·已归档）';
+  const TPL_NAME='洛阳出游·整套模板';
+  const loy=P.items.filter(x=>(x.title||'')===IT_TITLE);
+  if(loy.length>1){const keep=loy[0].id;P.items=P.items.filter(x=>x.id===keep||(x.title||'')!==IT_TITLE);}
+  const lt=P.tpl.filter(t=>(t.name||'')===TPL_NAME);
+  if(lt.length>1){const keepT=lt[0].id;P.tpl=P.tpl.filter(t=>t.id===keepT||(t.name||'')!==TPL_NAME);}
+  if(!D._meta)D._meta={};
+  D._meta.planCleanLuoyang20250813=true;
+  save(false);
+}
 
-/* ================= 从长计议 END ================= */
+/* ================= 从计议 END ================= */
 
 init();
 </script>
