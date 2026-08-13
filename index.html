@@ -2456,11 +2456,14 @@ function foldCard2(head,key,dflt,inner,cls){
     ${folded?'':`<div class="fold-c">${inner}</div>`}
   </div>`;
 }
-/* 区块折叠（非侵入式）：仅给 .card-h 增加点击折叠，绝不改写卡片内部，零回归风险 */
-let _wiring=false;
+/* 区块折叠（非侵入式）：仅给 .card-h 增加点击折叠，绝不改写卡片内部，零回归风险。
+   关键：修改 DOM 前必须先断开 MutationObserver，否则 insertBefore/innerHTML 会触发
+   新的 childList 回调 → 再次 wireFold → 无限级联，导致移动端/低性能设备卡死白屏。 */
+let _wiring=false,_foldObs=null;
 function wireFold(){
   if(_wiring)return; _wiring=true;
   try{
+    if(_foldObs)try{_foldObs.disconnect();}catch(e){}
     const ctx=currentModule==='plan'?('plan_'+(typeof planTab!=='undefined'?planTab:'main'))
             :currentModule==='game'?('game_'+(typeof gameView!=='undefined'?gameView:'week'))
             :currentModule;
@@ -2495,7 +2498,10 @@ function wireFold(){
       if(isFolded(key,false))card.classList.add('collapsed');
     });
   }catch(e){}
-  _wiring=false;
+  finally{
+    _wiring=false;
+    if(_foldObs){try{const _ce=document.getElementById('content');if(_ce)_foldObs.observe(_ce,{childList:true,subtree:true});}catch(e){}}
+  }
 }
 function renderGameWeek(){
   const progDay=D.game.progress[todayStr()]||{};
@@ -4717,7 +4723,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.5';
+const APP_VER='v75.5.1';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -5303,8 +5309,8 @@ async function init(){
   try{
     const _ce=document.getElementById('content');
     if(_ce){
-      const _obs=new MutationObserver(()=>wireFold());
-      _obs.observe(_ce,{childList:true,subtree:true});
+      _foldObs=new MutationObserver(()=>wireFold());
+      _foldObs.observe(_ce,{childList:true,subtree:true});
       wireFold();
     }
   }catch(e){}
