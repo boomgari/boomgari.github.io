@@ -187,6 +187,28 @@ textarea{resize:vertical;min-height:60px;}
 .item.done .fit-time{opacity:.5;}
 .meta-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
 .emptybox{background:var(--bg);border-radius:8px;padding:8px 10px;font-size:calc(var(--fs)*0.8);color:var(--muted);margin-top:6px;}
+/* v75.5.4 观影系列化：分段开关 / 4 气泡响应式网格 / 系列卡片 / 期集行 / 推荐溯源 */
+.seg{display:inline-flex;border:var(--bw) solid var(--border);border-radius:9px;overflow:hidden;vertical-align:middle;}
+.seg button{border:0;background:#fff;padding:7px 16px;font-size:13px;cursor:pointer;color:var(--muted);line-height:1.2;}
+.seg button.on{background:var(--accent);color:#fff;font-weight:700;}
+.b4{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.src2{display:grid;grid-template-columns:1fr;gap:8px;}
+@media(min-width:600px){.b4{grid-template-columns:repeat(4,1fr);}.src2{grid-template-columns:2fr 1fr;}}
+.series-card{border:var(--bw) solid var(--border);border-radius:12px;margin-bottom:12px;background:#fff;overflow:hidden;}
+.series-head{padding:11px 13px;cursor:pointer;display:flex;flex-direction:column;gap:3px;}
+.series-title{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;}
+.series-sub{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.series-card .series-head .arr::after{content:'▾';color:var(--accent);font-size:12px;}
+.series-card.folded .series-head .arr::after{content:'▸';}
+.series-card.folded .series-eps{display:none;}
+.series-eps{padding:4px 13px 12px;}
+.ep-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:var(--bw) solid var(--border);flex-wrap:wrap;}
+.ep-main{display:flex;align-items:center;gap:6px;}
+.ep-name{font-weight:600;color:var(--accent);font-size:13px;}
+.ep-kind{font-size:11px;background:#fff3e6;color:#b07a2e;border-radius:6px;padding:1px 6px;}
+.ep-meta{font-size:12px;color:var(--muted);flex:1;min-width:160px;}
+.ep-acts{display:flex;gap:4px;align-items:center;}
+.series-add{margin-top:8px;}
 /* 心愿单 · 规格与比价表 */
 .spec-line{margin-top:5px;font-size:calc(var(--fs)*0.833);color:var(--text);background:var(--tint);border-radius:7px;padding:5px 9px;display:inline-block;}
 .cmp-box{margin-top:9px;border:var(--bw) solid var(--border);border-radius:10px;background:var(--bg);padding:9px 10px 10px;}
@@ -945,6 +967,8 @@ function load(){
   if(!Array.isArray(D.plan.lib))D.plan.lib=[];
   if(!Array.isArray(D.plan.tpl))D.plan.tpl=[];
   D.plan.items.forEach(x=>planFix(x));
+  if(!Array.isArray(D.movie))D.movie=[];
+  migrateMovie();
   snapPrev();
 }
 /* 阴阳师的日常/周常是「模板」，同名即同一条。合并/恢复/导入时若两端 id 不同
@@ -3245,6 +3269,9 @@ function gActDelLib(libid){
 let movieFilter='全部';
 let movieView='list';
 let movieStatsRange='month';
+let movieFold={};            // 系列卡片折叠态（按系列名）
+let movieFormMode='single';  // 'single' 独立作品 / 'series' 分集系列
+let moviePrefill=null;       // 点「＋添加一期」时带入的系列首次信息
 const MOVIE_CATS=['电影','动漫','电视剧','综艺','纪录片'];
 function movieCustomTypes(){ if(!D.movie)D.movie={}; if(!Array.isArray(D.movie.custom))D.movie.custom=['自定义']; return D.movie.custom; }
 function movieAllTypes(){ return MOVIE_CATS.concat(movieCustomTypes()); }
@@ -3254,6 +3281,18 @@ function movieRenameType(old){ if(MOVIE_CATS.indexOf(old)>=0){toast('内置类�
 function movieDelType(old){ if(MOVIE_CATS.indexOf(old)>=0){toast('内置类别不可删除');return;} if(!confirm('删除类别「'+old+'」？\n（已归该类别的影片会改回「自定义」）'))return; const c=movieCustomTypes(); const i=c.indexOf(old); if(i>=0)c.splice(i,1); (D.movie.items||[]).forEach(it=>{if(it.category===old)it.category='自定义';}); save(); renderMovie(); }
 const MOVIE_CAT_COLOR={'电影':'#B98AA8','动漫':'#7BA8C4','电视剧':'#6E8B8B','综艺':'#C49A6C','纪录片':'#7E9A7E','自定义':'#9AA0A6'};
 const PLATFORMS=['腾讯','爱奇艺','B站','优酷','芒果TV','抖音','影院','网盘','其他'];
+function migrateMovie(){
+  if(!Array.isArray(D.movie))D.movie=[];
+  if(!Array.isArray(D.movie.custom))D.movie.custom=['自定义'];
+  const byName={};D.movie.forEach(it=>{(byName[it.name]=byName[it.name]||[]).push(it);});
+  D.movie.forEach(it=>{
+    if(it.mode===undefined){const same=byName[it.name]||[];it.mode=same.length>1?'series':'single';it.series=it.mode==='series'?(it.name||''):'';}
+    if(it.ep===undefined)it.ep=it.progress||'';
+    if(it.epKind===undefined)it.epKind='正片';
+    if(it.src===undefined)it.src='';
+    if(it.srcUrl===undefined)it.srcUrl='';
+  });
+}
 function renderMovie(){
   if(movieView==='stats'){renderMovieStats();return;}
   let html=`<div class="tabs">
@@ -3263,48 +3302,75 @@ function renderMovie(){
   </div>
   <div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="clearAll('movie')">清空全部</button></div>`;
   let list=D.movie.filter(x=>movieFilter==='全部'||x.category===movieFilter);
-  // 同剧名集数序号（按观看时间升序）
-  const byName={};list.forEach(it=>{(byName[it.name]=byName[it.name]||[]).push(it);});
-  Object.values(byName).forEach(arr=>arr.sort((a,b)=>(a.date||'').localeCompare(b.date||'')));
-  const seqMap={};Object.entries(byName).forEach(([n,arr])=>arr.forEach((it,i)=>{seqMap[it.id]={seq:i+1,total:arr.length};}));
-  // 按录入时间从新到旧
-  list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const groups={};
+  list.forEach(it=>{const gk=it.series||it.name||'未命名';if(!groups[gk])groups[gk]={items:[]};groups[gk].items.push(it);});
+  const groupArr=Object.entries(groups).map(([k,g])=>{const sorted=g.items.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));return {key:k,items:sorted,latest:sorted[0]?sorted[0].date:''};}).sort((a,b)=>(b.latest||'').localeCompare(a.latest||''));
   if(list.length===0)html+=`<div class="empty"><div class="em">🎬</div>暂无观影记录</div>`;
-  list.forEach(it=>html+=movieItem(it,seqMap[it.id]));
-  html+=movieForm();
+  groupArr.forEach(({key,items})=>{
+    const asSeries=items.length>1||items.some(i=>i.mode==='series');
+    html+= asSeries?movieSeriesCard(items):movieItem(items[0]);
+  });
+  html+=`<div id="movieFormCard">${movieForm()}</div>`;
   $('#content').innerHTML=html;
 }
-function movieItem(it,seq){
+function movieItem(it){
   const stars='★'.repeat(it.rating||0)+'☆'.repeat(5-(it.rating||0));
-  const seriesTxt=(seq&&seq.total>1)?` · 第${seq.seq}/${seq.total}期`:'';
+  const prog=it.progress||it.ep||'';
   return `<div class="item">
     <div class="body">
       <div class="ttitle">${esc(it.name)} <span class="tag">${esc(it.category)}</span></div>
       <div class="sub">${it.country?('国别:'+esc(it.country)+' '):''}${it.director?('导演:'+esc(it.director)):''}</div>
-      <div class="sub">进度：${esc(it.progress)}${seriesTxt} ${it.category==='电影'?'<a href="#" onclick="movieDone(\''+it.id+'\')">看完</a>':''}</div>
+      ${prog?`<div class="sub">进度：${esc(prog)} ${it.category==='电影'?'<a href="#" onclick="movieDone(\''+it.id+'\')">看完</a>':''}</div>`:''}
       <div class="meta-grid">
-        ${it.cast?`<span class="tag">主演/声优:${esc(it.cast)}</span>`:''}
+        ${it.cast?`<span class="tag">主演:${esc(it.cast)}</span>`:''}
         ${it.duration?`<span class="tag">${it.duration}分</span>`:''}
         ${it.platform?`<span class="tag">${esc(it.platform)}</span>`:''}
+        ${it.watchLoc?`<span class="tag">${esc(it.watchLoc)}</span>`:''}
         ${it.tags?`<span class="tag alt">${esc(it.tags)}</span>`:''}
         ${it.rewatch?`<span class="tag">重温${it.rewatch}次</span>`:''}
         ${it.recommend?`<span class="tag alt">年度Top</span>`:''}
-        ${it.watchLoc?`<span class="tag">${esc(it.watchLoc)}</span>`:''}
+        ${it.epKind&&it.epKind!=='正片'?`<span class="tag">${esc(it.epKind)}</span>`:''}
       </div>
       <div class="sub">${stars} · ${esc(it.likeLevel||'')} · ${fmtDate(it.date)}</div>
+      ${it.src?`<div class="sub">推荐溯源：${esc(it.src)}${it.srcUrl?` · <a href="${esc(it.srcUrl)}" target="_blank">链接</a>`:''}</div>`:''}
       ${it.link?`<div class="sub"><a href="${esc(it.link)}" target="_blank">关联链接</a></div>`:''}
       ${it.comment?`<div class="emptybox">💬 ${esc(it.comment)}</div>`:''}
     </div>
     <div class="item-acts">
-      <button class="btn ghost sm" onclick="openEdit('movie','${it.id}')">✏️ 编辑</button>
+      <button class="btn ghost sm" onclick="openEdit('movie','${it.id}')">编辑</button>
       <button class="del" onclick="delItem('movie','${it.id}')">×</button>
     </div>
   </div>`;
 }
+function movieSeriesCard(items){
+  const head=items[0];
+  const name=head.series||head.name||'未命名';
+  const folded=(movieFold[name]===undefined)?(items.length>3):movieFold[name];
+  const avg=items.length?Math.round(items.reduce((s,x)=>s+(+x.rating||0),0)/items.length*10)/10:0;
+  const stars='★'.repeat(Math.round(avg))+'☆'.repeat(5-Math.round(avg));
+  let h=`<div class="series-card${folded?' folded':''}">
+    <div class="series-head" onclick="movieToggleFold('${esc(name)}',this)">
+      <div class="series-title">${esc(name)} <span class="tag">${esc(head.category)}</span> <span class="arr"></span></div>
+      <div class="series-sub">${head.country?esc(head.country)+' · ':''}${head.director?('导演 '+esc(head.director)):''} · ${stars} · 已看 ${items.length} 期/集</div>
+    </div>`;
+  h+=`<div class="series-eps">`;
+  items.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).forEach(it=>{h+=movieEpRow(it);});
+  h+=`<div class="series-add"><button class="btn ghost sm" onclick="openAddEp('${esc(name)}')">＋ 添加一期</button></div>`;
+  h+=`</div></div>`;
+  return h;
+}
+function movieEpRow(it){
+  return `<div class="ep-row">
+    <div class="ep-main"><span class="ep-name">${esc(it.ep||'正片')}</span>${it.epKind&&it.epKind!=='正片'?`<span class="ep-kind">${esc(it.epKind)}</span>`:''}</div>
+    <div class="ep-meta">${fmtDate(it.date)} · ${it.duration?it.duration+'分':''} · ${it.platform?esc(it.platform):''} · ${it.watchLoc?esc(it.watchLoc):''}${it.src?(' · 推荐:'+esc(it.src)):''}</div>
+    <div class="ep-acts"><button class="btn ghost sm" onclick="openEdit('movie','${it.id}')">编辑</button><button class="del" onclick="delItem('movie','${it.id}')">×</button></div>
+  </div>`;
+}
+function movieToggleFold(name,el){movieFold[name]=!movieFold[name];const c=el&&el.closest?el.closest('.series-card'):null;if(c)c.classList.toggle('folded');}
 function renderMovieStats(){
   const all=D.movie||[];
   const byName={};
-  all.forEach(it=>{(byName[it.name]=byName[it.name]||{cat:it.category,list:[]}).list.push(it);});
+  all.forEach(it=>{const gk=it.series||it.name||'未命名';(byName[gk]=byName[gk]||{cat:it.category,list:[]}).list.push(it);});
   let html=`<div class="tabs">
     <div class="tab ${movieStatsRange==='month'?'on':''}" onclick="movieStatsRange='month';renderMovieStats()">按月</div>
     <div class="tab ${movieStatsRange==='year'?'on':''}" onclick="movieStatsRange='year';renderMovieStats()">按年</div>
@@ -3323,55 +3389,141 @@ function renderMovieStats(){
       `</div></div>`;
   });
   html+=`<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">${movieAllTypes().map(c=>`<span style="font-size:calc(var(--fs)*0.733);color:var(--muted)"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${movieCatColor(c)};margin-right:3px"></span>${c}</span>`).join('')}</div></div>`;
-  const series=Object.entries(byName).map(([n,o])=>{const sorted=o.list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));return {name:n,cat:o.cat,total:o.list.length,last:sorted[0]?sorted[0].date:''};}).filter(s=>s.total>0).sort((a,b)=>(b.last||'').localeCompare(a.last||''));
+  const series=Object.entries(byName).map(([n,o])=>{const sorted=o.list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));const avg=Math.round(sorted.reduce((s,x)=>s+(+x.rating||0),0)/sorted.length*10)/10;return {name:n,cat:o.cat,total:sorted.length,avg,last:sorted[0]?sorted[0].date:''};}).filter(s=>s.total>0).sort((a,b)=>(b.last||'').localeCompare(a.last||''));
   html+=`<div class="card"><div class="card-h"><h2>📚 系列总览（同剧不同集归并）</h2></div>`;
   if(series.length===0)html+=`<div class="hint">暂无数据</div>`;
-  else series.forEach(s=>{html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:var(--bw) solid var(--border);font-size:calc(var(--fs)*0.867)"><span class="tag">${esc(s.cat)}</span><b style="flex:1">${esc(s.name)}</b><span class="hint">共 ${s.total} 集/部 · 最近 ${fmtDate(s.last)}</span></div>`;});
+  else series.forEach(s=>{html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:var(--bw) solid var(--border);font-size:calc(var(--fs)*0.867)"><span class="tag">${esc(s.cat)}</span><b style="flex:1">${esc(s.name)}</b><span class="hint">均分 ${s.avg||'—'} · 共 ${s.total} 集/部 · 最近 ${fmtDate(s.last)}</span></div>`;});
   html+=`</div>`;
   $('#content').innerHTML=html;
 }
 function movieForm(){
-  return `<div class="card"><div class="card-h"><h2>➕ 记录观影</h2></div>
-    <div class="field"><label>名称 *</label><input type="text" id="mf_name" onkeydown="if(event.key==='Enter')addMovie()"></div>
+  const pf=moviePrefill||{};
+  const isSeries=(movieFormMode==='series')||pf.mode==='series';
+  const g=(k,def)=> (pf[k]!==undefined&&pf[k]!==null&&pf[k]!=='')?pf[k]:def;
+  const nameV=esc(g('name',''));
+  const catV=g('cat','电影');
+  const today=new Date().toISOString().slice(0,10);
+  const dateV=(pf.date?String(pf.date).slice(0,10):today);
+  const timeV=pf.time||'';
+  const durV=esc(g('duration',''));
+  const castV=esc(g('cast',''));
+  const countryV=esc(g('country',''));
+  const dirV=esc(g('director',''));
+  const platV=g('platform','');
+  const locV=g('watchLoc','');
+  const tagsV=esc(g('tags',''));
+  const rewV=g('rewatch',0);
+  const recV=!!g('recommend',false);
+  const rateV=g('rating',5);
+  const likeV=g('likeLevel','非常喜欢');
+  const epV=esc(g('ep',''));
+  const kindV=g('epKind','正片');
+  const linkV=esc(g('link',''));
+  const commentV=esc(g('comment',''));
+  const srcV=esc(g('src',''));
+  const srcUrlV=esc(g('srcUrl',''));
+  const seriesHint=(pf.mode==='series')?`<div class="hint" style="margin:2px 0 10px">已带入「${esc(pf.series)}」首次信息：仅改 期集标签 / 日期时间 / 时长 / 性质 / 简评 / 推荐溯源（其余可改）</div>`:'';
+  const seriesOpts=Object.keys(Object.fromEntries((D.movie||[]).filter(x=>(x.series||x.name)).map(x=>[(x.series||x.name),1]))).filter(Boolean).map(n=>`<option>${esc(n)}</option>`).join('');
+  const epLabel=isSeries?'期集标签 *（第N期 / 先导片 / 超前营业）':'观看进度（电影 mm:ss / 全片）';
+  let html=`<div class="card"><div class="card-h"><h2>➕ 记录观影</h2></div>
+    <div class="field"><label>记录类型</label>
+      <div class="seg">
+        <button type="button" class="${!isSeries?'on':''}" onclick="movieSetMode('single')">独立作品</button>
+        <button type="button" class="${isSeries?'on':''}" onclick="movieSetMode('series')">分集系列</button>
+      </div>
+    </div>
+    ${seriesHint}
+    <div class="field"><label>${isSeries?'系列名称 *':'名称 *'}</label>
+      <input type="text" id="mf_name" list="mf_series_list" value="${nameV}" oninput="movieSeriesNameChg()" onkeydown="if(event.key==='Enter')addMovie()">
+      ${isSeries?`<datalist id="mf_series_list">${seriesOpts}</datalist>`:''}
+    </div>
+    <div class="field"><label>${epLabel}</label><input type="text" id="mf_ep" value="${epV}" placeholder="第5期 / 先导片 / 全片" onkeydown="if(event.key==='Enter')addMovie()"></div>
     <div class="row">
-      <div class="field"><label>类别</label><select id="mf_cat" onchange="movieCatChg()">${movieAllTypes().map(c=>`<option>${c}</option>`).join('')}</select> <button class="btn ghost sm" onclick="movieAddType()">＋</button> <button class="btn ghost sm" onclick="movieRenameType($('#mf_cat').value)">✎</button> <button class="btn ghost sm" onclick="movieDelType($('#mf_cat').value)">🗑</button></div>
-      <div class="field"><label>国别</label><input type="text" id="mf_country"></div>
-      <div class="field"><label>导演</label><input type="text" id="mf_dir"></div>
+      <div class="field"><label>类别</label><select id="mf_cat" onchange="movieCatChg()">${movieAllTypes().map(c=>`<option ${c===catV?'selected':''}>${esc(c)}</option>`).join('')}</select> <button class="btn ghost sm" onclick="movieAddType()">＋</button> <button class="btn ghost sm" onclick="movieRenameType($('#mf_cat').value)">✎</button> <button class="btn ghost sm" onclick="movieDelType($('#mf_cat').value)">🗑</button></div>
+      <div class="field"><label>国别</label><input type="text" id="mf_country" value="${countryV}"></div>
+      <div class="field"><label>导演</label><input type="text" id="mf_dir" value="${dirV}"></div>
+    </div>
+    <div class="field"><label>主演 / 声优</label><input type="text" id="mf_cast" value="${castV}"></div>
+    <div class="row">
+      <div class="field"><label>观看日期</label><input type="date" id="mf_date_d" value="${dateV}"></div>
+      <div class="field" style="flex:0 0 120px"><label>时间</label><input type="text" id="mf_date_t" class="timepick" readonly placeholder="选择" value="${timeV}" onclick="openTP(this,this.value)"></div>
+    </div>
+    <div class="b4">
+      <div class="field"><label>时长(分)</label><input type="number" id="mf_dur" value="${durV}"></div>
+      <div class="field"><label>性质</label><select id="mf_kind">${['正片','花絮','特辑','其他'].map(o=>`<option ${o===kindV?'selected':''}>${esc(o)}</option>`).join('')}</select></div>
+      <div class="field"><label>观看平台</label><select id="mf_plat"><option value="">请选择</option>${PLATFORMS.map(p=>`<option ${p===platV?'selected':''}>${esc(p)}</option>`).join('')}</select></div>
+      <div class="field"><label>观影地点</label><select id="mf_loc"><option value="">请选择</option>${['影院','居家','朋友家'].map(o=>`<option ${o===locV?'selected':''}>${esc(o)}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>个人标签(逗号分隔)</label><input type="text" id="mf_tags" value="${tagsV}" placeholder="科幻,悬疑"></div>
+    <div class="field"><label>短评 / 感想</label><textarea id="mf_comment">${commentV}</textarea></div>
+    <div class="row">
+      <div class="field"><label>评分</label><select id="mf_rate">${[1,2,3,4,5].map(n=>`<option ${n==rateV?'selected':''}>${n}</option>`).join('')}</select></div>
+      <div class="field"><label>喜好程度</label><select id="mf_like">${['非常喜欢','喜欢','一般','不喜欢','未看完'].map(l=>`<option ${l===likeV?'selected':''}>${esc(l)}</option>`).join('')}</select></div>
     </div>
     <div class="row">
-      <div class="field"><label>主演 / 声优</label><input type="text" id="mf_cast"></div>
-      <div class="field"><label>时长(分)</label><input type="number" id="mf_dur"></div>
-      <div class="field"><label>观看平台</label><select id="mf_plat"><option value="">请选择</option>${PLATFORMS.map(p=>`<option>${p}</option>`).join('')}</select></div>
-      <div class="field"><label>观影地点</label><select id="mf_loc"><option value="">请选择</option><option>影院</option><option>居家</option><option>朋友家</option></select></div>
+      <div class="field"><label>重温次数</label><input type="number" id="mf_rewatch" value="${rewV}"></div>
+      <div class="field" style="flex:0 0 auto"><label>年度推荐 Top</label><div style="display:flex;align-items:center;gap:6px;padding-top:2px"><input type="checkbox" id="mf_rec" ${recV?'checked':''}> 标记</div></div>
+      <div class="field"><label>关联链接</label><input type="text" id="mf_link" value="${linkV}" placeholder="豆瓣/影评"></div>
     </div>
-    <div class="row">
-      <div class="field"><label>个人标签(逗号分隔)</label><input type="text" id="mf_tags" placeholder="科幻,悬疑"></div>
-      <div class="field"><label>重温次数</label><input type="number" id="mf_rewatch" value="0"></div>
-      <div class="field" style="flex:0 0 auto"><label>年度推荐 Top</label><div style="padding-top:6px"><input type="checkbox" id="mf_rec"> 标记</div></div>
-      <div class="field"><label>关联链接</label><input type="text" id="mf_link" placeholder="豆瓣/影评"></div>
-    </div>
-    <div class="field"><label>短评 / 感想</label><textarea id="mf_comment"></textarea></div>
-    <div class="field"><label>观看进度</label><input type="text" id="mf_prog" placeholder="电影:mm:ss / 剧:第5集 / S2E1"></div>
-    <div class="row">
-      <div class="field"><label>评分</label><select id="mf_rate">${[1,2,3,4,5].map(n=>`<option>${n}</option>`).join('')}</select></div>
-      <div class="field"><label>喜好程度</label><select id="mf_like">${['非常喜欢','喜欢','一般','不喜欢','未看完'].map(l=>`<option>${l}</option>`).join('')}</select></div>
-      <div class="field" style="flex:1.2"><label>观看日期</label><input type="date" id="mf_date_d" value="${new Date().toISOString().slice(0,10)}"></div>
-      <div class="field" style="flex:0 0 120px"><label>时间</label><input type="text" id="mf_date_t" class="timepick" readonly placeholder="选择" onclick="openTP(this,this.value)"></div>
+    <div class="field"><label>推荐溯源（谁推荐 / 何原因，可附链接）</label>
+      <div class="src2">
+        <input type="text" id="mf_src" value="${srcV}" placeholder="如：朋友阿杰安利 / 某博主推荐">
+        <input type="text" id="mf_srcurl" value="${srcUrlV}" placeholder="相关链接（选填）">
+      </div>
     </div>
     <button class="btn" onclick="addMovie()">记录</button>
   </div>`;
+  return html;
 }
-function movieCatChg(){const c=$('#mf_cat').value;const ph=c==='电影'?'mm:ss（如 01:23:45）':(c==='动漫'||c==='电视剧'||c==='综艺')?'第5集 / S2E1':'集数或时间';if($('#mf_prog'))$('#mf_prog').placeholder=ph;}
+function mfVal(id){const e=document.getElementById(id);return e?e.value:'';}
+function movieSetMode(m){movieFormMode=m;const c=document.getElementById('movieFormCard');if(c)c.innerHTML=movieForm();}
+function movieSeriesNameChg(){
+  const nm=mfVal('mf_name').trim();if(!nm)return;
+  const arr=(D.movie||[]).filter(x=>(x.series||x.name)===nm);
+  if(!arr.length)return;
+  const b=arr.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''))[0];
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
+  set('mf_cat',b.category);set('mf_country',b.country);set('mf_dir',b.director);set('mf_cast',b.cast);
+  set('mf_plat',b.platform);set('mf_loc',b.watchLoc);set('mf_tags',b.tags);set('mf_rewatch',b.rewatch||0);
+  set('mf_rate',b.rating||5);set('mf_like',b.likeLevel);
+  const rec=document.getElementById('mf_rec');if(rec)rec.checked=!!b.recommend;
+}
+function openAddEp(series){
+  const arr=(D.movie||[]).filter(x=>(x.series||x.name)===series);
+  const b=arr.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''))[0]||{};
+  moviePrefill={mode:'series',series:series,name:series,cat:b.category||'电影',country:b.country||'',director:b.director||'',cast:b.cast||'',platform:b.platform||'',watchLoc:b.watchLoc||'',tags:b.tags||'',rewatch:b.rewatch||0,recommend:!!b.recommend,rating:b.rating||5,likeLevel:b.likeLevel||'非常喜欢',ep:'',epKind:'正片',date:new Date().toISOString().slice(0,10),time:'',duration:'',comment:'',src:'',srcUrl:''};
+  movieFormMode='series';
+  const c=document.getElementById('movieFormCard');
+  if(c){c.innerHTML=movieForm();if(c.scrollIntoView)c.scrollIntoView({behavior:'smooth',block:'start'});}
+}
+function movieCatChg(){const c=mfVal('mf_cat');const ph=c==='电影'?'mm:ss（如 01:23:45）':(c==='动漫'||c==='电视剧'||c==='综艺')?'第5集 / S2E1':'集数或时间';const e=document.getElementById('mf_ep');if(e)e.placeholder=ph;}
 function addMovie(){
-  const name=$('#mf_name').value.trim();if(!name){toast('填名称');return;}
-  const cat=$('#mf_cat').value;
-  const it={id:uid(),name,category:cat,country:$('#mf_country').value,director:$('#mf_dir').value,
-    cast:$('#mf_cast')?$('#mf_cast').value:'',duration:$('#mf_dur')?$('#mf_dur').value:'',
-    platform:$('#mf_plat')?$('#mf_plat').value:'',tags:$('#mf_tags')?$('#mf_tags').value:'',
-    rewatch:$('#mf_rewatch')?+$('#mf_rewatch').value||0:0,recommend:$('#mf_rec')?$('#mf_rec').checked:false,watchLoc:$('#mf_loc')?$('#mf_loc').value:'',
-    progress:$('#mf_prog').value,rating:+$('#mf_rate').value,likeLevel:$('#mf_like').value,
-    date:(($('#mf_date_d')?$('#mf_date_d').value:'')||new Date().toISOString().slice(0,10))+'T'+(($('#mf_date_t')?$('#mf_date_t').value:'')||'00:00'),link:$('#mf_link')?$('#mf_link').value:'',comment:$('#mf_comment')?$('#mf_comment').value:''};
-  D.movie.unshift(it);save();renderNav();renderMovie();toast('已记录');
+  const name=mfVal('mf_name').trim();if(!name){toast('填名称');return;}
+  const isSeries=(movieFormMode==='series')||(moviePrefill&&moviePrefill.mode==='series');
+  const epVal=mfVal('mf_ep').trim();
+  if(isSeries&&!epVal){toast('填期集标签');return;}
+  const it={
+    id:uid(),name:name,category:mfVal('mf_cat'),
+    country:mfVal('mf_country'),director:mfVal('mf_dir'),
+    cast:mfVal('mf_cast'),duration:mfVal('mf_dur'),
+    platform:mfVal('mf_plat'),tags:mfVal('mf_tags'),
+    rewatch:+$('#mf_rewatch').value||0,
+    recommend:$('#mf_rec')?$('#mf_rec').checked:false,
+    watchLoc:mfVal('mf_loc'),
+    mode:isSeries?'series':'single',
+    series:isSeries?name:'',
+    ep:isSeries?epVal:'',
+    epKind:mfVal('mf_kind')||'正片',
+    progress:isSeries?'':epVal,
+    rating:+$('#mf_rate').value,
+    likeLevel:mfVal('mf_like'),
+    date:(mfVal('mf_date_d')||new Date().toISOString().slice(0,10))+'T'+(mfVal('mf_date_t')||'00:00'),
+    link:mfVal('mf_link'),comment:mfVal('mf_comment'),
+    src:mfVal('mf_src'),srcUrl:mfVal('mf_srcurl')
+  };
+  D.movie.unshift(it);
+  movieFormMode='single';moviePrefill=null;
+  save();renderNav();renderMovie();toast('已记录');
 }
 function movieDone(id){const it=D.movie.find(x=>x.id===id);if(it){it.progress='全片';save();renderMovie();}}
 
@@ -4330,6 +4482,10 @@ const EDIT_SCHEMA={
   movie:{title:'观影记录',fields:[
     {k:'category',l:'类别',t:'sel',o:['电影','动漫','电视剧','综艺','纪录片','自定义']},
     {k:'name',l:'名称',t:'text'},
+    {k:'mode',l:'记录类型',t:'sel',o:['single','series'],ol:['独立作品','分集系列']},
+    {k:'series',l:'系列名称(分集)',t:'text'},
+    {k:'ep',l:'期集标签(分集)',t:'text'},
+    {k:'epKind',l:'性质',t:'sel',o:['正片','花絮','特辑','其他']},
     {k:'country',l:'国别',t:'text'},{k:'director',l:'导演',t:'text'},
     {k:'cast',l:'主演/声优',t:'text'},{k:'duration',l:'时长(分钟)',t:'num'},
     {k:'platform',l:'观看平台',t:'text'},{k:'watchLoc',l:'观影地点',t:'text'},
@@ -4339,6 +4495,8 @@ const EDIT_SCHEMA={
     {k:'tags',l:'个人标签',t:'text'},{k:'rewatch',l:'重温次数',t:'num'},
     {k:'date',l:'观看时间',t:'datetime'},
     {k:'link',l:'关联链接',t:'text'},
+    {k:'src',l:'推荐溯源(谁推荐/原因)',t:'text'},
+    {k:'srcUrl',l:'推荐溯源链接',t:'text'},
     {k:'recommend',l:'年度推荐',t:'chk'},
     {k:'comment',l:'短评',t:'ta'}
   ]},
@@ -4737,7 +4895,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.5.3';
+const APP_VER='v75.5.4';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
