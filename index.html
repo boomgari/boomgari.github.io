@@ -249,8 +249,11 @@ textarea{resize:vertical;min-height:60px;}
 .item .ic{flex:none;background:none;border:none;color:var(--muted);font-size:calc(var(--fs)*1.1);cursor:pointer;line-height:1;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;}
 .item .ic:hover{background:var(--tint);color:var(--accent);}
 /* 换肤网格 */
-.swatch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:9px;margin-top:10px;}
-.skin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:6px;}
+/* v75.5.3 铁律：色卡容器必须 block，严禁改回 display:grid 小列宽（否则色卡又会竖列堆叠） */
+.swatch-grid{display:block;margin-top:10px;}
+/* v75.5.3 起：色卡固定两列（手机端一左一右），宽屏三列；永不再回退竖列 */
+.skin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
+@media(min-width:600px){.skin-grid{grid-template-columns:repeat(3,1fr);}}
 .skin-tile{position:relative;border:1.5px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .12s,box-shadow .12s;min-height:98px;display:flex;flex-direction:column;}
 .skin-tile:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12);}
 .skin-tile .bar{height:7px;width:100%;flex:none;}
@@ -261,11 +264,16 @@ textarea{resize:vertical;min-height:60px;}
 .skin-tab{padding:5px 12px;border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:12px;white-space:nowrap;}
 .skin-tab.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent);}
 .skin-tab .cnt{opacity:.6;font-size:10px;margin-left:4px;}
+/* v75.5.3 换肤：横向分类 tab 行 + 紧凑分类标签 + 行内搜索 + 直线主题色对号 */
+.skin-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:12px;}
+.skin-search-inline{flex:1 1 140px;min-width:120px;padding:6px 11px;border:var(--bw) solid var(--border);border-radius:9px;font-size:12px;}
+.skin-cat-label{margin:12px 0 4px;font-size:12px;font-weight:700;color:var(--muted);border-left:3px solid var(--accent-soft);padding-left:8px;}
+.chk-inline{display:inline-flex;vertical-align:-2px;color:var(--accent);margin-right:2px;}
 .cycle-sel{font-size:calc(var(--fs)*0.72);padding:2px 5px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--accent);max-width:80px;}
 .cycle-n{width:42px;font-size:calc(var(--fs)*0.72);padding:2px 4px;border:1px solid var(--border);border-radius:7px;background:var(--bg);}
 .swatch.sel{border-color:#1A1A1A;}
-.season-cards{display:flex;gap:8px;margin-bottom:6px;}
-.season-card{flex:1;text-align:center;align-items:center;padding:10px 6px;border-radius:10px;color:#fff;font-size:calc(var(--fs)*0.867);font-weight:600;cursor:pointer;border:2px solid transparent;}
+.season-cards{display:flex;gap:8px;margin-bottom:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.season-card{flex:0 0 auto;white-space:nowrap;text-align:center;align-items:center;padding:10px 12px;border-radius:10px;color:#fff;font-size:calc(var(--fs)*0.867);font-weight:600;cursor:pointer;border:2px solid transparent;}
 .season-card.sel{border-color:#1A1A1A;}
 .skin-search{width:100%;padding:8px 11px;border:var(--bw) solid var(--border);border-radius:9px;margin-bottom:8px;}
 .bc-slot{display:flex;flex-direction:column;gap:3px;}
@@ -2400,6 +2408,8 @@ function isFolded(k,dflt){const v=foldVal(k);return v===null?!!dflt:!!v;}
 function foldToggle(k,dflt){const cur=isFolded(k,dflt);mwbFold[k]=!cur;foldSave();(currentModule==='game'?renderGame():renderModule());}
 /* 直线对号（无弧，跨设备字体不变弯） */
 function chkSvg(){return '<svg class="chk-svg" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8.5 L6.5 12 L13 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"/></svg>';}
+/* 直线主题色对号（用于「打卡时间前」等位置，替代旧版带弧度的对号字符） */
+function chkInline(){return '<span class="chk-inline">'+chkSvg()+'</span>';}
 /* 自定义复选框：隐藏原生 input，用直线 SVG 对号，跨设备一致无弧度 */
 function chkBox(checked,onchange){return '<label class="chk-custom"><input type="checkbox" '+(checked?'checked':'')+' onclick="event.stopPropagation()" onchange="'+onchange+'"><span class="chk-vis">'+chkSvg()+'</span></label>';}
 /* 折叠箭头（细线条 chevron） */
@@ -2609,7 +2619,7 @@ function gameWeeklyCard(prog){
     const exp=gameNoteExp[t.id];
     const check=ty==='text'?chkBox(done,"gProg('weekly','"+t.id+"',this.checked)") : (done?'<span class="tag done">'+chkSvg()+' 已完成</span>':'<span class="hint">进行中</span>');
     const noteBox=exp?('<div class="note-edit"><textarea class="inp" id="gn_'+t.id+'" placeholder="补充备注（奖励/细节）">'+(note?esc(note.text):'')+'</textarea><button class="btn ghost sm" onclick="gameNoteSave(\''+t.id+'\')">保存备注</button></div>'):'';
-    return '<div class="item g-item '+(done?'done':'')+'">'+drag+gWeeklyMv(t.id)+check+'<div class="body"><div class="ttitle">'+esc(t.name)+'</div>'+sub+(ts?('<div class="sub hint">✓ '+fmtTime(ts)+'</div>'):'')+(note?('<div class="sub note-line">📝 '+esc(note.text)+' <span class="hint">'+fmtTime(note.time)+'</span></div>'):'')+'</div><button class="del" title="删除此条" onclick="gDelWeekly(\''+t.id+'\')">×</button><button class="note-btn" title="备注" onclick="gameNoteToggle(\''+t.id+'\')">'+icoNote()+'序列</button></div>'+noteBox;
+    return '<div class="item g-item '+(done?'done':'')+'">'+drag+gWeeklyMv(t.id)+check+'<div class="body"><div class="ttitle">'+esc(t.name)+'</div>'+sub+(ts?('<div class="sub hint">'+chkInline()+' '+fmtTime(ts)+'</div>'):'')+(note?('<div class="sub note-line">📝 '+esc(note.text)+' <span class="hint">'+fmtTime(note.time)+'</span></div>'):'')+'</div><button class="del" title="删除此条" onclick="gDelWeekly(\''+t.id+'\')">×</button><button class="note-btn" title="备注" onclick="gameNoteToggle(\''+t.id+'\')">'+icoNote()+'序列</button></div>'+noteBox;
   }).join('');
   return items
     +'<div class="emptybox">💡 惠比寿：某些活动本周没做但已提前存好，下周做同样活动会自动补领上周奖励。</div>';
@@ -3871,7 +3881,7 @@ function renderTemp(){
       <div class="body">
         <div class="ttitle">${esc(x.text)}</div>
         ${chips?`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:6px">${chips}</div>`:''}
-        ${x.doneTs?`<div class="sub hint">✓ ${fmtTime(x.doneTs)}</div>`:''}
+        ${x.doneTs?`<div class="sub hint">${chkInline()} ${fmtTime(x.doneTs)}</div>`:''}
         ${x.note?`<div class="sub">${esc(x.note)}</div>`:''}
       </div>
       <button class="btn ghost sm" onclick="openEdit('temp','${x.id}')">✏️ 编辑</button>
@@ -4180,7 +4190,7 @@ function renderChecklist(){
     return `<div class="item ${on?'done':''}" style="padding:8px 10px">
       <input type="checkbox" ${on?'checked':''} onchange="chkToggle('${x.id}',this.checked)">
       <div class="body"><div class="ttitle">${esc(x.name)} ${subs.length?`<span class="hint">${p.cur}/${p.tot}</span>`:''}</div>
-      ${mainTs?`<div class="sub hint">✓ ${fmtTime(mainTs)}</div>`:''}
+      ${mainTs?`<div class="sub hint">${chkInline()} ${fmtTime(mainTs)}</div>`:''}
       ${subsHtml}
       <div class="hint" style="cursor:pointer;margin-top:4px" onclick="chkExpToggle('${x.id}')">${exp?'收起子项':(subs.length?('展开子项 '+subs.length+' 个'):'＋ 添加子项')}</div>
       </div>
@@ -4564,20 +4574,24 @@ let _skinFocus=false;
 function skinTab(n,lbl,cnt){return '<span class="skin-tab'+(skinCat===n?' on':'')+'" onclick="setSkinCat(\''+n+'\')">'+lbl+'<span class="cnt">'+cnt+'</span></span>';}
 function skinSearchInput(){_skinFocus=true;renderSkinGrid();}
 function renderSkinGrid(){
+  // 铁律（v75.5.3 起，永不再回退）：色卡区保持「横向分类 tab + 两列网格」，
+  // 严禁把容器改回 display:grid 小列宽，那会让色卡又竖列堆叠。
   const box=document.getElementById('skinSearch');
   const q=box?(box.value||'').trim():'';
   const cur=getAccent();
-  let html='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:12px">';
+  let html='<div class="skin-tabs">';
   const allCount=SKIN_CATS.reduce(function(a,c){return a+c.colors.length;},0);
   html+=skinTab('all','全部',allCount);
   SKIN_CATS.forEach(function(c){ html+=skinTab(c.name,c.name,c.colors.length); });
-  html+='<input id="skinSearch" value="'+esc(q)+'" placeholder="搜索颜色名…" style="flex:1;min-width:120px;padding:6px 11px;border:var(--bw) solid var(--border);border-radius:9px;font-size:12px" oninput="skinSearchInput()">';
+  html+='<input id="skinSearch" value="'+esc(q)+'" placeholder="搜索颜色名…" class="skin-search-inline" oninput="skinSearchInput()">';
   html+='</div>';
-  SKIN_CATS.forEach(function(c){
-    if(skinCat!=='all'&&skinCat!==c.name)return;
+  const cats=(skinCat==='all')?SKIN_CATS:SKIN_CATS.filter(c=>c.name===skinCat);
+  const showLabel=(skinCat==='all');
+  cats.forEach(function(c){
     const items=c.colors.filter(function(s){return !q||s[0].includes(q);});
     if(!items.length)return;
-    html+='<div style="margin:10px 0 4px;font-size:13px;font-weight:700;color:var(--muted)">'+c.name+' <span style="font-weight:400;font-size:11px;opacity:.7">'+items.length+' 色</span></div><div class="skin-grid">';
+    if(showLabel)html+='<div class="skin-cat-label">'+esc(c.name)+'</div>';
+    html+='<div class="skin-grid">';
     items.forEach(function(s){
       const name=s[0],hex=s[1],t=softColor(hex),a=hex,sc=strongColor(hex);
       const isCur=cur.toLowerCase()===hex.toLowerCase();
@@ -4723,7 +4737,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.5.2';
+const APP_VER='v75.5.3';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
