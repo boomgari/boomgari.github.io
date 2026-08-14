@@ -654,6 +654,27 @@ textarea.inp{min-height:52px;}
   .note-btn{padding:4px 6px;}
   .act-meta{justify-content:flex-start;}
 }
+/* ===== v75.6 心愿单：添置原因 / 分页 / 归档 / 联动 ===== */
+.flash{animation:flashHi 1.4s ease;}
+@keyframes flashHi{0%{box-shadow:0 0 0 3px var(--accent);}100%{box-shadow:0 0 0 3px transparent;}}
+.pager{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0 4px;flex-wrap:wrap;}
+.pager-info{font-size:calc(var(--fs)*0.833);color:var(--muted);}
+.pager button[disabled]{opacity:.45;cursor:default;}
+.more-chip{font-size:calc(var(--fs)*0.8);color:var(--accent);cursor:pointer;user-select:none;padding:5px 8px;margin:3px 4px 3px 0;display:inline-flex;align-items:center;}
+.more-chip:hover{text-decoration:underline;}
+.reason-group{border:var(--bw) solid var(--border);border-radius:10px;margin-bottom:10px;background:#fff;overflow:hidden;}
+.reason-head{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;user-select:none;-webkit-user-select:none;flex-wrap:wrap;}
+.reason-head .arr{flex:none;display:inline-flex;align-items:center;color:var(--muted);}
+.reason-name{font-weight:700;font-size:calc(var(--fs)*0.967);}
+.reason-sum{font-size:calc(var(--fs)*0.8);color:var(--muted);margin-left:auto;text-align:right;}
+.reason-body{padding:2px 12px 12px;border-top:var(--bw) solid var(--border);}
+.wish-link-bar{background:var(--tint);border:var(--bw) solid var(--border);border-radius:10px;padding:9px 12px;margin-bottom:12px;font-size:calc(var(--fs)*0.867);color:var(--on-tint);cursor:pointer;display:flex;align-items:center;gap:6px;}
+.wish-link-bar:hover{filter:brightness(.98);}
+.plan-pick{display:flex;align-items:center;gap:8px;padding:9px 10px;border:var(--bw) solid var(--border);border-radius:9px;margin-bottom:8px;cursor:pointer;}
+.plan-pick:hover{background:var(--bg);}
+.plan-pick b{flex:1;word-break:break-word;}
+.item.arch{opacity:.6;}
+.btn.ghost.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent);}
 </style>
 </head>
 <body data-theme="auto">
@@ -784,6 +805,10 @@ textarea.inp{min-height:52px;}
   </div>
 </div>
 
+<div class="overlay" id="wishPlanOverlay" onclick="wishPlanClose()"></div>
+<div class="modal" id="wishPlanModal">
+  <div id="wishPlanBody"></div>
+</div>
 <div id="toast"></div>
 
 <script>
@@ -1617,7 +1642,7 @@ function renderModule(){
 }
 
 /* ================= 工作台账 ================= */
-let workTab='list', workFilter='全部', workState='all', workStatFocus='', workTypes=['常规工作','标书制作','外借','其他'], LOG_TYPES=['提前完成','自发任务','指派完成','协助配合','其他'];
+let workTab='list', workFilter='全部', workState='all', workStatFocus='', workPage=1, workTypes=['常规工作','标书制作','外借','其他'], LOG_TYPES=['提前完成','自发任务','指派完成','协助配合','其他'];
 function renderWork(){
   let html=`<div class="tabs">
     <div class="tab ${workTab==='list'?'on':''}" onclick="workTab='list';renderWork()">待办列表</div>
@@ -1628,10 +1653,10 @@ function renderWork(){
   else if(workTab==='log'){html+=renderWorkLog();}
   else{
     html+=`<div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px">
-      ${['全部','进行中','已完成','已归档'].map(s=>`<span class="chip ${workState===s?'on':''}" onclick="workState='${s}';renderWork()">${s}</span>`).join('')}
+      ${['全部','进行中','已完成','已归档'].map(s=>`<span class="chip ${workState===s?'on':''}" onclick="workState='${s}';workPage=1;renderWork()">${s}</span>`).join('')}
     </div>`;
     html+=`<div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px">
-      ${['全部','每日计划','每周计划','月度计划'].map(f=>`<span class="chip ${workFilter===f?'on':''}" onclick="workFilter='${f}';renderWork()">${f}</span>`).join('')}
+      ${['全部','每日计划','每周计划','月度计划'].map(f=>`<span class="chip ${workFilter===f?'on':''}" onclick="workFilter='${f}';workPage=1;renderWork()">${f}</span>`).join('')}
     </div>`;
     html+=`<div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="archiveAllDone()">📦 归档已完成</button></div>`;
     let list=D.work.filter(x=>{
@@ -1643,7 +1668,14 @@ function renderWork(){
       return true;
     });
     if(list.length===0)html+=`<div class="empty"><div class="em">📋</div>暂无待办，添加一条吧</div>`;
-    list.forEach(it=>html+=workItem(it));
+    const ps=MOVIE_PAGE_SIZE, totalP=Math.max(1,Math.ceil(list.length/ps));
+    if(workPage>totalP)workPage=totalP; if(workPage<1)workPage=1;
+    list.slice((workPage-1)*ps,workPage*ps).forEach(it=>html+=workItem(it));
+    if(list.length>ps)html+=`<div class="pager">
+      <button class="btn ghost sm" ${workPage<=1?'disabled':''} onclick="if(workPage>1){workPage--;renderWork();}">‹ 上一页</button>
+      <span class="pager-info">第 ${workPage}/${totalP} 页 · 共 ${list.length} 条</span>
+      <button class="btn ghost sm" ${workPage>=totalP?'disabled':''} onclick="if(workPage<${totalP}){workPage++;renderWork();}">下一页 ›</button>
+    </div>`;
     html+=workForm();
   }
   $('#content').innerHTML=html;
@@ -1714,9 +1746,9 @@ function addWork(){
   D.work.unshift(it);save();renderNav();renderWork();toast('已添加');
 }
 /* ===== 待办：归档 / 重开（数据保留，不吞统计） ===== */
-function archiveOne(mod,id){const it=(D[mod]||[]).find(x=>x.id===id);if(!it)return;it.archived=true;save();renderNav();renderWork();toast('已归档');}
-function unarchive(mod,id){const it=(D[mod]||[]).find(x=>x.id===id);if(!it)return;it.archived=false;save();renderNav();renderWork();toast('已取消归档');}
-function reopen(mod,id){const it=(D[mod]||[]).find(x=>x.id===id);if(!it)return;it.done=false;it.doneDate='';it.archived=false;save();renderNav();renderWork();toast('已重新打开');}
+function archiveOne(mod,id){const it=(D[mod]||[]).find(x=>x.id===id);if(!it)return;it.archived=true;save();renderNav();renderModule();toast('已归档');}
+function unarchive(mod,id){const it=(D[mod]||[]).find(x=>x.id===id);if(!it)return;it.archived=false;save();renderNav();renderModule();toast('已取消归档');}
+function reopen(mod,id){const it=(D[mod]||[]).find(x=>x.id===id);if(!it)return;it.done=false;it.doneDate='';it.archived=false;save();renderNav();renderModule();toast('已重新打开');}
 function archiveAllDone(){const n=D.work.filter(x=>x.done&&!x.archived).length;if(n===0){toast('没有可归档的已完成项');return;}if(!confirm('将 '+n+' 条已完成待办归档？\n（数据保留，仅从活跃列表移走，统计仍计入累计完成）'))return;D.work.forEach(x=>{if(x.done&&!x.archived)x.archived=true;});save();renderNav();renderWork();toast('已归档 '+n+' 条');}
 
 /* ===== 工作记录（与待办相对：待办=怕忘而记，记录=做完留痕） ===== */
@@ -1878,7 +1910,7 @@ function clone(o){return JSON.parse(JSON.stringify(o||{}));}
 function fitRec(){const t=todayStr();if(!D.fitness.history[t])D.fitness.history[t]={items:[],diet:{}};D.fitness.today=D.fitness.history[t].items;return D.fitness.history[t];}
 function fitRecSet(key,val){const r=fitRec();if(key.indexOf('.')>=0){const p=key.split('.');let o=r;for(let i=0;i<p.length-1;i++)o=o[p[i]];o[p[p.length-1]]=val;}else r[key]=val;save();}
 function renderFitness(){
-  let html='';
+  let html=wishLinkBar('fit');
   if(fitView==='today')html+=renderFitToday();
   else if(fitView==='tpl')html+=renderFitTpl();
   else if(fitView==='lib')html+=renderFitLib();
@@ -2259,7 +2291,7 @@ function studyAddType(){ const v=prompt('新增学习类型（如：日语N2、�
 function studyRenameType(old){ if(STUDY_TYPES.indexOf(old)>=0){toast('内置类型不可改名');return;} const v=prompt('重命名类型：',old); if(v===null)return; const n=v.trim(); if(!n||n===old)return; const c=studyCustomTypes(); const i=c.indexOf(old); if(i>=0)c[i]=n; (D.study.items||[]).forEach(it=>{if(it.type===old)it.type=n;}); save(); renderStudy(); }
 function studyDelType(old){ if(STUDY_TYPES.indexOf(old)>=0){toast('内置类型不可删除');return;} if(!confirm('删除类型「'+old+'」？\n（已用该类型的记录会改回「其他」）'))return; const c=studyCustomTypes(); const i=c.indexOf(old); if(i>=0)c.splice(i,1); (D.study.items||[]).forEach(it=>{if(it.type===old)it.type='其他';}); save(); renderStudy(); }
 function renderStudy(){
-  let html=`<div class="tabs">
+  let html=wishLinkBar('study')+`<div class="tabs">
     <div class="tab ${studyTab==='list'?'on':''}" onclick="studyTab='list';renderStudy()">计划列表</div>
     <div class="tab ${studyTab==='lib'?'on':''}" onclick="studyTab='lib';renderStudy()">资料方案库</div>
   </div>`;
@@ -2413,7 +2445,7 @@ function studyDelLib(id){if(!confirm('删除该资料方案？'))return;D.studyL
 let gameView='week', gameTplDay=0, gameDrag=null;
 const YYS_ACT_TYPES_DEFAULT=['爬塔/海域探索','为崽而战','首领挑战/全服BOSS','抽卡UP/召唤','百鬼夜行','协同斗技','真蛇/秘魂','斗技PVP','逢魔之时','限时副本','其他'];
 function renderGame(){
-  let html=`<div class="tabs">
+  let html=wishLinkBar('game')+`<div class="tabs">
     <div class="tab ${gameView==='week'?'on':''}" onclick="gameView='week';renderGame()">本周视图</div>
     <div class="tab ${gameView==='tpl'?'on':''}" onclick="gameView='tpl';renderGame()">日常/周常设置</div>
     <div class="tab ${gameView==='lib'?'on':''}" onclick="gameView='lib';renderGame()">模板库</div>
@@ -3272,6 +3304,8 @@ let movieStatsRange='month';
 let movieFold={};            // 系列卡片折叠态（按系列名）
 let movieFormMode='single';  // 'single' 独立作品 / 'series' 分集系列
 let moviePrefill=null;       // 点「＋添加一期」时带入的系列首次信息
+let moviePage=1;              // 列表分页（每页 MOVIE_PAGE_SIZE 张）
+const MOVIE_PAGE_SIZE=6;
 const MOVIE_CATS=['电影','动漫','电视剧','综艺','纪录片'];
 function movieCustomTypes(){ if(!D.movie)D.movie={}; if(!Array.isArray(D.movie.custom))D.movie.custom=['自定义']; return D.movie.custom; }
 function movieAllTypes(){ return MOVIE_CATS.concat(movieCustomTypes()); }
@@ -3299,8 +3333,8 @@ function migrateMovie(){
 function renderMovie(){
   if(movieView==='stats'){renderMovieStats();return;}
   let html=`<div class="tabs">
-    <div class="tab ${movieFilter==='全部'?'on':''}" onclick="movieFilter='全部';renderMovie()">全部</div>
-    ${movieAllTypes().map(c=>`<div class="tab ${movieFilter===c?'on':''}" onclick="movieFilter='${c}';renderMovie()">${c}</div>`).join('')}
+    <div class="tab ${movieFilter==='全部'?'on':''}" onclick="movieFilter='全部';moviePage=1;renderMovie()">全部</div>
+    ${movieAllTypes().map(c=>`<div class="tab ${movieFilter===c?'on':''}" onclick="movieFilter='${c}';moviePage=1;renderMovie()">${c}</div>`).join('')}
     <div class="tab" style="margin-left:auto" onclick="movieView='stats';renderMovie()">📊 统计</div>
   </div>
   <div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="clearAll('movie')">清空全部</button></div>`;
@@ -3309,11 +3343,23 @@ function renderMovie(){
   list.forEach(it=>{const gk=it.series||it.name||'未命名';if(!groups[gk])groups[gk]={items:[]};groups[gk].items.push(it);});
   const groupArr=Object.entries(groups).map(([k,g])=>{const sorted=g.items.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));return {key:k,items:sorted,latest:sorted[0]?sorted[0].date:''};}).sort((a,b)=>(b.latest||'').localeCompare(a.latest||''));
   if(list.length===0)html+=`<div class="empty"><div class="em">🎬</div>暂无观影记录</div>`;
-  groupArr.forEach(({key,items})=>{
+  const ps=MOVIE_PAGE_SIZE;
+  const totalP=Math.max(1,Math.ceil(groupArr.length/ps));
+  if(moviePage>totalP)moviePage=totalP;
+  if(moviePage<1)moviePage=1;
+  const pageGroups=groupArr.slice((moviePage-1)*ps,moviePage*ps);
+  pageGroups.forEach(({key,items})=>{
     const asSeries=items.length>1||items.some(i=>i.mode==='series');
     html+= asSeries?movieSeriesCard(items):movieItem(items[0]);
   });
   html+=`<div id="movieFormCard">${movieForm()}</div>`;
+  if(groupArr.length>ps){
+    html+=`<div class="pager">
+      <button class="btn ghost sm" ${moviePage<=1?'disabled':''} onclick="if(moviePage>1){moviePage--;renderMovie();}">‹ 上一页</button>
+      <span class="pager-info">第 ${moviePage}/${totalP} 页 · 共 ${groupArr.length} 部</span>
+      <button class="btn ghost sm" ${moviePage>=totalP?'disabled':''} onclick="if(moviePage<${totalP}){moviePage++;renderMovie();}">下一页 ›</button>
+    </div>`;
+  }
   $('#content').innerHTML=html;
 }
 function movieItem(it){
@@ -3497,7 +3543,8 @@ function openAddEp(arg){const series=(arg&&arg.dataset)?arg.dataset.series:arg;
   moviePrefill={mode:'series',series:series,name:series,cat:b.category||'电影',country:b.country||'',director:b.director||'',cast:b.cast||'',platform:b.platform||'',watchLoc:b.watchLoc||'',tags:b.tags||'',rewatch:b.rewatch||0,recommend:!!b.recommend,rating:b.rating||5,likeLevel:b.likeLevel||'非常喜欢',ep:'',epKind:'正片',date:new Date().toISOString().slice(0,10),time:'',duration:'',comment:'',src:'',srcUrl:''};
   movieFormMode='series';
   const c=document.getElementById('movieFormCard');
-  if(c){c.innerHTML=movieForm();if(c.scrollIntoView)c.scrollIntoView({behavior:'smooth',block:'start'});}
+  if(c){c.innerHTML=movieForm();if(c.scrollIntoView)c.scrollIntoView({behavior:'smooth',block:'start'});c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),1400);}
+  toast('已带入《'+series+'》信息，请在下方填写');
 }
 function movieCatChg(){const c=mfVal('mf_cat');const ph=c==='电影'?'mm:ss（如 01:23:45）':(c==='动漫'||c==='电视剧'||c==='综艺')?'第5集 / S2E1':'集数或时间';const e=document.getElementById('mf_ep');if(e)e.placeholder=ph;}
 function addMovie(){
@@ -3536,10 +3583,14 @@ const SEASON_COLOR={spring:'#7E9A7E',summer:'#7B9DBD',autumn:'#C49A6C',winter:'#
 const SEASON_KEY={春季:'spring',夏季:'summer',秋季:'autumn',冬季:'winter'};
 const Q_TYPES=['旅游计划','健身目标','学习目标','观影目标','其他'];
 const FESTIVALS=['五一','十一','端午','中秋','春节','元旦','清明','无'];
+let quarterTypeFilter='全部';
 function renderQuarter(){
-  let html=`<div class="card"><div class="card-h"><h2>📅 年度总览（达成率）</h2></div><div class="row">`;
+  let html=`<div class="row" style="margin-bottom:10px;flex-wrap:wrap;gap:6px">
+    ${['全部'].concat(Q_TYPES).map(t=>`<span class="chip ${quarterTypeFilter===t?'on':''}" onclick="quarterTypeFilter='${t}';renderQuarter()">${t}</span>`).join('')}
+  </div>`;
+  html+=`<div class="card"><div class="card-h"><h2>📅 年度总览（达成率）</h2></div><div class="row">`;
   SEASONS.forEach(s=>{
-    const items=D.quarter.filter(x=>x.season===s);
+    const items=D.quarter.filter(x=>x.season===s && (quarterTypeFilter==='全部'||x.type===quarterTypeFilter));
     const total=items.length;const done=items.filter(x=>(+x.currentValue||0)>=(+x.targetValue||0)&&(+x.targetValue||0)>0).length;
     const pct=total?Math.round(done/total*100):0;
     const c=SEASON_COLOR[SEASON_KEY[s]];
@@ -3547,11 +3598,10 @@ function renderQuarter(){
   });
   html+=`</div></div>`;
   SEASONS.forEach(s=>{
-    const items=D.quarter.filter(x=>x.season===s);
+    const items=D.quarter.filter(x=>x.season===s && (quarterTypeFilter==='全部'||x.type===quarterTypeFilter));
     if(items.length===0)return;
-    html+=`<div class="card"><div class="card-h"><h2>${s}</h2><span class="spacer"></span></div>`;
-    items.forEach(it=>html+=quarterItem(it));
-    html+=`</div>`;
+    const inner=items.map(it=>quarterItem(it)).join('');
+    html+=foldCard(s+' · '+items.length+' 项', 'q_season_'+s, items.length>4, inner);
   });
   html+=quarterForm();
   $('#content').innerHTML=html;
@@ -3620,7 +3670,7 @@ function qMs(qid,mid,v){const it=D.quarter.find(x=>x.id===qid);if(!it)return;con
 function qUndo(qid){const it=D.quarter.find(x=>x.id===qid);it.currentValue=0;it.done=false;save();renderQuarter();}
 
 /* ================= 心愿单 ================= */
-let wishFilter='全部', wishStat='time';
+let wishFilter='全部', wishStat='list', wishGroupBy='reason', wishReasonFilter='全部', wishArch=false, wishPage=1, wishReasonMore=false, wfReason='日常需要';
 const WISH_PLATS=['抖音','拼多多','京东','淘宝','天猫','官网'];
 const WISH_CATS=['数码','家居','书籍','服饰','箱包','体验','美妆','食品','其他'];
 // 不同分类，规格/型号的含义不一样 —— 给对应的提示与候选
@@ -3649,6 +3699,138 @@ function wishOffers(it){
   }
   return it.platformOffers;
 }
+/* ================= 心愿单：添置原因体系 ================= */
+const WISH_PRESET_REASONS=['日常需要','健身需要','学习需要','游戏内购','工作需要'];
+function allWishReasons(){
+  const s=new Set(WISH_PRESET_REASONS);
+  (D.wishReasons||[]).forEach(r=>{ if(r&&r.name) s.add(r.name); });
+  (D.wish||[]).forEach(w=>{ if(w&&w.reason) s.add(w.reason); });
+  return Array.from(s);
+}
+function wishPlanPrice(it){
+  const cp=parseFloat(it.currentPrice), ap=parseFloat(it.alertPrice);
+  const p=(ap>0)?ap:(isNaN(cp)?0:cp); return p||0;
+}
+function wishUrgency(it){
+  if(!it.expectDate)return '';
+  const days=Math.round((new Date(it.expectDate+'T00:00')-new Date(todayStr()+'T00:00'))/86400000);
+  if(days>0)return '还剩 '+days+' 天';
+  if(days===0)return '今天截止';
+  return '已过期待办';
+}
+function wishReasonChips(){
+  const reasons=allWishReasons();
+  const showAll=wishReasonMore||reasons.length<=6;
+  const vis=showAll?reasons:reasons.slice(0,6);
+  let h=`<div class="row" style="margin-bottom:10px">`;
+  h+=`<span class="chip ${wishReasonFilter==='全部'?'on':''}" onclick="wishReasonFilter='全部';wishPage=1;renderWish()">全部</span>`;
+  h+=vis.map(r=>`<span class="chip ${wishReasonFilter===r?'on':''}" data-r="${esc(r)}" onclick="wishPickReason(this)">${esc(r)}</span>`).join('');
+  if(reasons.length>6&&!wishReasonMore)h+=`<span class="more-chip" onclick="wishReasonMore=true;renderWish()">⋯更多 ${reasons.length-6} ▾</span>`;
+  if(wishReasonMore)h+=`<span class="more-chip" onclick="wishReasonMore=false;renderWish()">收起 ▴</span>`;
+  h+=`</div>`;
+  return h;
+}
+function wishPickReason(el){ wishReasonFilter=el.dataset.r; wishPage=1; renderWish(); }
+function wishReasonToggle(el){ const r=el.dataset.r; const dflt=el.dataset.dflt==='1'; foldToggle('wishR_'+r, dflt); }
+function wishPager(total,totalP){
+  return `<div class="pager">
+    <button class="btn ghost sm" ${wishPage<=1?'disabled':''} onclick="if(wishPage>1){wishPage--;renderWish();}">‹ 上一页</button>
+    <span class="pager-info">第 ${wishPage}/${totalP} 页 · 共 ${total} 条</span>
+    <button class="btn ghost sm" ${wishPage>=totalP?'disabled':''} onclick="if(wishPage<${totalP}){wishPage++;renderWish();}">下一页 ›</button>
+  </div>`;
+}
+function wishFlat(list){
+  if(list.length===0)return `<div class="empty"><div class="em">❤️</div>${wishArch?'暂无已归档心愿':'暂无心愿'}</div>`;
+  const ps=MOVIE_PAGE_SIZE, totalP=Math.max(1,Math.ceil(list.length/ps));
+  if(wishPage>totalP)wishPage=totalP; if(wishPage<1)wishPage=1;
+  const pageItems=list.slice((wishPage-1)*ps,wishPage*ps);
+  let h=pageItems.map(it=>wishItem(it,true)).join('');
+  if(list.length>ps)h+=wishPager(list.length,totalP);
+  return h;
+}
+function wishByReason(list){
+  const g={};
+  list.forEach(it=>{const r=it.reason||'未分类'; (g[r]=g[r]||[]).push(it);});
+  let arr=Object.entries(g).map(([r,items])=>{
+    const plan=items.reduce((s,it)=>s+wishPlanPrice(it),0);
+    const bought=items.filter(it=>it.priority==='已实现').length;
+    const ds=items.map(it=>it.expectDate).filter(Boolean).sort();
+    const minD=ds[0]||'', maxD=ds[ds.length-1]||'';
+    const sorted=items.slice().sort((a,b)=>(a.expectDate||'9999-12-31').localeCompare(b.expectDate||'9999-12-31'));
+    return {r,items:sorted,total:items.length,bought,plan,minD,maxD};
+  });
+  arr.sort((a,b)=>(a.minD||'9999').localeCompare(b.minD||'9999'));
+  if(arr.length===0)return `<div class="empty"><div class="em">❤️</div>${wishArch?'暂无已归档心愿':'暂无心愿'}</div>`;
+  const ps=MOVIE_PAGE_SIZE, totalP=Math.max(1,Math.ceil(arr.length/ps));
+  if(wishPage>totalP)wishPage=totalP; if(wishPage<1)wishPage=1;
+  const pageGroups=arr.slice((wishPage-1)*ps,wishPage*ps);
+  let h='';
+  pageGroups.forEach(gp=>{
+    const dflt=gp.total>2;
+    const folded=isFolded('wishR_'+gp.r, dflt);
+    const dRange=gp.minD?(gp.minD+(gp.maxD&&gp.maxD!==gp.minD?('~'+gp.maxD):'')):'—';
+    h+=`<div class="reason-group${folded?' folded':''}">
+      <div class="reason-head" data-r="${esc(gp.r)}" data-dflt="${dflt?1:0}" onclick="wishReasonToggle(this)">
+        <span class="arr">${foldArr(!folded)}</span>
+        <span class="reason-name">${esc(gp.r)}</span>
+        <span class="reason-sum">共 ${gp.total} 件 · 计划 ¥${fmtMoney(gp.plan)} · 已购 ${gp.bought} · 截止 ${dRange}</span>
+      </div>
+      ${folded?'':`<div class="reason-body">${gp.items.map(it=>wishItem(it,false)).join('')}</div>`}
+    </div>`;
+  });
+  if(arr.length>ps)h+=wishPager(arr.length,totalP);
+  return h;
+}
+function wishLinkBar(mod){
+  if(!D.wish||!D.wish.length)return '';
+  let reasons;
+  if(mod==='plan'){ reasons=planItems().filter(p=>p.status!=='archived').map(p=>p.title).filter(Boolean); }
+  else { const m={fit:'健身需要',study:'学习需要',game:'游戏内购'}; reasons=[m[mod]].filter(Boolean); }
+  if(!reasons.length)return '';
+  const pending=(D.wish||[]).filter(w=>!w.archived && w.priority!=='已实现' && reasons.includes(w.reason));
+  if(!pending.length)return '';
+  const plan=Math.round(pending.reduce((s,w)=>s+wishPlanPrice(w),0));
+  const label=mod==='plan'?'从长计议相关':reasons[0];
+  return `<div class="wish-link-bar" data-reasons="${esc(reasons.join('\u0001'))}" onclick="gotoWishReasonFromBar(this)">🛒 心愿单有 ${pending.length} 件「${esc(label)}」待购 · 计划 ¥${fmtMoney(plan)}　查看 →</div>`;
+}
+function gotoWishReasonFromBar(el){
+  const rs=(el.dataset.reasons||'').split('\u0001').filter(Boolean);
+  wishGroupBy='reason'; wishArch=false; wishReasonFilter=rs.length===1?rs[0]:'全部'; wishPage=1;
+  currentModule='wish'; renderNav(); renderModule();
+}
+function wishNewReason(){
+  const v=prompt('新建添置原因（如：十一旅行计划需要）：','');
+  if(v===null)return; const n=v.trim(); if(!n)return;
+  D.wishReasons=D.wishReasons||[];
+  if(!D.wishReasons.some(r=>r.name===n))D.wishReasons.push({name:n,defaultDate:'',module:''});
+  wfReason=n; renderWish();
+}
+function wishImportPlan(){
+  const plans=planItems().filter(p=>p.status!=='archived');
+  if(!plans.length){toast('还没有「从长计议」计划');return;}
+  let h=`<div class="modal-h"><h3>↙ 从「从长计议」引入添置原因</h3><button class="close" onclick="wishPlanClose()">×</button></div><div class="modal-b">`;
+  h+=`<div class="hint" style="margin-bottom:10px">点一个计划，即生成同名自定义添置原因（默认截止日取计划日期），之后该计划相关物品自动归区。</div>`;
+  h+=plans.map(p=>{
+    const used=(D.wishReasons||[]).some(r=>r.name===p.title);
+    const cnt=(D.wish||[]).filter(w=>w.reason===p.title).length;
+    return `<div class="plan-pick" data-pid="${esc(p.id)}" onclick="wishImportPick(this)">
+      <b>${esc(p.title)}</b>${p.end?`<span class="tag">${esc(p.end)}</span>`:''}
+      ${used?`<span class="tag done">已引入${cnt?(' · '+cnt+' 件'):''}</span>`:`<span class="tag alt">引入</span>`}
+    </div>`;
+  }).join('');
+  h+=`</div>`;
+  const b=$('#wishPlanBody'); if(b)b.innerHTML=h;
+  const m=$('#wishPlanModal'),o=$('#wishPlanOverlay'); if(m)m.classList.add('show'); if(o)o.classList.add('show');
+}
+function wishImportPick(el){
+  const p=planFind(el.dataset.pid); if(!p)return;
+  const name=p.title||'未命名计划';
+  D.wishReasons=D.wishReasons||[];
+  let r=D.wishReasons.find(x=>x.name===name);
+  if(!r){ r={name,defaultDate:(p.end||p.start||''),module:'plan'}; D.wishReasons.push(r); }
+  wfReason=name; wishPlanClose(); renderWish();
+}
+function wishPlanClose(){ const m=$('#wishPlanModal'),o=$('#wishPlanOverlay'); if(m)m.classList.remove('show'); if(o)o.classList.remove('show'); }
 function renderWish(){
   let html=`<div class="tabs">
     <div class="tab ${wishStat==='list'?'on':''}" onclick="wishStat='list';renderWish()">列表</div>
@@ -3656,19 +3838,37 @@ function renderWish(){
     <div class="tab ${wishStat==='pie'?'on':''}" onclick="wishStat='pie';renderWish()">分类花费</div>
   </div>`;
   if(wishStat==='list'){
-    const cats=['全部'].concat(WISH_CATS);
-    html+=`<div class="row" style="margin-bottom:10px">${cats.map(c=>`<span class="chip ${wishFilter===c?'on':''}" onclick="wishFilter='${c}';renderWish()">${c}</span>`).join('')}</div>`;
+    html+=`<div class="row" style="margin:4px 0 8px;align-items:center;gap:6px;flex-wrap:wrap">
+      <span class="seg">
+        <button type="button" class="${wishGroupBy==='reason'?'on':''}" onclick="wishGroupBy='reason';wishPage=1;renderWish()">按添置原因</button>
+        <button type="button" class="${wishGroupBy==='category'?'on':''}" onclick="wishGroupBy='category';wishPage=1;renderWish()">按分类</button>
+      </span>
+      <span style="flex:1"></span>
+      <button class="btn ghost sm ${wishArch?'on':''}" onclick="wishArch=!wishArch;wishPage=1;renderWish()">📦 ${wishArch?'返回活跃':'已归档'}</button>
+    </div>`;
+    if(wishGroupBy==='reason'){
+      html+=wishReasonChips();
+    } else {
+      const cats=['全部'].concat(WISH_CATS);
+      html+=`<div class="row" style="margin-bottom:10px">${cats.map(c=>`<span class="chip ${wishFilter===c?'on':''}" onclick="wishFilter='${c}';wishPage=1;renderWish()">${c}</span>`).join('')}</div>`;
+    }
     html+=`<div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="clearAll('wish')">清空全部</button></div>`;
-    const list=D.wish.filter(x=>wishFilter==='全部'||x.category===wishFilter);
-    if(list.length===0)html+=`<div class="empty"><div class="em">❤️</div>暂无心愿</div>`;
-    list.forEach(it=>html+=wishItem(it));
+    let list=D.wish.filter(x=>!!x.archived===!!wishArch);
+    if(wishGroupBy==='reason'){
+      if(wishReasonFilter!=='全部')list=list.filter(x=>(x.reason||'未分类')===wishReasonFilter);
+      html+=wishByReason(list);
+    } else {
+      if(wishFilter!=='全部')list=list.filter(x=>x.category===wishFilter);
+      html+=wishFlat(list);
+    }
     html+=wishForm();
   }else if(wishStat==='time'){html+=wishTimeStat();}
   else{html+=wishPieStat();}
   $('#content').innerHTML=html;
 }
-function wishItem(it){
+function wishItem(it, showReason){
   const done=it.priority==='已实现';
+  const archived=!!it.archived;
   const ph=(it.priceHistory||[]).slice().reverse().map(p=>`${p.date}: ¥${p.price}`).join(' → ');
   const offers=wishOffers(it);
   const filled=Object.keys(offers).filter(p=>offers[p]&&offers[p].price!==''&&offers[p].price!=null);
@@ -3690,15 +3890,17 @@ function wishItem(it){
     </div>`;
   }).join('');
   const diff=(prices.length>1)?`最高 ${fmtMoney(Math.max(...prices))} · 最低 ${fmtMoney(best)} · 差价 <b>${fmtMoney(Math.max(...prices)-best)}</b>`:(prices.length===1?`已记 1 个平台 ${fmtMoney(best)}`:'还没记录任何平台价格');
-  return `<div class="item ${done?'done':''}">
+  const urg=wishUrgency(it);
+  return `<div class="item ${done?'done':''} ${archived?'arch':''}">
     <div class="body">
-      <div class="ttitle">${esc(it.name)} ${it.category?`<span class="tag">${esc(it.category)}</span>`:''} ${it.importance?`<span class="star">${'★'.repeat(Math.min(5,it.importance))}</span>`:''}</div>
+      <div class="ttitle">${done?chkInline():''}${esc(it.name)} ${it.category?`<span class="tag">${esc(it.category)}</span>`:''} ${it.importance?`<span class="star">${'★'.repeat(Math.min(5,it.importance))}</span>`:''} ${archived?'<span class="tag" style="opacity:.7">已归档</span>':''}</div>
       ${it.spec?`<div class="spec-line">🏷 目标规格：<b>${esc(it.spec)}</b></div>`:''}
-      <div class="sub">当前价 ¥${esc(it.currentPrice||'暂无')} · <span class="tag ${done?'done':''}">${esc(it.priority||'未分类')}</span> ${it.expectDate?('· 期望'+esc(it.expectDate)):''}</div>
+      <div class="sub">当前价 ¥${esc(it.currentPrice||'暂无')} · <span class="tag ${done?'done':''}">${esc(it.priority||'未分类')}</span> ${it.expectDate?('· 期望'+esc(it.expectDate)+(urg?(' · '+esc(urg)):'')):''}</div>
       <div class="meta-grid">
         ${it.recommender?`<span class="tag">推荐:${esc(it.recommender)}</span>`:''}
         ${it.buyPlatform?`<span class="tag alt">入手:${esc(it.buyPlatform)}</span>`:''}
-        ${it.alertPrice?`<span class="tag alt">阈值¥${esc(it.alertPrice)}</span>`:''}
+        ${alert?`<span class="tag alt">阈值¥${esc(it.alertPrice)}</span>`:''}
+        ${showReason&&it.reason&&it.reason!=='未分类'?`<span class="tag alt">${esc(it.reason)}</span>`:''}
       </div>
       <datalist id="wspec_${it.id}">${pr.opts.map(o=>`<option>${esc(o)}</option>`).join('')}</datalist>
       <div class="cmp-box">
@@ -3715,6 +3917,7 @@ function wishItem(it){
       ${it.note?`<div class="emptybox">📝 ${esc(it.note)}</div>`:''}
     </div>
     <div class="item-acts">
+      ${archived?`<button class="btn ghost sm" onclick="unarchive('wish','${it.id}')">↩ 取消归档</button>`:`<button class="btn ghost sm" onclick="archiveOne('wish','${it.id}')">📦 归档</button>`}
       <button class="btn ghost sm" onclick="openEdit('wish','${it.id}')">✏️ 编辑</button>
       <button class="btn ghost sm" onclick="wishBuy('${it.id}')">${done?'取消实现':'标记实现'}</button>
       <button class="del" onclick="delItem('wish','${it.id}')">×</button>
@@ -3748,6 +3951,14 @@ function wishChart(id){const it=D.wish.find(x=>x.id===id);
 }
 function wishForm(){
   return `<div class="card"><div class="card-h"><h2>➕ 添加心愿</h2></div>
+    <div class="field"><label>添置原因 *（为什么想买）</label>
+      <div class="row" style="align-items:center;gap:6px;flex-wrap:wrap">
+        <select id="wf2_reason">${allWishReasons().map(r=>`<option ${r===(wfReason||'日常需要')?'selected':''}>${esc(r)}</option>`).join('')}<option value="__new__">＋ 新建自定义原因…</option></select>
+        <button class="btn ghost sm" type="button" onclick="wishNewReason()">＋ 自定义</button>
+        <button class="btn ghost sm" type="button" onclick="wishImportPlan()">↙ 从计划引入</button>
+      </div>
+      <div class="hint" style="margin-top:4px">按「添置原因」归类（日常/健身/学习/游戏内购/工作需要，或自定义）。同原因自动聚成一个可折叠分区，便于压缩预算、分批购买。</div>
+    </div>
     <div class="field"><label>物品名 *</label><input type="text" id="wf2_name" oninput="wishAutoCat(this.value)" onkeydown="if(event.key==='Enter')addWish()" placeholder="如 大疆 Action 6 / 平板 / 背包"></div>
     <div class="row">
       <div class="field"><label>分类（自动归类，可改）</label><input type="text" id="wf2_cat" list="wishcats" onchange="wishSpecHint()" oninput="wishSpecHint()"><datalist id="wishcats">${WISH_CATS.map(c=>`<option>${c}</option>`).join('')}</datalist></div>
@@ -3793,7 +4004,8 @@ function wishSpecHint(){
 }
 function addWish(){
   const name=$('#wf2_name').value.trim();if(!name){toast('填物品名');return;}
-  const it={id:uid(),name,spec:($('#wf2_spec')?$('#wf2_spec').value.trim():''),currentPrice:$('#wf2_price').value,priceHistory:[{date:todayStr(),price:$('#wf2_price').value||'暂无'}],expectDate:$('#wf2_ed').value,priority:$('#wf2_pri').value,category:$('#wf2_cat').value||'其他',link:$('#wf2_link').value,recommender:$('#wf2_rec').value,importance:+$('#wf2_imp').value,alertPrice:$('#wf2_alert').value,note:$('#wf2_note').value,platformPrices:{},platformOffers:{},buyPlatform:''};
+  const rawReason=($('#wf2_reason')?$('#wf2_reason').value:'').trim(); const reason=(rawReason&&rawReason!=='__new__')?rawReason:'日常需要';
+  const it={id:uid(),name,spec:($('#wf2_spec')?$('#wf2_spec').value.trim():''),currentPrice:$('#wf2_price').value,priceHistory:[{date:todayStr(),price:$('#wf2_price').value||'暂无'}],expectDate:$('#wf2_ed').value,priority:$('#wf2_pri').value,category:$('#wf2_cat').value||'其他',link:$('#wf2_link').value,recommender:$('#wf2_rec').value,importance:+$('#wf2_imp').value,alertPrice:$('#wf2_alert').value,note:$('#wf2_note').value,reason:reason,platformPrices:{},platformOffers:{},buyPlatform:''};
   D.wish.unshift(it);save();renderNav();renderWish();toast('已添加');
 }
 function wishTimeStat(){
@@ -4520,6 +4732,7 @@ const EDIT_SCHEMA={
   wish:{title:'心愿单',fields:[
     {k:'name',l:'物品名',t:'text'},
     {k:'category',l:'分类',t:'sel',o:WISH_CATS},
+    {k:'reason',l:'添置原因',t:'sel',dyn:'wishReasons'},
     {k:'spec',l:'规格/型号',t:'spec'},
     {k:'currentPrice',l:'当前参考价 ¥',t:'num'},
     {k:'expectDate',l:'期望购买日期',t:'date'},
@@ -4626,7 +4839,7 @@ function renderEditBody(){
     else if(f.t==='time')ctl=`<input type="time" id="${id}" value="${esc(v||'')}">`;
     else if(f.t==='chk')ctl=`<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0"><input type="checkbox" id="${id}" ${v?'checked':''} style="width:16px;height:16px;margin:0"><span style="font-size:calc(var(--fs)*0.867)">是</span></label>`;
     else if(f.t==='stars')ctl=`<select id="${id}">${[1,2,3,4,5].map(n=>`<option ${(+v===n)?'selected':''}>${n}</option>`).join('')}</select>`;
-    else if(f.t==='sel'){const _opts=f.dyn?(f.dyn==='studyTypes'?studyAllTypes():(f.o||[])):(f.o||[]);ctl=`<select id="${id}"${reRender}>${_opts.map((o,i)=>`<option value="${esc(o)}" ${v===o?'selected':''}>${esc(f.ol?f.ol[i]:o)}</option>`).join('')}</select>`;}
+    else if(f.t==='sel'){const _opts=f.dyn?(f.dyn==='studyTypes'?studyAllTypes():(f.dyn==='wishReasons'?allWishReasons():(f.o||[]))):(f.o||[]);ctl=`<select id="${id}"${reRender}>${_opts.map((o,i)=>`<option value="${esc(o)}" ${v===o?'selected':''}>${esc(f.ol?f.ol[i]:o)}</option>`).join('')}</select>`;}
     else if(f.t==='range'){const parts=String(v||'').split('~');ctl=`<div class="row"><input type="date" id="${id}_a" value="${esc(parts[0]||'')}"><input type="date" id="${id}_b" value="${esc(parts[1]||'')}"></div>`;}
     else if(f.t==='datetime'){const s=String(v||'');const dd=s.slice(0,10),tt=s.slice(11,16);ctl=`<div class="row"><input type="date" id="${id}_a" value="${esc(dd)}"><input type="time" id="${id}_b" value="${esc(tt||'00:00')}"></div>`;}
     else if(f.t==='spec'){const cat=d.category||'其他';const pr=specPreset(cat);ctl=`<input type="text" id="${id}" value="${esc(v||'')}" list="edspecs" placeholder="${esc(pr.ph)}"><datalist id="edspecs">${pr.opts.map(o=>`<option>${esc(o)}</option>`).join('')}</datalist>`;}
@@ -4898,7 +5111,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.5.5';
+const APP_VER='v75.6.0';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -5634,7 +5847,7 @@ function renderPlan(){
   const all=planItems();
   const live=all.filter(x=>x.status!=='archived');
   const arch=all.filter(x=>x.status==='archived');
-  let html=`<div class="tabs">
+  let html=wishLinkBar('plan')+`<div class="tabs">
     <div class="tab ${planTab==='live'?'on':''}" onclick="planTab='live';renderPlan()">筹备中 ${live.length?`<span class="tab-n">${live.length}</span>`:''}</div>
     <div class="tab ${planTab==='arch'?'on':''}" onclick="planTab='arch';renderPlan()">归档 ${arch.length?`<span class="tab-n">${arch.length}</span>`:''}</div>
     <div class="tab ${planTab==='tpl'?'on':''}" onclick="planTab='tpl';renderPlan()">模板库</div>
@@ -6504,10 +6717,13 @@ function planRowToWish(id,did,sid,rid){
   const it=planFind(id);if(!it)return;const f=planRowFind(it,did,sid,rid);if(!f.r)return;
   const nm=prompt('送去心愿单的商品名称：',f.r.title||'');
   if(nm===null||!nm.trim())return;
+  const ptitle=it.title||'从长计议';
   D.wish=D.wish||[];
+  D.wishReasons=D.wishReasons||[];
+  if(!D.wishReasons.some(r=>r.name===ptitle))D.wishReasons.push({name:ptitle,defaultDate:(it.end||it.start||''),module:'plan'});
   D.wish.unshift({id:uid(),name:nm.trim(),category:'其他',priority:'观望',price:'',priceHistory:[],
-    note:'来源：'+(it.title||'从长计议'),tags:['来源:'+(it.title||'从长计议')],addedAt:Date.now()});
-  save();renderNav();toast('已送进心愿单');
+    note:'来源：'+ptitle,tags:['来源:'+ptitle],reason:ptitle,addedAt:Date.now()});
+  save();renderNav();toast('已送进心愿单（归到「'+ptitle+'」）');
 }
 
 /* ---------- 备选库（全局共享 + 地点标签） ---------- */
