@@ -1538,7 +1538,7 @@ async function forcePullCloud(){
 /* ================= 工具 ================= */
 function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function $(s){return document.querySelector(s);}
-function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function nowISO(){const d=new Date();const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}
 function fmtDate(d){if(!d)return '';const dt=new Date(d);if(isNaN(dt))return esc(d);const wd=['周日','周一','周二','周三','周四','周五','周六'][dt.getDay()];return dt.getFullYear()+'年'+(dt.getMonth()+1)+'月'+dt.getDate()+'日 '+wd;}
 function weekStart(d){const dt=new Date(d);dt.setHours(0,0,0,0);const day=(dt.getDay()+6)%7;dt.setDate(dt.getDate()-day);return dt;}
@@ -3275,11 +3275,14 @@ let moviePrefill=null;       // 点「＋添加一期」时带入的系列首次
 const MOVIE_CATS=['电影','动漫','电视剧','综艺','纪录片'];
 function movieCustomTypes(){ if(!D.movie)D.movie={}; if(!Array.isArray(D.movie.custom))D.movie.custom=['自定义']; return D.movie.custom; }
 function movieAllTypes(){ return MOVIE_CATS.concat(movieCustomTypes()); }
-function movieCatColor(c){ return movieCatColor(c)||'#9AA0A6'; }
+function movieCatColor(c){ return MOVIE_CAT_COLOR[c]||'#9AA0A6'; }
 function movieAddType(){ const v=prompt('新增观影类别（如：话剧、演唱会）：',''); if(v===null)return; const n=v.trim(); if(!n)return; const c=movieCustomTypes(); if(!c.includes(n))c.push(n); save(); renderMovie(); }
 function movieRenameType(old){ if(MOVIE_CATS.indexOf(old)>=0){toast('内置类别不可改名');return;} const v=prompt('重命名类别：',old); if(v===null)return; const n=v.trim(); if(!n||n===old)return; const c=movieCustomTypes(); const i=c.indexOf(old); if(i>=0)c[i]=n; (D.movie.items||[]).forEach(it=>{if(it.category===old)it.category=n;}); save(); renderMovie(); }
 function movieDelType(old){ if(MOVIE_CATS.indexOf(old)>=0){toast('内置类别不可删除');return;} if(!confirm('删除类别「'+old+'」？\n（已归该类别的影片会改回「自定义」）'))return; const c=movieCustomTypes(); const i=c.indexOf(old); if(i>=0)c.splice(i,1); (D.movie.items||[]).forEach(it=>{if(it.category===old)it.category='自定义';}); save(); renderMovie(); }
 const MOVIE_CAT_COLOR={'电影':'#B98AA8','动漫':'#7BA8C4','电视剧':'#6E8B8B','综艺':'#C49A6C','纪录片':'#7E9A7E','自定义':'#9AA0A6'};
+/* 时长自由录入：支持「分」(纯数字) 或 「h:mm:ss / h:mm」(时分秒)，也可纯文字；不报错，并能反推分钟数 */
+function parseDuration(d){ if(d==null)return null; d=String(d).trim(); if(d==='')return null; const m=d.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/); if(m){const h=+m[1],mi=+m[2],s=m[3]?+m[3]:0;return Math.round((h*60+mi+s/60)*10)/10;} if(/^\d+(\.\d+)?$/.test(d))return parseFloat(d); return null; }
+function fmtDuration(d){ if(d==null)return ''; d=String(d).trim(); if(d==='')return ''; if(/^\d+:\d{1,2}(?::\d{1,2})?$/.test(d))return d; if(/^\d+(\.\d+)?$/.test(d))return d+' 分'; return d; }
 const PLATFORMS=['腾讯','爱奇艺','B站','优酷','芒果TV','抖音','影院','网盘','其他'];
 function migrateMovie(){
   if(!Array.isArray(D.movie))D.movie=[];
@@ -3323,7 +3326,7 @@ function movieItem(it){
       ${prog?`<div class="sub">进度：${esc(prog)} ${it.category==='电影'?'<a href="#" onclick="movieDone(\''+it.id+'\')">看完</a>':''}</div>`:''}
       <div class="meta-grid">
         ${it.cast?`<span class="tag">主演:${esc(it.cast)}</span>`:''}
-        ${it.duration?`<span class="tag">${it.duration}分</span>`:''}
+        ${it.duration?`<span class="tag">${fmtDuration(it.duration)}</span>`:''}
         ${it.platform?`<span class="tag">${esc(it.platform)}</span>`:''}
         ${it.watchLoc?`<span class="tag">${esc(it.watchLoc)}</span>`:''}
         ${it.tags?`<span class="tag alt">${esc(it.tags)}</span>`:''}
@@ -3349,24 +3352,24 @@ function movieSeriesCard(items){
   const avg=items.length?Math.round(items.reduce((s,x)=>s+(+x.rating||0),0)/items.length*10)/10:0;
   const stars='★'.repeat(Math.round(avg))+'☆'.repeat(5-Math.round(avg));
   let h=`<div class="series-card${folded?' folded':''}">
-    <div class="series-head" onclick="movieToggleFold('${esc(name)}',this)">
+    <div class="series-head" data-series="${esc(name)}" onclick="movieToggleFold(this)">
       <div class="series-title">${esc(name)} <span class="tag">${esc(head.category)}</span> <span class="arr"></span></div>
       <div class="series-sub">${head.country?esc(head.country)+' · ':''}${head.director?('导演 '+esc(head.director)):''} · ${stars} · 已看 ${items.length} 期/集</div>
     </div>`;
   h+=`<div class="series-eps">`;
   items.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).forEach(it=>{h+=movieEpRow(it);});
-  h+=`<div class="series-add"><button class="btn ghost sm" onclick="openAddEp('${esc(name)}')">＋ 添加一期</button></div>`;
+  h+=`<div class="series-add"><button class="btn ghost sm" data-series="${esc(name)}" onclick="openAddEp(this)">＋ 添加一期</button></div>`;
   h+=`</div></div>`;
   return h;
 }
 function movieEpRow(it){
   return `<div class="ep-row">
     <div class="ep-main"><span class="ep-name">${esc(it.ep||'正片')}</span>${it.epKind&&it.epKind!=='正片'?`<span class="ep-kind">${esc(it.epKind)}</span>`:''}</div>
-    <div class="ep-meta">${fmtDate(it.date)} · ${it.duration?it.duration+'分':''} · ${it.platform?esc(it.platform):''} · ${it.watchLoc?esc(it.watchLoc):''}${it.src?(' · 推荐:'+esc(it.src)):''}</div>
+    <div class="ep-meta">${fmtDate(it.date)} · ${it.duration?fmtDuration(it.duration):''} · ${it.platform?esc(it.platform):''} · ${it.watchLoc?esc(it.watchLoc):''}${it.src?(' · 推荐:'+esc(it.src)):''}</div>
     <div class="ep-acts"><button class="btn ghost sm" onclick="openEdit('movie','${it.id}')">编辑</button><button class="del" onclick="delItem('movie','${it.id}')">×</button></div>
   </div>`;
 }
-function movieToggleFold(name,el){movieFold[name]=!movieFold[name];const c=el&&el.closest?el.closest('.series-card'):null;if(c)c.classList.toggle('folded');}
+function movieToggleFold(arg){const name=(arg&&arg.dataset)?arg.dataset.series:arg;movieFold[name]=!movieFold[name];const c=(arg&&arg.closest)?arg.closest('.series-card'):null;if(c)c.classList.toggle('folded');}
 function renderMovieStats(){
   const all=D.movie||[];
   const byName={};
@@ -3449,7 +3452,7 @@ function movieForm(){
       <div class="field" style="flex:0 0 120px"><label>时间</label><input type="text" id="mf_date_t" class="timepick" readonly placeholder="选择" value="${timeV}" onclick="openTP(this,this.value)"></div>
     </div>
     <div class="b4">
-      <div class="field"><label>时长(分)</label><input type="number" id="mf_dur" value="${durV}"></div>
+      <div class="field"><label>时长（分 或 h:mm:ss）</label><input type="text" id="mf_dur" value="${durV}" placeholder="如 95 或 1:41:55"></div>
       <div class="field"><label>性质</label><select id="mf_kind">${['正片','花絮','特辑','其他'].map(o=>`<option ${o===kindV?'selected':''}>${esc(o)}</option>`).join('')}</select></div>
       <div class="field"><label>观看平台</label><select id="mf_plat"><option value="">请选择</option>${PLATFORMS.map(p=>`<option ${p===platV?'selected':''}>${esc(p)}</option>`).join('')}</select></div>
       <div class="field"><label>观影地点</label><select id="mf_loc"><option value="">请选择</option>${['影院','居家','朋友家'].map(o=>`<option ${o===locV?'selected':''}>${esc(o)}</option>`).join('')}</select></div>
@@ -3488,7 +3491,7 @@ function movieSeriesNameChg(){
   set('mf_rate',b.rating||5);set('mf_like',b.likeLevel);
   const rec=document.getElementById('mf_rec');if(rec)rec.checked=!!b.recommend;
 }
-function openAddEp(series){
+function openAddEp(arg){const series=(arg&&arg.dataset)?arg.dataset.series:arg;
   const arr=(D.movie||[]).filter(x=>(x.series||x.name)===series);
   const b=arr.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''))[0]||{};
   moviePrefill={mode:'series',series:series,name:series,cat:b.category||'电影',country:b.country||'',director:b.director||'',cast:b.cast||'',platform:b.platform||'',watchLoc:b.watchLoc||'',tags:b.tags||'',rewatch:b.rewatch||0,recommend:!!b.recommend,rating:b.rating||5,likeLevel:b.likeLevel||'非常喜欢',ep:'',epKind:'正片',date:new Date().toISOString().slice(0,10),time:'',duration:'',comment:'',src:'',srcUrl:''};
@@ -4487,7 +4490,7 @@ const EDIT_SCHEMA={
     {k:'ep',l:'期集标签(分集)',t:'text'},
     {k:'epKind',l:'性质',t:'sel',o:['正片','花絮','特辑','其他']},
     {k:'country',l:'国别',t:'text'},{k:'director',l:'导演',t:'text'},
-    {k:'cast',l:'主演/声优',t:'text'},{k:'duration',l:'时长(分钟)',t:'num'},
+    {k:'cast',l:'主演/声优',t:'text'},{k:'duration',l:'时长（分 或 h:mm:ss）',t:'text'},
     {k:'platform',l:'观看平台',t:'text'},{k:'watchLoc',l:'观影地点',t:'text'},
     {k:'progress',l:'观看进度',t:'text'},
     {k:'rating',l:'评分(1-5)',t:'stars'},
@@ -4895,7 +4898,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.5.4';
+const APP_VER='v75.5.5';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
