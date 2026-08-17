@@ -121,20 +121,25 @@ body.night .tag.actual{background:#1A2A36;color:#5A9EC4;}
 body.night .ep-kind{background:rgba(176,122,46,.2);color:#D4A56C;}
 body.night .del:hover{background:#2A1A1A;}
 body.night .pl-tkcd.hot{background:#3A2222;color:#E08080;}
-/* 日常小记首卡（hero）：v75.6.5 防御性重写——强制最小高度+不裁剪+color-mix fallback */
-.note-hero{color:#fff;border:none;border-radius:var(--radius);padding:16px;margin-bottom:14px;overflow:visible;text-shadow:0 1px 2px rgba(0,0,0,.18);background:linear-gradient(135deg,var(--accent),var(--accent-soft));position:relative;z-index:1;min-height:200px;flex-shrink:0;}
+/* 日常小记首卡（hero）：v75.6.6 —— 实体主题色 + 智能文字色
+ * 设计原则：hero 始终保持不透明主题渐变（不受 glass 透明度影响），
+ * 作为工作台第一张卡片要有足够的存在感和可读性。
+ * 文字颜色由 JS 通过 --hero-text CSS 变量根据主题色亮度自动设置（ink 函数）。
+ * ::after 微暗化层确保即使浅色皮肤也有足够对比度。 */
+.note-hero{color:var(--hero-text,#fff);border:none;border-radius:var(--radius);padding:16px;margin-bottom:14px;overflow:visible;text-shadow:var(--hero-shadow,0 1px 3px rgba(0,0,0,.3));background:linear-gradient(135deg,var(--accent),var(--accent-soft));position:relative;z-index:1;min-height:200px;flex-shrink:0;}
 .note-hero::before{display:none;}
-body.glass-on:not(.night) .note-hero{backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);}
-/* v75.6.5: glass 模式不再用 color-mix() 覆盖 hero 背景（避免不支持时整条声明失效→透明→渲染异常），
-   只叠加 backdrop-filter 模糊；基础渐变保持不变确保内容始终可见 */
-body.glass-light:not(.night) .note-hero{backdrop-filter:blur(12px) saturate(130%);-webkit-backdrop-filter:blur(12px) saturate(130%);}
-body.glass-mid:not(.night) .note-hero{backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);}
-body.glass-strong:not(.night) .note-hero{backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);}
+/* 微暗化对比度保障层：从上到下极淡渐变，不破坏主题色观感但确保白字可读 */
+.note-hero::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.06) 0%,rgba(0,0,0,.14) 100%);z-index:0;}
+/* glass 模式：hero 不随玻璃变透明，只做视觉融合（轻微模糊即可或完全不做）*/
+body.glass-on:not(.night) .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
+body.glass-light:not(.night) .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
+body.glass-mid:not(.night) .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
+body.glass-strong:not(.night) .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
 body.night .note-hero{background:linear-gradient(135deg,var(--accent),var(--accent-soft));}
-body.night.glass-on .note-hero{backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);}
-body.night.glass-light .note-hero{backdrop-filter:blur(12px) saturate(130%);-webkit-backdrop-filter:blur(12px) saturate(130%);}
-body.night.glass-mid .note-hero{backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);}
-body.night.glass-strong .note-hero{backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);}
+body.night.glass-on .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
+body.night.glass-light .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
+body.night.glass-mid .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
+body.night.glass-strong .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
 /* ===== 卡片/通用 ===== */
 .card{background:var(--card);border:var(--bw) solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.02);}
 .card-h{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
@@ -4295,7 +4300,7 @@ function renderNote(){
   const maxC=Math.max(1,...dayCount);
   const bars=`<div style="display:flex;align-items:flex-end;gap:4px;height:48px">${dayCount.map((c,i)=>`<i style="display:block;flex:1;min-width:6px;background:${c>0?'var(--accent)':'#dfe3e7'};border-radius:3px 3px 0 0;height:${Math.round(c/maxC*100)}%" title="${days[i].slice(5)}:${c}条"></i>`).join('')}</div>`;
   const cap=waterCap(); const wlog=todayWaterLog(); const totalMl=wlog.reduce((s,x)=>s+(+x.ml||0),0);
-  const cupHtml=wlog.length?wlog.map((x,i)=>`<span class="note-cup" onclick="noteDelCup(${i})" title="点击删除">💧 ${x.ml}ml${x.time?' · '+x.time:''}<b>×</b></span>`).join(''):'<span style="color:#fff;opacity:.92;font-size:calc(var(--fs)*0.8)">还没喝水，点上面的快捷键记一杯～</span>';
+  const cupHtml=wlog.length?wlog.map((x,i)=>`<span class="note-cup" onclick="noteDelCup(${i})" title="点击删除">💧 ${x.ml}ml${x.time?' · '+x.time:''}<b>×</b></span>`).join(''):`<span style="color:var(--hero-row-text,#fff);opacity:.92;font-size:calc(var(--fs)*0.8)">还没喝水，点上面的快捷键记一杯～</span>`;
   const order=noteOrder();
   let html=`
   <div class="card note-hero">
@@ -4303,30 +4308,30 @@ function renderNote(){
     <div style="font-size:calc(var(--fs)*1.467);font-weight:700;margin:2px 0">Murphy</div>
     <div style="font-size:calc(var(--fs)*0.867);opacity:.9">${fmtDate(new Date())}</div>
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <span style="background:rgba(255,255,255,.22);padding:4px 12px;border-radius:20px;font-size:calc(var(--fs)*0.867);cursor:pointer;color:#fff" onclick="noteSetMood()">${N.mood?('心情:'+N.mood):'设置心情'}</span>
-      <span style="background:rgba(255,255,255,.22);padding:4px 12px;border-radius:20px;font-size:calc(var(--fs)*0.867);cursor:pointer;color:#fff" onclick="noteSetWeather()">${N.weather?('天气:'+N.weather):'设置天气'}</span>
+      <span style="background:var(--hero-bubble,rgba(255,255,255,.22));padding:4px 12px;border-radius:20px;font-size:calc(var(--fs)*0.867);cursor:pointer;color:var(--hero-bubble-text,#fff)" onclick="noteSetMood()">${N.mood?('心情:'+N.mood):'设置心情'}</span>
+      <span style="background:var(--hero-bubble,rgba(255,255,255,.22));padding:4px 12px;border-radius:20px;font-size:calc(var(--fs)*0.867);cursor:pointer;color:var(--hero-bubble-text,#fff)" onclick="noteSetWeather()">${N.weather?('天气:'+N.weather):'设置天气'}</span>
     </div>
-    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(0,0,0,.12);padding:8px 12px;border-radius:12px">
-      <span style="font-size:calc(var(--fs)*0.867);color:#fff">🛏 睡眠</span>
-      <span class="note-sl" style="background:rgba(255,255,255,.18);color:#fff" onclick="openTP(this,'${SL.bed||''}','setSleep','bed')">${SL.bed||'入睡'}</span>
-      <span style="opacity:.7;color:#fff">→</span>
-      <span class="note-sl" style="background:rgba(255,255,255,.18);color:#fff" onclick="openTP(this,'${SL.wake||''}','setSleep','wake')">${SL.wake||'起床'}</span>
-      <span style="font-size:calc(var(--fs)*0.8);opacity:.9;margin-left:auto;font-weight:600;color:#fff">${sleepDur(SL.bed,SL.wake)||'设置'}</span>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--hero-row-bg,rgba(0,0,0,.12));padding:8px 12px;border-radius:12px">
+      <span style="font-size:calc(var(--fs)*0.867)">🛏 睡眠</span>
+      <span class="note-sl" style="background:rgba(255,255,255,.18);color:var(--hero-row-text,#fff)" onclick="openTP(this,'${SL.bed||''}','setSleep','bed')">${SL.bed||'入睡'}</span>
+      <span style="opacity:.7">→</span>
+      <span class="note-sl" style="background:rgba(255,255,255,.18);color:var(--hero-row-text,#fff)" onclick="openTP(this,'${SL.wake||''}','setSleep','wake')">${SL.wake||'起床'}</span>
+      <span style="font-size:calc(var(--fs)*0.8);opacity:.9;margin-left:auto;font-weight:600;color:var(--hero-row-text,#fff)">${sleepDur(SL.bed,SL.wake)||'设置'}</span>
     </div>
-    <div style="margin-top:8px;background:rgba(0,0,0,.12);padding:8px 12px;border-radius:12px">
+    <div style="margin-top:8px;background:var(--hero-row-bg,rgba(0,0,0,.12));padding:8px 12px;border-radius:12px">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="font-size:calc(var(--fs)*0.867);color:#fff">💧 饮水</span>
-        <span class="note-sl" style="background:rgba(255,255,255,.18);color:#fff" onclick="noteSetCap()" title="点击设置一杯容量">杯 ${cap}ml</span>
-        <span style="font-size:calc(var(--fs)*1.25);font-weight:700;color:#fff">${totalMl}ml</span>
-        <span style="font-size:calc(var(--fs)*0.8);opacity:.85;color:#fff">≈ ${(totalMl/cap).toFixed(1)} 杯</span>
+        <span style="font-size:calc(var(--fs)*0.867)">💧 饮水</span>
+        <span class="note-sl" style="background:rgba(255,255,255,.18);color:var(--hero-row-text,#fff)" onclick="noteSetCap()" title="点击设置一杯容量">杯 ${cap}ml</span>
+        <span style="font-size:calc(var(--fs)*1.25);font-weight:700;color:var(--hero-row-text,#fff)">${totalMl}ml</span>
+        <span style="font-size:calc(var(--fs)*0.8);opacity:.85;color:var(--hero-row-text,#fff)">≈ ${(totalMl/cap).toFixed(1)} 杯</span>
       </div>
       <div class="water-add">${[['1/4',0.25],['1/3',0.33],['1/2',0.5],['3/4',0.75],['1',1]].map(([g,f])=>`<span class="chip" onclick="noteWaterAdd(${Math.round(cap*f)})"><span>${g}杯</span><b>${Math.round(cap*f)}ml</b></span>`).join('')}<span class="chip" onclick="noteWaterCustom()"><span>＋</span><b>自定义</b></span></div>
       <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">${cupHtml}</div>
     </div>
-    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(0,0,0,.12);padding:8px 12px;border-radius:12px">
-      <span style="font-size:calc(var(--fs)*0.8);opacity:.9;white-space:nowrap;font-weight:600;color:#fff">随记概览</span>
-      <span style="font-size:calc(var(--fs)*0.867);font-weight:700;white-space:nowrap;color:#fff">共 ${entries.length} 条</span>
-      ${types.filter(t=>cat[t]>0).map(t=>`<span style="background:rgba(255,255,255,.15);padding:2px 10px;border-radius:20px;font-size:calc(var(--fs)*0.733);white-space:nowrap;color:#fff">${t} ${cat[t]}</span>`).join('')}
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--hero-row-bg,rgba(0,0,0,.12));padding:8px 12px;border-radius:12px">
+      <span style="font-size:calc(var(--fs)*0.8);opacity:.9;white-space:nowrap;font-weight:600">随记概览</span>
+      <span style="font-size:calc(var(--fs)*0.867);font-weight:700;white-space:nowrap">共 ${entries.length} 条</span>
+      ${types.filter(t=>cat[t]>0).map(t=>`<span style="background:var(--hero-bubble,rgba(255,255,255,.15));padding:2px 10px;border-radius:20px;font-size:calc(var(--fs)*0.733);white-space:nowrap;color:var(--hero-bubble-text,#fff)">${t} ${cat[t]}</span>`).join('')}
     </div>
   </div>
   ${renderTodayOverview()}
@@ -5160,6 +5165,19 @@ function setPalette(accent,tint,soft){
  d.setProperty('--accent-soft',soft);
  d.setProperty('--on-accent',ink(accent));
  d.setProperty('--on-tint',ink(tint));
+ /* v75.6.6: Hero 首卡智能文字色 —— 基于主题色亮度自动计算，确保 48 色皮肤全适配 */
+ const ht=ink(accent); /* #fff(深色背景用白字) 或 #1A1A1A(浅色背景用深色字) */
+ const isDark=ht==='#fff';
+ d.setProperty('--hero-text',ht);
+ d.setProperty('--hero-shadow',isDark?'0 1px 3px rgba(0,0,0,.35)':'0 1px 0 rgba(255,255,255,.45)');
+ /* 心情/天气气泡：白字时用半透明白气泡；深字时用半透明深气泡 */
+ d.setProperty('--hero-bubble',isDark?'rgba(255,255,255,.22)':'rgba(0,0,0,.10)');
+ d.setProperty('--hero-bubble-text',isDark?'#fff':'inherit');
+ /* 睡眠/饮水/随记概览行：深色半透明底 */
+ d.setProperty('--hero-row-bg',isDark?'rgba(0,0,0,.12)':'rgba(0,0,0,.06)');
+ d.setProperty('--hero-row-text',ht);
+ /* 饮水快捷按钮 chip 内文字 */
+ d.setProperty('--hero-chip-text',isDark?'#fff':'#333');
  const meta=document.querySelector('meta[name=theme-color]');if(meta)meta.content=accent;
 }
 function applyTheme(t){
@@ -5294,7 +5312,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.6.5';
+const APP_VER='v75.6.6';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
