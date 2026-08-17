@@ -138,6 +138,15 @@ body.night.glass-strong .note-hero{background:linear-gradient(135deg,color-mix(i
 .row.c{align-items:center;}
 .field{margin-bottom:10px;flex:1;min-width:140px;}
 .field label{display:block;font-size:calc(var(--fs)*0.833);color:var(--muted);margin-bottom:4px;}
+/* v75.6.3 类型管理行：select 占满剩余宽度，＋/改名/删除三按钮排尾，不再互相挤兑 */
+.type-mgr{display:flex;gap:6px;align-items:center}
+.type-mgr select{flex:1;min-width:0}
+.type-mgr .btn{flex:none}
+/* v75.6.3 手机端（≤640px）表单堆叠：一项一行完整显示，杜绝互挤/截断/竖排折字 */
+@media(max-width:640px){
+  .row .field{flex:1 1 100%!important;min-width:0!important}
+  .row{row-gap:0}
+}
 /* 统一「宽浅框」规范：1px 浅灰边 + 10px 圆角 + 9×12 内边距，覆盖全部文本类输入/文本域/下拉 */
 input:not([type=checkbox]):not([type=radio]),textarea,select{width:100%;padding:9px 12px;border:var(--bw) solid var(--border);border-radius:10px;background:var(--input-bg);outline:none;transition:border .15s,background .15s,box-shadow .15s;}
 input:focus,textarea:focus,select:focus{border-color:var(--accent-soft);background:var(--card);box-shadow:0 0 0 3px var(--tint);}
@@ -327,6 +336,11 @@ textarea{resize:vertical;min-height:60px;}
 /* v75.5.3 起：色卡固定两列（手机端一左一右），宽屏三列；永不再回退竖列 */
 .skin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
 @media(min-width:600px){.skin-grid{grid-template-columns:repeat(3,1fr);}}
+/* v75.6.3 主题色折叠区：默认收起缩短弹窗，展开后横排色卡布局零改动 */
+.skin-fold{margin-bottom:14px;padding-bottom:14px;border-bottom:var(--bw) solid var(--border)}
+.skin-fold-h{width:100%;display:flex;align-items:center;gap:10px;padding:4px 0;background:none;border:none;cursor:pointer;color:var(--text);font-size:inherit;min-height:32px}
+.skin-fold-arr{margin-left:auto;color:var(--muted);font-size:calc(var(--fs)*0.8)}
+#skinFoldBody[hidden]{display:none}
 .skin-tile{position:relative;border:1.5px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .12s,box-shadow .12s;min-height:98px;display:flex;flex-direction:column;}
 .skin-tile:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12);}
 .skin-tile .bar{height:7px;width:100%;flex:none;}
@@ -464,7 +478,11 @@ textarea.inp{min-height:52px;}
 .act-mini{font-size:calc(var(--fs)*0.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:42%;}
 .act-tpl-item .fold-h{background:var(--bg);border-radius:9px;padding:6px 8px;margin-bottom:2px;}
 .chk-svg{display:inline-block;vertical-align:-2px;color:var(--accent-soft);}
-.ico{display:inline-block;vertical-align:middle;color:var(--muted);}
+/* v75.6.3 图标统一：emoji 与线条 SVG 同装 1.3em 方框、垂直中线对齐；SVG 为矢量路径，放大不模糊 */
+.ico{display:inline-flex;align-items:center;justify-content:center;vertical-align:-0.22em;width:1.3em;height:1.3em;font-size:inherit;line-height:1;color:var(--muted);flex:none}
+.ico svg{width:100%;height:100%;display:block}
+.ico.em{color:inherit}
+.ico.del-x{color:#E5484D}
 .note-btn .ico{width:18px;height:18px;}
 .type-mgr{border-left:4px solid var(--accent);}
 .type-mgr-h h2{color:var(--accent-soft);}
@@ -772,8 +790,15 @@ textarea.inp{min-height:52px;}
     <div class="hint" style="margin-bottom:8px">主色雾光缓慢流动，卡片呈磨砂质感；「关」回归纯色背景。三档强度可调，与日间/夜间联动。</div>
     <div id="glassCtl" style="display:flex;gap:8px;flex-wrap:wrap"></div>
   </div>
-  <div class="season-cards" id="seasonCards"></div>
-  <div class="skin-preview" id="skinPreview">
+  <!-- v75.6.3 主题色折叠区：默认收起，横排色卡 CSS 零改动 -->
+  <div class="skin-fold">
+    <button class="skin-fold-h" onclick="toggleSkinFold()">
+      <span style="font-weight:700">🎨 主题色 · 48 色（含季节推荐）</span>
+      <span class="skin-fold-arr" id="skinFoldArr">▸</span>
+    </button>
+    <div id="skinFoldBody">
+      <div class="season-cards" id="seasonCards"></div>
+      <div class="skin-preview" id="skinPreview">
     <div class="sp-nav" id="pv_nav">导航栏示例</div>
     <div class="sp-t" id="pv_name">颜色名 #HEX</div>
     <div class="sp-surface" id="pv_soft">浅底表面：主色浅底上放标题与正文，清爽薄荷感正源于此</div>
@@ -788,7 +813,9 @@ textarea.inp{min-height:52px;}
     <div class="sp-acc" id="pv_acc">主色实色 · <span id="pv_tacc"></span></div>
   </div>
   <div class="swatch-grid" id="skinGrid"></div>
-  <div style="margin-top:18px;border-top:var(--bw) solid var(--border);padding-top:14px">
+    </div>
+  </div>
+  <div style="margin-top:14px;border-top:var(--bw) solid var(--border);padding-top:14px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
       <span style="font-weight:700">🔠 字体大小</span>
       <span id="fsVal" style="margin-left:auto;color:var(--accent-soft);font-weight:700"></span>
@@ -1011,6 +1038,11 @@ function migrateWeeklyV64(){
 }
 function load(){
   try{D=JSON.parse(localStorage.getItem(KEY))||defaultData();}catch(e){D=defaultData();}
+  migrate();
+}
+/* v75.6.3：字段规范化从 load() 抽出为独立 migrate()，云同步 autoMerge 合并后同样重跑，
+   杜绝 mergeNode 产出 null/缺字段（如 note.sleep=null）导致渲染崩溃、首卡消失。幂等、绝不破坏已有数据。 */
+function migrate(){
   const def=defaultData();
   for(const k in def){if(D[k]===undefined)D[k]=def[k];}
   if(!D.fitness.weekTemplate||!D.fitness.weekTemplate['单周'])D.fitness.weekTemplate=def.fitness.weekTemplate;
@@ -1347,7 +1379,7 @@ function autoMerge(remote,opt,doRender){
     const firstJoin=!!(SYNC&&!SYNC.lastSync&&!(SYNC.baseRev||0));
     const m=mergeData(D,remote,Object.assign({preferRemote:firstJoin},opt||{}));
     if(!m||typeof m!=='object')return false;
-    D=m;dedupGameNames();if(D.game&&Array.isArray(D.game.activities))D.game.activities.forEach(a=>{if(a&&!Array.isArray(a.tasks))a.tasks=[];});persistLocal();snapPrev();
+    D=m;migrate();dedupGameNames();if(D.game&&Array.isArray(D.game.activities))D.game.activities.forEach(a=>{if(a&&!Array.isArray(a.tasks))a.tasks=[];});persistLocal();snapPrev();
     dirtySinceSync=true;
     // 仅在用户主动点「立即同步」(doRender=true) 且当前没在输入框里打字时才重绘，
     // 避免后台自动同步在录入/翻看时把页面刷回模块最顶端，打断正在做的事。
@@ -2046,7 +2078,7 @@ function renderFitToday(){
   ${foldCard('自由添加（仅今日）','fit_free',0,`
     <div class="row">
       <div class="field"><label>名称</label><input type="text" id="ff_name"></div>
-      <div class="field"><label>类型</label><select id="ff_type">${fitAllTypes().map(t=>`<option>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="fitAddType()">＋</button> <button class="btn ghost sm" onclick="fitRenameType($('#ff_type').value)">${icoPencil()}</button> <button class="btn ghost sm" onclick="fitDelType($('#ff_type').value)">${icoTrash()}</button></div>
+      <div class="field"><label>类型</label><div class="type-mgr"><select id="ff_type">${fitAllTypes().map(t=>`<option>${t}</option>`).join('')}</select><button class="btn ghost sm" onclick="fitAddType()">＋</button><button class="btn ghost sm" onclick="fitRenameType($('#ff_type').value)">${icoPencil()}</button><button class="btn ghost sm" onclick="fitDelType($('#ff_type').value)">${icoTrash()}</button></div></div>
       <div class="field"><label>开始时间</label><input type="text" id="ff_st" class="timepick" readonly placeholder="选择时间" onclick="openTP(this,this.value)"></div>
       <div class="field"><label>时长(分)</label><input type="number" id="ff_dur" value="25"></div>
     </div>
@@ -2410,10 +2442,10 @@ function studyItem(it){
 function studyForm(){
   return `<div class="card"><div class="card-h"><h2>➕ 添加学习计划</h2></div>
     <div class="field"><label>计划类型 *</label>
-      <select id="sf_type" onchange="studyDyn()">${studyAllTypes().map(t=>`<option>${t}</option>`).join('')}</select>
-      <button class="btn ghost sm" onclick="studyAddType()">＋类型</button>
-      <button class="btn ghost sm" onclick="studyRenameType($('#sf_type').value)">${icoPencil()}改名</button>
-      <button class="btn ghost sm" onclick="studyDelType($('#sf_type').value)">${icoTrash()}</button>
+      <div class="type-mgr"><select id="sf_type" onchange="studyDyn()">${studyAllTypes().map(t=>`<option>${t}</option>`).join('')}</select>
+      <button class="btn ghost sm" onclick="studyAddType()">＋</button>
+      <button class="btn ghost sm" onclick="studyRenameType($('#sf_type').value)">${icoPencil()}</button>
+      <button class="btn ghost sm" onclick="studyDelType($('#sf_type').value)">${icoTrash()}</button></div>
     </div>
     <div class="field"><label>引用资料方案库</label>
       <select id="sf_lib" onchange="if(this.value)studyApplyLib(this.value)"><option value="">不引用…</option>${D.studyLib.map(l=>`<option value="${l.id}">${esc(l.name)}（${l.type}）</option>`).join('')}</select>
@@ -2545,7 +2577,7 @@ function foldArr(open){return '<svg class="fold-arr" viewBox="0 0 16 16" width="
 /* 细线条图标：备注 */
 function icoNote(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 4 H16 V14 L13 17 H4 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M13 17 V14 H16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M7 8 H13 M7 11 H11" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>';}
 /* 细线条图标：铅笔（重命名） */
-function icoPencil(){return '<svg class="ico" viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="M13 3 L16 6 L6 16 L3 16 L3 13 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="miter"/><path d="M11 5 L14 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg>';}
+function icoPencil(){return '<span class="ico em">✏️</span>';}
 /* ===== 统一细线条图标库（currentColor 描边 / miter·square 连接 / 无圆角弧线，跨设备一致） ===== */
 function icoWork(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="4" y="3" width="12" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M7 7 H13 M7 10 H13 M7 13 H11" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>';}
 function icoFitness(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 7 H5 V13 H3 Z M15 7 H17 V13 H15 Z M5 10 H15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
@@ -2555,9 +2587,10 @@ function icoPlan(){return '<svg class="ico" viewBox="0 0 20 20" width="18" heigh
 function icoMovie(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="3" y="4" width="14" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M7 4 V16 M13 4 V16 M3 8 H7 M3 12 H7 M13 8 H17 M13 12 H17" stroke="currentColor" stroke-width="1.1"/></svg>';}
 function icoQuarter(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 3 V17 M5 3 H15 L13 6 L15 9 H5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/></svg>';}
 function icoWish(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 16 C5 12.5 5 7.5 8 7.5 C9.5 7.5 10 8.5 10 9.5 C10 8.5 10.5 7.5 12 7.5 C15 7.5 15 12.5 10 16 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/></svg>';}
-function icoBox(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 7 H16 V16 H4 Z M4 7 V4 H16 V7 M7 10 H13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
-function icoTrash(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 6 H15 M7 6 V4 H13 V6 M6 6 V16 H14 V6 M9 9 V13 M11 9 V13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
-function icoGear(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 3.4 V5.4 M10 14.6 V16.6 M3.4 10 H5.4 M14.6 10 H16.6 M5.5 5.5 L6.9 6.9 M13.1 13.1 L14.5 14.5 M14.5 5.5 L13.1 6.9 M6.9 13.1 L5.5 14.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>';}
+function icoBox(){return '<span class="ico em">📦</span>';}/* 动作按钮用 emoji；装饰性类型图标用 icoBoxLine 保持线条组一致 */
+function icoBoxLine(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 7 H16 V16 H4 Z M4 7 V4 H16 V7 M7 10 H13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
+function icoTrash(){return '<span class="ico del-x" title="删除"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 L15 15 M15 5 L5 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/></svg></span>';}/* v75.6.3：删除=红✕ 直线，用户拍板 */
+function icoGear(){return '<span class="ico em">⚙️</span>';}
 function icoChart(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 16 V4 M4 16 H17 M7 16 V11 M11 16 V7 M15 16 V9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
 function icoCal(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="4" y="5" width="12" height="11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M4 8 H16 M7 3 V6 M13 3 V6 M7 11 H9 M13 11 H15" stroke="currentColor" stroke-width="1.3" stroke-linecap="square"/></svg>';}
 function icoBook(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 4 H11 V16 H5 Z M11 4 H15 V16 H11 M5 4 V16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/></svg>';}
@@ -2565,7 +2598,8 @@ function icoBolt(){return '<svg class="ico" viewBox="0 0 20 20" width="16" heigh
 function icoWater(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 3 C10 3 5 9 5 13 a5 5 0 0 0 10 0 C15 9 10 3 10 3 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/></svg>';}
 function icoEmpty(){return '<svg class="ico" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><rect x="5" y="5" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="2 2"/></svg>';}
 function icoStar(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 4 L12 8 L16 8.5 L13 11.5 L14 15.5 L10 13 L6 15.5 L7 11.5 L4 8.5 L8 8 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="miter"/></svg>';}
-function icoPin(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="10" cy="7" r="4.2" fill="currentColor"/><rect x="3.4" y="13.6" width="13.2" height="2.2" rx="1.1" fill="currentColor"/></svg>';}
+function icoPin(){return '<span class="ico em">📌</span>';}/* 动作按钮用 emoji；类型图标用 icoPinLine */
+function icoPinLine(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="10" cy="7" r="4.2" fill="currentColor"/><rect x="3.4" y="13.6" width="13.2" height="2.2" rx="1.1" fill="currentColor"/></svg>';}
 /* 细线条图标：撤销/返回（左向箭头，miter·square，与图标库风格一致） */
 function icoUndo(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M15 9 H6 M6 9 L9 6 M6 9 L9 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter"/></svg>';}
 function icoTrain(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="4" y="5" width="12" height="9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/><path d="M7 14 L5 17 M13 14 L15 17 M4 9 H16" stroke="currentColor" stroke-width="1.3" stroke-linecap="square"/><circle cx="8" cy="11" r="0.8" fill="currentColor"/><circle cx="12" cy="11" r="0.8" fill="currentColor"/></svg>';}
@@ -3572,7 +3606,7 @@ function movieForm(){
     </div>
     <div class="field"><label>${epLabel}</label><input type="text" id="mf_ep" value="${epV}" placeholder="第5期 / 先导片 / 全片" onkeydown="if(event.key==='Enter')addMovie()"></div>
     <div class="row">
-      <div class="field"><label>类别</label><select id="mf_cat" onchange="movieCatChg()">${movieAllTypes().map(c=>`<option ${c===catV?'selected':''}>${esc(c)}</option>`).join('')}</select> <button class="btn ghost sm" onclick="movieAddType()">＋</button> <button class="btn ghost sm" onclick="movieRenameType($('#mf_cat').value)">${icoPencil()}</button> <button class="btn ghost sm" onclick="movieDelType($('#mf_cat').value)">${icoTrash()}</button></div>
+      <div class="field"><label>类别</label><div class="type-mgr"><select id="mf_cat" onchange="movieCatChg()">${movieAllTypes().map(c=>`<option ${c===catV?'selected':''}>${esc(c)}</option>`).join('')}</select><button class="btn ghost sm" onclick="movieAddType()">＋</button><button class="btn ghost sm" onclick="movieRenameType($('#mf_cat').value)">${icoPencil()}</button><button class="btn ghost sm" onclick="movieDelType($('#mf_cat').value)">${icoTrash()}</button></div></div>
       <div class="field"><label>国别</label><input type="text" id="mf_country" value="${countryV}"></div>
       <div class="field"><label>导演</label><input type="text" id="mf_dir" value="${dirV}"></div>
     </div>
@@ -4234,7 +4268,8 @@ function noteSetCap(){ const c=prompt('设置一杯的容量（ml）',String(wat
 function noteDelCup(i){ const t=todayStr(); const w=D.note.water; if(!w||!w.log||!w.log[t]||!w.log[t][i])return; w.log[t].splice(i,1); save(); renderNote(); }
 function greet(){const h=new Date().getHours();return h<6?'凌晨好':h<12?'早上好':h<14?'中午好':h<18?'下午好':h<22?'晚上好':'夜深了';}
 function renderNote(){
-  const N=D.note; const entries=N.entries||[];
+  const N=D.note||{}; const entries=N.entries||[];
+  const SL=(N.sleep&&typeof N.sleep==='object')?N.sleep:{};   // v75.6.3 防御：sleep 缺失/null 不再崩溃
   const today=todayStr();
   const cat={}; entries.forEach(e=>{cat[e.type]=(cat[e.type]||0)+1;});
   const types=NOTE_ORDER;
@@ -4258,10 +4293,10 @@ function renderNote(){
     </div>
     <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(255,255,255,.15);padding:8px 12px;border-radius:12px">
       <span style="font-size:calc(var(--fs)*0.867)">🛏 睡眠</span>
-      <span class="note-sl" onclick="openTP(this,'${D.note.sleep.bed||''}','setSleep','bed')">${D.note.sleep.bed||'入睡'}</span>
+      <span class="note-sl" onclick="openTP(this,'${SL.bed||''}','setSleep','bed')">${SL.bed||'入睡'}</span>
       <span style="opacity:.7">→</span>
-      <span class="note-sl" onclick="openTP(this,'${D.note.sleep.wake||''}','setSleep','wake')">${D.note.sleep.wake||'起床'}</span>
-      <span style="font-size:calc(var(--fs)*0.8);opacity:.9;margin-left:auto;font-weight:600">${sleepDur(D.note.sleep.bed,D.note.sleep.wake)||'设置'}</span>
+      <span class="note-sl" onclick="openTP(this,'${SL.wake||''}','setSleep','wake')">${SL.wake||'起床'}</span>
+      <span style="font-size:calc(var(--fs)*0.8);opacity:.9;margin-left:auto;font-weight:600">${sleepDur(SL.bed,SL.wake)||'设置'}</span>
     </div>
     <div style="margin-top:8px;background:rgba(255,255,255,.15);padding:8px 12px;border-radius:12px">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -5014,7 +5049,21 @@ function applyFont(){
 }
 function setFont(id){if(!D._meta)D._meta={};D._meta.fontFamily=id;save();applyFont();renderFontChips();}
 function renderFontChips(){const cur=(D._meta&&D._meta.fontFamily)||'';const box=$('#fontChips');if(!box)return;box.innerHTML=FONT_OPTS.map(o=>{const f=FONT_FILES[o.id];let tag='';if(f){const st=_fontState[f.fam];tag=st==='ok'?'':(st==='loading'?`<span style="opacity:.55;font-size:calc(var(--fs)*0.7)"> 下载中…</span>`:`<span style="opacity:.55;font-size:calc(var(--fs)*0.7)"> ${f.mb}MB</span>`);}return `<button class="btn ${o.id===cur?'primary':'ghost'} sm" style="font-family:${o.stack}" onclick="setFont('${o.id}')">${o.name}${tag}</button>`;}).join('');}
-function openSkin(){renderSkinGrid();renderSeasonCards();syncFsUI();syncFwUI();renderFontChips();bcSyncFromSaved();bcUpdate();renderModeCtl();renderGlassCtl();$('#skinModal').classList.add('show');$('#skinOverlay').classList.add('show');}
+function openSkin(){renderSkinGrid();renderSeasonCards();syncFsUI();syncFwUI();renderFontChips();bcSyncFromSaved();bcUpdate();renderModeCtl();renderGlassCtl();applySkinFold();$('#skinModal').classList.add('show');$('#skinOverlay').classList.add('show');}
+/* v75.6.3 主题色折叠区：默认收起，状态经 D._meta.skinFold 持久化（云同步三端一致） */
+function applySkinFold(){
+  const open=(D._meta&&D._meta.skinFold==='1');
+  const body=$('#skinFoldBody');if(!body)return;
+  body.style.display=open?'':'none';
+  const arr=$('#skinFoldArr');if(arr)arr.textContent=open?'▾':'▸';
+}
+function toggleSkinFold(){
+  const body=$('#skinFoldBody');if(!body)return;
+  const open=body.style.display==='none';
+  body.style.display=open?'':'none';
+  const arr=$('#skinFoldArr');if(arr)arr.textContent=open?'▾':'▸';
+  D._meta=D._meta||{};D._meta.skinFold=open?'1':'0';persistLocal();
+}
 function closeSkin(){$('#skinModal').classList.remove('show');$('#skinOverlay').classList.remove('show');}
 function renderSeasonCards(){
   const cur=D._meta.currentTheme;
@@ -5230,7 +5279,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.6.2';
+const APP_VER='v75.6.3';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -5860,7 +5909,7 @@ function planCfgFor(type){ return PLAN_CFG[type]||PLAN_CFG['自定义']; }
 function planAddType(){ const v=prompt('新增事项类型（如：婚礼筹备、宠物安置）：',''); if(v===null)return; const n=v.trim(); if(!n)return; const c=planCustomTypes(); if(!c.includes(n))c.push(n); save(); renderPlan(); }
 function planRenameType(old){ if(PLAN_TYPES.indexOf(old)>=0){toast('内置类型不可改名');return;} const v=prompt('重命名类型：',old); if(v===null)return; const n=v.trim(); if(!n||n===old)return; const c=planCustomTypes(); const i=c.indexOf(old); if(i>=0)c[i]=n; (D.plan.items||[]).forEach(it=>{if(it.type===old)it.type=n;}); save(); renderPlan(); }
 function planDelType(old){ if(PLAN_TYPES.indexOf(old)>=0){toast('内置类型不可删除');return;} if(!confirm('删除类型「'+old+'」？\n（已用该类型的计划会改回「自定义」配置）'))return; const c=planCustomTypes(); const i=c.indexOf(old); if(i>=0)c.splice(i,1); (D.plan.items||[]).forEach(it=>{if(it.type===old)it.type='自定义';}); save(); renderPlan(); }
-const PLAN_TYPE_IC={'出游':icoPlan(),'考试备考':icoBook(),'搬家':icoBox(),'装修':icoBolt(),'大额采购':icoBag(),'证件办理':icoDoc(),'自定义':icoPin()};
+const PLAN_TYPE_IC={'出游':icoPlan(),'考试备考':icoBook(),'搬家':icoBoxLine(),'装修':icoBolt(),'大额采购':icoBag(),'证件办理':icoDoc(),'自定义':icoPinLine()};
 const PLAN_PREP_NAMES={trans:'往返大交通',weather:'天气与穿衣',goods:'物品清单',stay:'住宿安排',ticket:'票务预约'};
 const PLAN_PREP_IC={trans:icoTrain(),weather:icoWeather(),goods:icoBag(),stay:icoHotel(),ticket:icoTicket()};
 const PLAN_CFG={
@@ -5978,7 +6027,7 @@ function renderPlan(){
   if(planTab==='lib'){html+=planLibPage(null);$('#content').innerHTML=html;return;}
   const src=planTab==='live'?live:arch;
   const types=['全部'].concat(planAllTypes());
-  html+=`<div class="row" style="margin-bottom:10px">${types.map(t=>`<span class="chip ${planFilter===t?'on':''}" onclick="planFilter='${t}';renderPlan()">${t==='全部'?'全部':(PLAN_TYPE_IC[t]||icoPin())+' '+t}</span>`).join('')}</div>`;
+  html+=`<div class="row" style="margin-bottom:10px">${types.map(t=>`<span class="chip ${planFilter===t?'on':''}" onclick="planFilter='${t}';renderPlan()">${t==='全部'?'全部':(PLAN_TYPE_IC[t]||icoPinLine())+' '+t}</span>`).join('')}</div>`;
   const list=src.filter(x=>planFilter==='全部'||x.type===planFilter)
     .sort((a,b)=>(a.start||'9999').localeCompare(b.start||'9999')||b.createdAt-a.createdAt);
   if(planTab==='live')html+=`<div class="row" style="margin:2px 0 10px"><button class="btn ghost sm" onclick="planSeedLuoyang()">🧳 导入洛阳范本示例</button><span class="hint" style="align-self:center">含一份已归档样例 + 一套可复用出游模板（金额清零）</span></div>`;
@@ -5999,7 +6048,7 @@ function planCard(it){
   const mem=it.members.map(m=>`<span class="pl-mem" title="${esc(m.identity||'')}">${esc(m.name||m.code)}</span>`).join('');
   return `<div class="card pl-card ${it.status==='archived'?'arch':''}">
     <div class="pl-h" onclick="planGo('${it.id}')">
-      <span class="pl-ic">${PLAN_TYPE_IC[it.type]||icoPin()}</span>
+      <span class="pl-ic">${PLAN_TYPE_IC[it.type]||icoPinLine()}</span>
       <div class="pl-h-t">
         <div class="pl-title">${esc(it.title||'（未命名事项）')}<span class="tag">${esc(it.type)}</span>${it.place?`<span class="tag alt">${esc(it.place)}</span>`:''}</div>
         <div class="pl-sub">${period}${cd}</div>
@@ -6041,7 +6090,7 @@ function planNewForm(){
   return `<div class="card"><div class="card-h"><h2>＋ 新建事项</h2></div>
     <div class="row">
       <div class="field" style="flex:2;min-width:200px"><label>事项标题 *</label><input id="pl_title" placeholder="如：十一洛阳行 / 二建备考"></div>
-      <div class="field"><label>事项类型</label><select id="pl_type">${planAllTypes().map(t=>`<option ${planNewType===t?'selected':''}>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="planAddType()">＋</button> <button class="btn ghost sm" onclick="planRenameType($('#pl_type').value)">${icoPencil()}</button> <button class="btn ghost sm" onclick="planDelType($('#pl_type').value)">${icoTrash()}</button></div>
+      <div class="field"><label>事项类型</label><div class="type-mgr"><select id="pl_type">${planAllTypes().map(t=>`<option ${planNewType===t?'selected':''}>${t}</option>`).join('')}</select><button class="btn ghost sm" onclick="planAddType()">＋</button><button class="btn ghost sm" onclick="planRenameType($('#pl_type').value)">${icoPencil()}</button><button class="btn ghost sm" onclick="planDelType($('#pl_type').value)">${icoTrash()}</button></div></div>
       <div class="field"><label>地点 / 关键词</label><input id="pl_place" placeholder="如：洛阳"></div>
     </div>
     <div class="row">
@@ -6078,7 +6127,7 @@ function renderPlanDetail(it){
   if(!secs.some(s=>s[0]===planSec))planSec='overview';
   let html=`<div class="pl-bar">
     <button class="btn ghost sm" onclick="planBack()">‹ 返回列表</button>
-    <div class="pl-bar-t">${PLAN_TYPE_IC[it.type]||icoPin()} ${esc(it.title||'未命名事项')}${it.status==='archived'?'<span class="tag">已归档</span>':''}</div>
+    <div class="pl-bar-t">${PLAN_TYPE_IC[it.type]||icoPinLine()} ${esc(it.title||'未命名事项')}${it.status==='archived'?'<span class="tag">已归档</span>':''}</div>
     <button class="btn ghost sm" onclick="planUndo()" title="撤销上一步（保留 20 步）">${icoUndo()} 撤销</button>
   </div>
   <div class="pl-secbar">${secs.map(s=>`<div class="pl-sec ${planSec===s[0]?'on':''}" onclick="planSec='${s[0]}';renderPlan()"><span>${s[2]}</span>${s[1]}</div>`).join('')}</div>`;
@@ -6109,7 +6158,7 @@ function planOverview(it){
   let html=`<div class="card"><div class="card-h"><h2>📊 概览</h2><span class="tag" style="margin-left:4px">${esc(it.type)}</span><span class="spacer"></span><span class="pl-cd2 ${cdCls}">${cdTxt}</span></div>
     <div class="row">
       <div class="field" style="flex:2;min-width:180px"><label>事项标题</label><input value="${esc(it.title)}" onchange="planSet('${it.id}','title',this.value)"></div>
-      <div class="field"><label>事项类型</label><select onchange="planTypeChange('${it.id}',this.value)">${planAllTypes().map(t=>`<option ${it.type===t?'selected':''}>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="planAddType()">＋</button> <button class="btn ghost sm" onclick="planRenameType('${it.type}')">${icoPencil()}</button> <button class="btn ghost sm" onclick="planDelType('${it.type}')">${icoTrash()}</button></div>
+      <div class="field"><label>事项类型</label><div class="type-mgr"><select onchange="planTypeChange('${it.id}',this.value)">${planAllTypes().map(t=>`<option ${it.type===t?'selected':''}>${t}</option>`).join('')}</select><button class="btn ghost sm" onclick="planAddType()">＋</button><button class="btn ghost sm" onclick="planRenameType('${it.type}')">${icoPencil()}</button><button class="btn ghost sm" onclick="planDelType('${it.type}')">${icoTrash()}</button></div></div>
       <div class="field"><label>地点 / 关键词</label><input value="${esc(it.place)}" placeholder="如：洛阳" onchange="planSet('${it.id}','place',this.value)"></div>
     </div>
     <div class="row">
