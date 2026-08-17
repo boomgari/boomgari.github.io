@@ -19,7 +19,7 @@
      浏览器会一直挂起等待超时 → 页面加载条永不结束、刷新键显示为停止(×)、SW 无法注册、无法安装到主屏幕。
      字体栈里的 "Noto Sans TC" 保留即可 —— 安卓系统自带思源黑体，会直接命中本地字体，无需联网。 -->
 <style>
-:root{--accent:#6B7A8A;--accent-soft:#8E9CA8;--bg:#F6F7F8;--card:#FFFFFF;--text:#1A1A1A;--muted:#888888;--border:#E6E8EB;--bw:0.5px;--radius:10px;--tint:#EDEFF1;--fs:15px;--fw:400;--ff:"UserFont","PingFang TC","PingFang HK","Noto Sans TC","Microsoft JhengHei","微軟正黑體","Heiti TC",sans-serif;}
+:root{--accent:#6B7A8A;--accent-soft:#8E9CA8;--bg:#F6F7F8;--card:#FFFFFF;--text:#1A1A1A;--muted:#888888;--border:#E6E8EB;--bw:0.5px;--radius:10px;--tint:#EDEFF1;--input-bg:#FBFBFC;--fs:15px;--fw:400;--ff:"UserFont","PingFang TC","PingFang HK","Noto Sans TC","Microsoft JhengHei","微軟正黑體","Heiti TC",sans-serif;}
 /* 字体不在 CSS 里声明 @font-face —— 那会让浏览器把 11MB~16MB 的 ttf 计入首屏必需资源，
    在手机网络下 load 事件被无限期拖住（加载条一直转、刷新键变 ×、SW 无法注册 → 无法安装到主屏幕）。
    改由 JS 用 FontFace API 按需异步加载（见 loadFontAsync），下载完成后自动生效，全程不阻塞页面。 */
@@ -90,7 +90,40 @@ body[data-theme="dual"] .nav-item.active{background:linear-gradient(90deg,var(--
 .glass-light .glass-layer .b1{opacity:.22}.glass-light .glass-layer .b2{opacity:.18}.glass-light .glass-layer .b3{opacity:.16}
 .glass-strong .glass-layer .b1{opacity:.58}.glass-strong .glass-layer .b2{opacity:.46}.glass-strong .glass-layer .b3{opacity:.42}
 @media (prefers-reduced-motion: reduce){.glass-layer .blob{animation:none!important;}}
-body.glass-on .card{background:color-mix(in srgb, var(--card) 80%, transparent);backdrop-filter:blur(11px) saturate(135%);-webkit-backdrop-filter:blur(11px) saturate(135%);border-color:color-mix(in srgb,var(--accent-soft) 38%,var(--border));box-shadow:0 4px 18px rgba(30,40,60,.06), inset 0 1px 0 rgba(255,255,255,.55);}
+body.glass-on .card{background:color-mix(in srgb, var(--card) 50%, transparent);backdrop-filter:blur(14px) saturate(135%);-webkit-backdrop-filter:blur(14px) saturate(135%);border-color:color-mix(in srgb,var(--accent-soft) 38%,var(--border));box-shadow:0 4px 18px rgba(30,40,60,.06), inset 0 1px 0 rgba(255,255,255,.55);}
+body.glass-light .card{background:color-mix(in srgb, var(--card) 60%, transparent);}
+body.glass-strong .card{background:color-mix(in srgb, var(--card) 35%, transparent);}
+/* ===== 夜间模式（v75.6.2） ===== */
+body.night{--bg:#13131A;--card:#1C1C26;--text:#E4E4EC;--muted:#7A7A90;--border:#2E2E3C;--tint:#252533;--input-bg:#22222E;--on-tint:#E4E4EC;}
+body.night .glass-layer .gp{background:radial-gradient(130% 90% at 0% 0%, color-mix(in srgb, var(--accent-soft) 28%, transparent), transparent 58%),radial-gradient(130% 90% at 100% 100%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 58%);}
+body.night.glass-mid .glass-layer .b1{opacity:.48}body.night.glass-mid .glass-layer .b2{opacity:.40}body.night.glass-mid .glass-layer .b3{opacity:.36}
+body.night.glass-light .glass-layer .b1{opacity:.30}body.night.glass-light .glass-layer .b2{opacity:.24}body.night.glass-light .glass-layer .b3{opacity:.20}
+body.night.glass-strong .glass-layer .b1{opacity:.64}body.night.glass-strong .glass-layer .b2{opacity:.52}body.night.glass-strong .glass-layer .b3{opacity:.48}
+body.night.glass-on .card{box-shadow:0 4px 18px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.08);}
+body.night .chip,body.night .item,body.night .ov-card,body.night .series-card,body.night .cmp-row,body.night .chart-box,body.night .modal,body.night .pl-box,body.night .pl-gdrow,body.night .pl-row,body.night .pl-dualc,body.night .pl-dualc.wide,body.night .pl-trrow,body.night .pl-baltable,body.night .reason-group,body.night .seg button,body.night .trk-row,body.night .timepick,body.night .datepick,body.night .dp-nav,body.night .pl-mini-b,body.night .pl-tl-dot,body.night .chk-custom input,body.night .btn-upd,body.night .drag-ghost,body.night .pl-subbar .pl-sub{background:var(--card);}
+body.night input:not([type=checkbox]):not([type=radio]),body.night textarea,body.night select,body.night .ps-trigger{background:var(--input-bg);}
+body.night input:focus,body.night textarea:focus,body.night select:focus,body.night .ps-trigger:active{background:var(--tint);}
+body.night .pl-frow input,body.night .pl-dualc input,body.night .cmp-row input,body.night .pl-wxrow{background:var(--card);}
+body.night .water-add .chip{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.15);}
+body.night .water-add .chip:hover{background:rgba(255,255,255,.2);}
+body.night .tag.alt{background:#3A2E22;color:#D4A56C;}
+body.night .tag.done{background:#1E3328;color:#5EAE7E;}
+body.night .tag.temp{background:#3A341A;color:#D4B85E;}
+body.night .tag.actual{background:#1A2A36;color:#5A9EC4;}
+body.night .ep-kind{background:rgba(176,122,46,.2);color:#D4A56C;}
+body.night .del:hover{background:#2A1A1A;}
+body.night .pl-tkcd.hot{background:#3A2222;color:#E08080;}
+/* 日常小记首卡（hero）：日间半透主题色 / 夜间加深主题色，玻璃档位联动（v75.6.2） */
+.note-hero{color:#fff;border:none;border-radius:var(--radius);padding:16px;margin-bottom:14px;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.12);background:linear-gradient(135deg,var(--accent),var(--accent-soft));}
+body.glass-on:not(.night) .note-hero{backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);}
+body.glass-light:not(.night) .note-hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 72%,transparent),color-mix(in srgb,var(--accent-soft) 65%,transparent));}
+body.glass-mid:not(.night) .note-hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 60%,transparent),color-mix(in srgb,var(--accent-soft) 53%,transparent));}
+body.glass-strong:not(.night) .note-hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 50%,transparent),color-mix(in srgb,var(--accent-soft) 43%,transparent));}
+body.night .note-hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 76%,#000 24%),color-mix(in srgb,var(--accent-soft) 80%,#000 20%));}
+body.night.glass-on .note-hero{backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);}
+body.night.glass-light .note-hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 68%,#000 20%),color-mix(in srgb,var(--accent-soft) 72%,#000 16%));}
+body.night.glass-mid .note-hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 60%,#000 22%),color-mix(in srgb,var(--accent-soft) 64%,#000 18%));}
+body.night.glass-strong .note-hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 50%,#000 24%),color-mix(in srgb,var(--accent-soft) 54%,#000 20%));}
 /* ===== 卡片/通用 ===== */
 .card{background:var(--card);border:var(--bw) solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.02);}
 .card-h{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
@@ -106,11 +139,11 @@ body.glass-on .card{background:color-mix(in srgb, var(--card) 80%, transparent);
 .field{margin-bottom:10px;flex:1;min-width:140px;}
 .field label{display:block;font-size:calc(var(--fs)*0.833);color:var(--muted);margin-bottom:4px;}
 /* 统一「宽浅框」规范：1px 浅灰边 + 10px 圆角 + 9×12 内边距，覆盖全部文本类输入/文本域/下拉 */
-input:not([type=checkbox]):not([type=radio]),textarea,select{width:100%;padding:9px 12px;border:var(--bw) solid var(--border);border-radius:10px;background:#FBFBFC;outline:none;transition:border .15s,background .15s,box-shadow .15s;}
-input:focus,textarea:focus,select:focus{border-color:var(--accent-soft);background:#fff;box-shadow:0 0 0 3px var(--tint);}
+input:not([type=checkbox]):not([type=radio]),textarea,select{width:100%;padding:9px 12px;border:var(--bw) solid var(--border);border-radius:10px;background:var(--input-bg);outline:none;transition:border .15s,background .15s,box-shadow .15s;}
+input:focus,textarea:focus,select:focus{border-color:var(--accent-soft);background:var(--card);box-shadow:0 0 0 3px var(--tint);}
 /* 自定义美化下拉：原生 select 在 Windows 弹窗是系统米黄直角、无法 CSS 美化，统一替换为本组件 */
-.ps-trigger{width:100%;padding:9px 12px;min-height:38px;border:var(--bw) solid var(--border);border-radius:10px;background:#FBFBFC;cursor:pointer;font-size:calc(var(--fs)*0.933);color:var(--text);display:flex;align-items:center;gap:8px;user-select:none;transition:border .15s,background .15s,box-shadow .15s;}
-.ps-trigger:active{border-color:var(--accent-soft);background:#fff;box-shadow:0 0 0 3px var(--tint);}
+.ps-trigger{width:100%;padding:9px 12px;min-height:38px;border:var(--bw) solid var(--border);border-radius:10px;background:var(--input-bg);cursor:pointer;font-size:calc(var(--fs)*0.933);color:var(--text);display:flex;align-items:center;gap:8px;user-select:none;transition:border .15s,background .15s,box-shadow .15s;}
+.ps-trigger:active{border-color:var(--accent-soft);background:var(--card);box-shadow:0 0 0 3px var(--tint);}
 .ps-caret{margin-left:auto;opacity:.5;font-size:calc(var(--fs)*0.8);}
 .ps-overlay{position:fixed;inset:0;background:rgba(20,24,28,.42);z-index:95;display:flex;align-items:center;justify-content:center;padding:16px;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}
 .ps-pop{background:var(--card);border-radius:14px;width:100%;max-width:340px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 22px 64px rgba(0,0,0,.32);}
@@ -729,6 +762,16 @@ textarea.inp{min-height:52px;}
 <div class="modal" id="skinModal">
   <button class="close" onclick="closeSkin()">×</button>
   <h3>🎨 选择皮肤</h3>
+  <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:var(--bw) solid var(--border)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-weight:700">🌓 日间 / 夜间</span></div>
+    <div class="hint" style="margin-bottom:8px">日间=白底浅色主题卡；夜间=暗底加深主题卡+反白文字，护眼省电。</div>
+    <div id="modeCtl" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+  </div>
+  <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:var(--bw) solid var(--border)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-weight:700">🪟 液态玻璃背景</span></div>
+    <div class="hint" style="margin-bottom:8px">主色雾光缓慢流动，卡片呈磨砂质感；「关」回归纯色背景。三档强度可调，与日间/夜间联动。</div>
+    <div id="glassCtl" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+  </div>
   <div class="season-cards" id="seasonCards"></div>
   <div class="skin-preview" id="skinPreview">
     <div class="sp-nav" id="pv_nav">导航栏示例</div>
@@ -793,11 +836,6 @@ textarea.inp{min-height:52px;}
       <span id="bc_txt" style="font-weight:600">文字示例</span>
       <div id="bc_prog" style="height:8px;border-radius:6px;flex:1;min-width:120px;overflow:hidden"><div id="bc_progi" style="height:100%;width:60%"></div></div>
     </div>
-  </div>
-  <div style="margin-top:16px;border-top:var(--bw) solid var(--border);padding-top:14px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-weight:700">🪟 液态玻璃背景</span></div>
-    <div class="hint" style="margin-bottom:8px">主色雾光缓慢流动，卡片呈磨砂质感；「关」回归纯色背景。开启后进度条、气泡等强调色仍随皮肤。</div>
-    <div id="glassCtl" style="display:flex;gap:8px;flex-wrap:wrap"></div>
   </div>
 </div>
 </div>
@@ -4204,19 +4242,13 @@ function renderNote(){
   const dayCount=days.map(d=>entries.filter(e=>e.date===d).length);
   let streak=0; const set=new Set(entries.map(e=>e.date)); let cur=new Date();
   while(set.has(cur.toISOString().slice(0,10))){streak++;cur.setDate(cur.getDate()-1);}
-  const total=(NOTE_ORDER.reduce((s,t)=>s+(cat[t]||0),0))||1; let acc=0,segs='';
-  types.forEach(t=>{const v=cat[t]||0;const ang=v/total*360;const a0=acc/180*Math.PI,a1=(acc+ang)/180*Math.PI;acc+=ang;
-    const x0=(100+70*Math.cos(a0)).toFixed(1),y0=(100+70*Math.sin(a0)).toFixed(1),x1=(100+70*Math.cos(a1)).toFixed(1),y1=(100+70*Math.sin(a1)).toFixed(1);
-    const large=ang>180?1:0;segs+=`<path d="M100,100 L${x0},${y0} A70,70 0 ${large} 1 ${x1},${y1} Z" fill="${NOTE_COLOR[t]}"><title>${t} ${v}</title></path>`;});
-  const donut=`<svg viewBox="0 0 200 200" style="width:72px;height:72px;flex:0 0 auto"><circle cx="100" cy="100" r="70" fill="#ffffff" fill-opacity="0.16"/>${segs}<circle cx="100" cy="100" r="40" fill="#7E8E9C"/></svg>`;
-  const legend=types.map(t=>`<span style="font-size:calc(var(--fs)*0.733);margin-right:8px;color:var(--text);opacity:.92"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${NOTE_COLOR[t]};margin-right:3px"></span>${t} ${cat[t]||0}</span>`).join('');
   const maxC=Math.max(1,...dayCount);
   const bars=`<div style="display:flex;align-items:flex-end;gap:4px;height:48px">${dayCount.map((c,i)=>`<i style="display:block;flex:1;min-width:6px;background:${c>0?'var(--accent)':'#dfe3e7'};border-radius:3px 3px 0 0;height:${Math.round(c/maxC*100)}%" title="${days[i].slice(5)}:${c}条"></i>`).join('')}</div>`;
   const cap=waterCap(); const wlog=todayWaterLog(); const totalMl=wlog.reduce((s,x)=>s+(+x.ml||0),0);
   const cupHtml=wlog.length?wlog.map((x,i)=>`<span class="note-cup" onclick="noteDelCup(${i})" title="点击删除">💧 ${x.ml}ml${x.time?' · '+x.time:''}<b>×</b></span>`).join(''):'<span style="color:#fff;opacity:.92;font-size:calc(var(--fs)*0.8)">还没喝水，点上面的快捷键记一杯～</span>';
   const order=noteOrder();
   let html=`
-  <div class="card" style="background:linear-gradient(135deg,var(--accent),var(--accent-soft));color:#fff;border:none">
+  <div class="card note-hero">
     <div style="font-size:calc(var(--fs)*0.867);opacity:.9">${greet()}</div>
     <div style="font-size:calc(var(--fs)*1.467);font-weight:700;margin:2px 0">Murphy</div>
     <div style="font-size:calc(var(--fs)*0.867);opacity:.9">${fmtDate(new Date())}</div>
@@ -4241,10 +4273,10 @@ function renderNote(){
       <div class="water-add">${[['1/4',0.25],['1/3',0.33],['1/2',0.5],['3/4',0.75],['1',1]].map(([g,f])=>`<span class="chip" onclick="noteWaterAdd(${Math.round(cap*f)})"><span>${g}杯</span><b>${Math.round(cap*f)}ml</b></span>`).join('')}<span class="chip" onclick="noteWaterCustom()"><span>＋</span><b>自定义</b></span></div>
       <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">${cupHtml}</div>
     </div>
-    <div style="margin-top:10px;display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.12);padding:8px 12px;border-radius:12px">
-      <span style="font-size:calc(var(--fs)*0.8);opacity:.9;white-space:nowrap">分类占比</span>
-      ${donut}
-      <div style="display:flex;flex-wrap:wrap;gap:2px 10px">${legend}</div>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(255,255,255,.12);padding:8px 12px;border-radius:12px">
+      <span style="font-size:calc(var(--fs)*0.8);opacity:.9;white-space:nowrap;font-weight:600">随记概览</span>
+      <span style="font-size:calc(var(--fs)*0.867);font-weight:700;white-space:nowrap">共 ${entries.length} 条</span>
+      ${types.filter(t=>cat[t]>0).map(t=>`<span style="background:rgba(255,255,255,.15);padding:2px 10px;border-radius:20px;font-size:calc(var(--fs)*0.733);white-space:nowrap">${t} ${cat[t]}</span>`).join('')}
     </div>
   </div>
   ${renderTodayOverview()}
@@ -4610,7 +4642,7 @@ function renderChecklist(){
       <button class="btn ghost sm" onclick="openEdit('checklist','${x.id}')">✏️ 编辑</button>
       <button class="del" onclick="chkDel('${x.id}')">×</button>
     </div>`;}).join(''):'<div class="hint">还没有每日必做事项，在下面添加一行（如：抖音续火）</div>';
-  return `${foldCard("${chkSvg()} 每日打卡", "fc_5", false, `
+  return `${foldCard(`${chkSvg()} 每日打卡`, "fc_5", false, `
     <div class="pbar" style="margin-bottom:10px"><i style="width:${pct}%"></i></div>
     ${list}
     <div class="row" style="margin-top:10px;align-items:flex-end">
@@ -4982,7 +5014,7 @@ function applyFont(){
 }
 function setFont(id){if(!D._meta)D._meta={};D._meta.fontFamily=id;save();applyFont();renderFontChips();}
 function renderFontChips(){const cur=(D._meta&&D._meta.fontFamily)||'';const box=$('#fontChips');if(!box)return;box.innerHTML=FONT_OPTS.map(o=>{const f=FONT_FILES[o.id];let tag='';if(f){const st=_fontState[f.fam];tag=st==='ok'?'':(st==='loading'?`<span style="opacity:.55;font-size:calc(var(--fs)*0.7)"> 下载中…</span>`:`<span style="opacity:.55;font-size:calc(var(--fs)*0.7)"> ${f.mb}MB</span>`);}return `<button class="btn ${o.id===cur?'primary':'ghost'} sm" style="font-family:${o.stack}" onclick="setFont('${o.id}')">${o.name}${tag}</button>`;}).join('');}
-function openSkin(){renderSkinGrid();renderSeasonCards();syncFsUI();syncFwUI();renderFontChips();bcSyncFromSaved();bcUpdate();$('#skinModal').classList.add('show');$('#skinOverlay').classList.add('show');}
+function openSkin(){renderSkinGrid();renderSeasonCards();syncFsUI();syncFwUI();renderFontChips();bcSyncFromSaved();bcUpdate();renderModeCtl();renderGlassCtl();$('#skinModal').classList.add('show');$('#skinOverlay').classList.add('show');}
 function closeSkin(){$('#skinModal').classList.remove('show');$('#skinOverlay').classList.remove('show');}
 function renderSeasonCards(){
   const cur=D._meta.currentTheme;
@@ -5111,6 +5143,19 @@ function initGlass(){
   }
   applyGlass();
 }
+/* 日间/夜间模式（v75.6.2） */
+function getMode(){return (D&&D._meta&&D._meta.mode)||'day';}
+function setMode(m){if(D&&D._meta){D._meta.mode=m;save();}applyMode();}
+function applyMode(){
+  const m=getMode();
+  document.body.classList.toggle('night',m==='night');
+  renderModeCtl();
+}
+function renderModeCtl(){
+  const el=document.getElementById('modeCtl');if(!el)return;
+  const m=getMode();
+  el.innerHTML=[['day','日间'],['night','夜间']].map(o=>`<span class="chip ${m===o[0]?'on':''}" onclick="setMode('${o[0]}')">${o[1]}</span>`).join('');
+}
 /* ============ 双色搭配（v71 补回 v66 功能） ============ */
 let bcA='#4F7365', bcB='#97A6B2';
 function bcSyncFromSaved(){ if(D&&D._meta&&D._meta.dual){ bcA=D._meta.dual.a||bcA; bcB=D._meta.dual.b||bcB; } }
@@ -5185,7 +5230,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.6.1';
+const APP_VER='v75.6.2';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -5765,7 +5810,7 @@ async function init(){
   try{ planCleanLuoyang(); }catch(e){}
   currentModule=(D._meta&&D._meta.activeModule)||'note';
   // 主题
-  bootTheme();
+  bootTheme();applyMode();
   renderNav();renderModule();renderTopDate();renderSyncRow();renderVer();applyFs();applyFw();applyFont();initSelectUpgrade();setupTouchDrag();initGlass();
   // 非侵入式区块折叠：监听 #content 变化自动给 .card-h 接线点击折叠（绝不改写卡片内部）
   try{
