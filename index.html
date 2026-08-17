@@ -73,6 +73,24 @@ body[data-theme="dual"] .nav-item.active{background:linear-gradient(90deg,var(--
 /* 大屏（平板横屏 / 笔记本）更充分利用宽度，但保持单行可读性 */
 @media(min-width:1280px){.content > *{max-width:1200px;}}
 @media(min-width:1600px){.content > *{max-width:1300px;}}
+/* ===== 液态玻璃背景（v75.6.1） ===== */
+.main{position:relative;}
+.content{position:relative;z-index:1;}
+.glass-layer{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.glass-layer .gp{position:absolute;inset:0;background:
+  radial-gradient(130% 90% at 0% 0%, color-mix(in srgb, var(--accent-soft) 24%, transparent), transparent 58%),
+  radial-gradient(130% 90% at 100% 100%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 58%);}
+.glass-layer .blob{position:absolute;border-radius:50%;filter:blur(30px);will-change:transform;}
+.glass-layer .b1{width:46vmin;height:46vmin;left:-8vmin;top:-8vmin;background:var(--accent);opacity:.42;animation:gdrift1 14s ease-in-out infinite;}
+.glass-layer .b2{width:40vmin;height:40vmin;right:-10vmin;top:22vmin;background:var(--accent-soft);opacity:.34;animation:gdrift2 17s ease-in-out infinite;}
+.glass-layer .b3{width:52vmin;height:52vmin;left:6vmin;bottom:-14vmin;background:var(--accent);opacity:.30;animation:gdrift3 20s ease-in-out infinite;}
+@keyframes gdrift1{0%,100%{transform:translate(0,0)}50%{transform:translate(3vmin,4vmin)}}
+@keyframes gdrift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-4vmin,3vmin)}}
+@keyframes gdrift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(3vmin,-4vmin) scale(1.06)}}
+.glass-light .glass-layer .b1{opacity:.22}.glass-light .glass-layer .b2{opacity:.18}.glass-light .glass-layer .b3{opacity:.16}
+.glass-strong .glass-layer .b1{opacity:.58}.glass-strong .glass-layer .b2{opacity:.46}.glass-strong .glass-layer .b3{opacity:.42}
+@media (prefers-reduced-motion: reduce){.glass-layer .blob{animation:none!important;}}
+body.glass-on .card{background:color-mix(in srgb, var(--card) 80%, transparent);backdrop-filter:blur(11px) saturate(135%);-webkit-backdrop-filter:blur(11px) saturate(135%);border-color:color-mix(in srgb,var(--accent-soft) 38%,var(--border));box-shadow:0 4px 18px rgba(30,40,60,.06), inset 0 1px 0 rgba(255,255,255,.55);}
 /* ===== 卡片/通用 ===== */
 .card{background:var(--card);border:var(--bw) solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.02);}
 .card-h{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
@@ -463,7 +481,7 @@ textarea.inp{min-height:52px;}
 .tab-n{display:inline-block;min-width:17px;padding:0 5px;margin-left:5px;border-radius:20px;background:var(--tint);color:var(--on-tint);font-size:calc(var(--fs)*0.7);font-weight:700;text-align:center;line-height:1.5;}
 .tab.on .tab-n{background:rgba(255,255,255,.3);color:var(--on-accent);}
 /* — 详情外壳 — */
-.pl-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.pl-bar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:6px 4px;background:rgba(246,247,248,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:10px;}
 .pl-bar-t{flex:1;min-width:0;font-size:calc(var(--fs)*1.1);font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap;word-break:break-word;}
 .pl-secbar{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
 .pl-secbar::-webkit-scrollbar{height:4px;}
@@ -530,12 +548,12 @@ textarea.inp{min-height:52px;}
 .pl-catline{display:flex;align-items:center;gap:6px;margin:8px 0 5px;font-size:calc(var(--fs)*0.783);color:var(--muted);}
 .pl-catline .dot{width:6px;height:6px;border-radius:50%;background:var(--accent-soft);flex:none;}
 /* — 物品清单行 — */
-.pl-gdrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 9px;border:var(--bw) solid var(--border);border-radius:10px;background:#fff;margin-bottom:6px;}
+.pl-gdrow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:8px 10px;border:var(--bw) solid var(--border);border-radius:10px;background:#fff;margin-bottom:8px;}
 .pl-gdrow.done{background:var(--bg);}
 .pl-gdrow.done .gd-n{color:var(--muted);text-decoration:line-through;}
 .pl-gdrow input:not([type=checkbox]),.pl-gdrow select,.pl-gdrow .ps-trigger{width:auto!important;padding:6px 10px!important;min-height:32px;font-size:calc(var(--fs)*0.833)!important;}
 .gd-n{flex:2 1 130px;min-width:104px;font-weight:600;}
-.gd-q{flex:0 0 62px;width:62px!important;text-align:center;}
+.gd-q{flex:0 0 52px;width:52px!important;max-width:52px;text-align:center;box-sizing:border-box;padding-left:4px!important;padding-right:4px!important;}
 .gd-s{flex:0 0 96px;width:96px!important;}
 .gd-r{flex:1 1 120px;min-width:96px;}
 /* — 天气表 — */
@@ -585,6 +603,7 @@ textarea.inp{min-height:52px;}
 .pl-row.skip .pl-rtitle{color:var(--muted);text-decoration:line-through;}
 .pl-row.off{opacity:.55;}
 .pl-rowh{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.pl-rowchk{flex:none;display:inline-flex;align-items:center;color:#3C8C5A;margin-right:1px;}
 .pl-time{flex:0 0 78px;width:78px!important;padding:6px 8px!important;text-align:center;font-variant-numeric:tabular-nums;font-weight:600;font-size:calc(var(--fs)*0.867)!important;}
 .pl-rtitle{flex:1 1 160px;min-width:120px;width:auto!important;padding:6px 10px!important;font-size:calc(var(--fs)*0.9)!important;}
 /* — 计划 / 实际 双轨 — */
@@ -774,6 +793,11 @@ textarea.inp{min-height:52px;}
       <span id="bc_txt" style="font-weight:600">文字示例</span>
       <div id="bc_prog" style="height:8px;border-radius:6px;flex:1;min-width:120px;overflow:hidden"><div id="bc_progi" style="height:100%;width:60%"></div></div>
     </div>
+  </div>
+  <div style="margin-top:16px;border-top:var(--bw) solid var(--border);padding-top:14px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-weight:700">🪟 液态玻璃背景</span></div>
+    <div class="hint" style="margin-bottom:8px">主色雾光缓慢流动，卡片呈磨砂质感；「关」回归纯色背景。开启后进度条、气泡等强调色仍随皮肤。</div>
+    <div id="glassCtl" style="display:flex;gap:8px;flex-wrap:wrap"></div>
   </div>
 </div>
 </div>
@@ -1046,6 +1070,16 @@ function archiveExpiredGame(){
     } else remain.push(a);
   });
   if(changed){D.game.activities=remain;try{persistLocal();}catch(e){}}
+}
+function gArchiveNow(id){
+  const a=(D.game.activities||[]).find(x=>x.id===id);
+  if(!a)return;
+  if(!confirm('提前归档「'+(a.name||'未命名')+'」？\n活动尚未结束也可归档，数据完整保留于模板库，可随时引入复用。'))return;
+  if(!Array.isArray(D.game.actArchive))D.game.actArchive=[];
+  if(D.game.actArchive.some(x=>x.id===a.id)){toast('已在归档库');return;}
+  const cp=JSON.parse(JSON.stringify(a));cp.archivedAt=nowISO();D.game.actArchive.push(cp);
+  D.game.activities=(D.game.activities||[]).filter(x=>x.id!==id);
+  save();renderGame();renderNav();toast('已提前归档');
 }
 function migrateGame(g,def){
   if(!g||typeof g!=='object'){return JSON.parse(JSON.stringify(def.game));}
@@ -1658,7 +1692,7 @@ function renderWork(){
     html+=`<div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px">
       ${['全部','每日计划','每周计划','月度计划'].map(f=>`<span class="chip ${workFilter===f?'on':''}" onclick="workFilter='${f}';workPage=1;renderWork()">${f}</span>`).join('')}
     </div>`;
-    html+=`<div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="archiveAllDone()">📦 归档已完成</button></div>`;
+    html+=`<div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="archiveAllDone()">${icoBox()} 归档已完成</button></div>`;
     let list=D.work.filter(x=>{
       if(workFilter!=='全部'&&x.planType!==workFilter)return false;
       if(workState==='all')return !x.archived;
@@ -1684,9 +1718,9 @@ function workItem(it){
   const range=it.startDate?(it.endDate?`${it.startDate} ~ ${it.endDate}`:`自 ${it.startDate}`):(it.endDate?`截止：${it.endDate}`:'');
   const archived=!!it.archived;
   const acts=archived
-    ? `<button class="btn ghost sm" onclick="unarchive('work','${it.id}')">↩ 取消归档</button>`
+    ? `<button class="btn ghost sm" onclick="unarchive('work','${it.id}')">${icoUndo()} 取消归档</button>`
     : (it.done
-        ? `<button class="btn ghost sm" onclick="archiveOne('work','${it.id}')">📦 归档</button><button class="btn ghost sm" onclick="reopen('work','${it.id}')">↺ 重开</button>`
+        ? `<button class="btn ghost sm" onclick="archiveOne('work','${it.id}')">${icoBox()} 归档</button><button class="btn ghost sm" onclick="reopen('work','${it.id}')">↺ 重开</button>`
         : '');
   return `<div class="item ${it.done?'done':''} ${archived?'arch':''}">
     <input type="checkbox" ${it.done?'checked':''} onchange="toggleDone('work','${it.id}',this.checked)">
@@ -1773,7 +1807,7 @@ function renderWorkLog(){
         <div class="ttitle">${esc(it.title||'')} ${it.type?`<span class="tag" style="background:var(--accent);color:var(--on-accent)">${esc(it.type)}</span>`:''}</div>
         <div class="sub">🕒 ${disp}${it.project?(' · 📁 '+esc(it.project)):''}${it.effort?(' · ⏱ '+esc(it.effort)):''}</div>
         ${it.detail?`<div class="emptybox">${esc(it.detail)}</div>`:''}
-        ${it.custom?`<div class="meta-grid"><span class="tag alt">✎ ${esc(it.custom)}</span></div>`:''}
+        ${it.custom?`<div class="meta-grid"><span class="tag alt">${icoPencil()} ${esc(it.custom)}</span></div>`:''}
       </div>
       <div class="item-acts">
         <button class="btn ghost sm" onclick="openEdit('log','${it.id}')">✏️ 编辑</button>
@@ -1954,7 +1988,7 @@ function renderFitToday(){
         <div class="ttitle">${esc(it.name)} <span class="tag">${it.type}</span></div>
         <div class="sub">${det||''}</div>
       </div>
-      <button class="ic" title="编辑此事项" onclick="fitEditItem(${i})">✎</button>
+      <button class="ic" title="编辑此事项" onclick="fitEditItem(${i})">${icoPencil()}</button>
       <button class="del" onclick="fitDel(${i})">×</button>
     </div>`;
   }).join('');
@@ -1974,7 +2008,7 @@ function renderFitToday(){
   ${foldCard('自由添加（仅今日）','fit_free',0,`
     <div class="row">
       <div class="field"><label>名称</label><input type="text" id="ff_name"></div>
-      <div class="field"><label>类型</label><select id="ff_type">${fitAllTypes().map(t=>`<option>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="fitAddType()">＋</button> <button class="btn ghost sm" onclick="fitRenameType($('#ff_type').value)">✎</button> <button class="btn ghost sm" onclick="fitDelType($('#ff_type').value)">🗑</button></div>
+      <div class="field"><label>类型</label><select id="ff_type">${fitAllTypes().map(t=>`<option>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="fitAddType()">＋</button> <button class="btn ghost sm" onclick="fitRenameType($('#ff_type').value)">${icoPencil()}</button> <button class="btn ghost sm" onclick="fitDelType($('#ff_type').value)">${icoTrash()}</button></div>
       <div class="field"><label>开始时间</label><input type="text" id="ff_st" class="timepick" readonly placeholder="选择时间" onclick="openTP(this,this.value)"></div>
       <div class="field"><label>时长(分)</label><input type="number" id="ff_dur" value="25"></div>
     </div>
@@ -2340,8 +2374,8 @@ function studyForm(){
     <div class="field"><label>计划类型 *</label>
       <select id="sf_type" onchange="studyDyn()">${studyAllTypes().map(t=>`<option>${t}</option>`).join('')}</select>
       <button class="btn ghost sm" onclick="studyAddType()">＋类型</button>
-      <button class="btn ghost sm" onclick="studyRenameType($('#sf_type').value)">✎改名</button>
-      <button class="btn ghost sm" onclick="studyDelType($('#sf_type').value)">🗑</button>
+      <button class="btn ghost sm" onclick="studyRenameType($('#sf_type').value)">${icoPencil()}改名</button>
+      <button class="btn ghost sm" onclick="studyDelType($('#sf_type').value)">${icoTrash()}</button>
     </div>
     <div class="field"><label>引用资料方案库</label>
       <select id="sf_lib" onchange="if(this.value)studyApplyLib(this.value)"><option value="">不引用…</option>${D.studyLib.map(l=>`<option value="${l.id}">${esc(l.name)}（${l.type}）</option>`).join('')}</select>
@@ -2485,6 +2519,7 @@ function icoQuarter(){return '<svg class="ico" viewBox="0 0 20 20" width="18" he
 function icoWish(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 16 C5 12.5 5 7.5 8 7.5 C9.5 7.5 10 8.5 10 9.5 C10 8.5 10.5 7.5 12 7.5 C15 7.5 15 12.5 10 16 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/></svg>';}
 function icoBox(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 7 H16 V16 H4 Z M4 7 V4 H16 V7 M7 10 H13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
 function icoTrash(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 6 H15 M7 6 V4 H13 V6 M6 6 V16 H14 V6 M9 9 V13 M11 9 V13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
+function icoGear(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 3.4 V5.4 M10 14.6 V16.6 M3.4 10 H5.4 M14.6 10 H16.6 M5.5 5.5 L6.9 6.9 M13.1 13.1 L14.5 14.5 M14.5 5.5 L13.1 6.9 M6.9 13.1 L5.5 14.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>';}
 function icoChart(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M4 16 V4 M4 16 H17 M7 16 V11 M11 16 V7 M15 16 V9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter" stroke-linecap="square"/></svg>';}
 function icoCal(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="4" y="5" width="12" height="11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"/><path d="M4 8 H16 M7 3 V6 M13 3 V6 M7 11 H9 M13 11 H15" stroke="currentColor" stroke-width="1.3" stroke-linecap="square"/></svg>';}
 function icoBook(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 4 H11 V16 H5 Z M11 4 H15 V16 H11 M5 4 V16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/></svg>';}
@@ -2492,7 +2527,9 @@ function icoBolt(){return '<svg class="ico" viewBox="0 0 20 20" width="16" heigh
 function icoWater(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 3 C10 3 5 9 5 13 a5 5 0 0 0 10 0 C15 9 10 3 10 3 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/></svg>';}
 function icoEmpty(){return '<svg class="ico" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><rect x="5" y="5" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="2 2"/></svg>';}
 function icoStar(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 4 L12 8 L16 8.5 L13 11.5 L14 15.5 L10 13 L6 15.5 L7 11.5 L4 8.5 L8 8 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="miter"/></svg>';}
-function icoPin(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 3 L13 8 V12 H7 V8 Z M10 12 V16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/></svg>';}
+function icoPin(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="10" cy="7" r="4.2" fill="currentColor"/><rect x="3.4" y="13.6" width="13.2" height="2.2" rx="1.1" fill="currentColor"/></svg>';}
+/* 细线条图标：撤销/返回（左向箭头，miter·square，与图标库风格一致） */
+function icoUndo(){return '<svg class="ico" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M15 9 H6 M6 9 L9 6 M6 9 L9 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" stroke-linejoin="miter"/></svg>';}
 function icoTrain(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><rect x="4" y="5" width="12" height="9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/><path d="M7 14 L5 17 M13 14 L15 17 M4 9 H16" stroke="currentColor" stroke-width="1.3" stroke-linecap="square"/><circle cx="8" cy="11" r="0.8" fill="currentColor"/><circle cx="12" cy="11" r="0.8" fill="currentColor"/></svg>';}
 function icoWeather(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5 15 a3 3 0 0 1 0-5 a3 3 0 0 1 5 1 M13 11 h4 M13 14 h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>';}
 function icoBag(){return '<svg class="ico" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M6 8 V6 a4 4 0 0 1 8 0 V8 M5 8 H15 V16 H5 Z M8 8 V10 M12 8 V10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="miter"/></svg>';}
@@ -2801,7 +2838,7 @@ function actCardInner(a,prog){
   }
   if(p.content){
     const c=p.content;
-    bars.push(`<div class="progbar ${c.pct>=100?'ok':''}"><i style="width:${c.pct}%"></i></div><div class="act-sum">✅ 内容进度 ${c.pct}% · ${c.done}/${c.total} 项</div>`);
+    bars.push(`<div class="progbar ${c.pct>=100?'ok':''}"><i style="width:${c.pct}%"></i></div><div class="act-sum">${chkSvg()} 内容进度 ${c.pct}% · ${c.done}/${c.total} 项</div>`);
   }
   if(bars.length===0){
     if(p.ty==='ticket'){
@@ -2815,6 +2852,7 @@ function actCardInner(a,prog){
   const statusTag = st? `<span class="tag ${st.cls}">${st.txt}</span>` : (ttotal?`<span class="hint">子项 ${tdone}/${ttotal}</span>`:'');
   const doneChk = (p.ty==='binary')? chkBox(((D.game.actDone||{})[a.id]),"gActDone('"+a.id+"',this.checked)") :'';
   const tempBtn = (!p.doneAll)? `<button class="btn ghost sm" onclick="gActTempDone('${a.id}')" title="标记今天暂时完成">今日完成</button>`:'';
+  const eaBtn = `<button class="btn ghost sm" onclick="gArchiveNow('${a.id}')" title="活动未结束也可提前归档">${icoBox()} 提前归档</button>`;
   const drag=dragSpan('activity',a.id);
   const ats=(D.game.actDoneTs||{})[a.id];
   const anote=gameNote(a.id);const aexp=gameNoteExp[a.id];
@@ -2834,7 +2872,7 @@ function actCardInner(a,prog){
     </div>
     ${folded?'':`<div class="fold-c">
       <div class="act-meta" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px">
-        ${statusTag} ${a.type?`<span class="tag">${esc(a.type)}</span>`:''} ${a.reward?`<span class="tag alt">${esc(a.reward)}</span>`:''} ${a.priority?`<span class="tag">${esc(a.priority)}</span>`:''} <span class="spacer"></span><span class="hint">${fmtDt(a.start)} ~ ${fmtDt(a.end)}</span> ${tempBtn} <button class="note-btn" title="备注" onclick="gameNoteToggle('${a.id}')">${icoNote()}</button>
+        ${statusTag} ${a.type?`<span class="tag">${esc(a.type)}</span>`:''} ${a.reward?`<span class="tag alt">${esc(a.reward)}</span>`:''} ${a.priority?`<span class="tag">${esc(a.priority)}</span>`:''} <span class="spacer"></span><span class="hint">${fmtDt(a.start)} ~ ${fmtDt(a.end)}</span> ${eaBtn} ${tempBtn} <button class="note-btn" title="备注" onclick="gameNoteToggle('${a.id}')">${icoNote()}</button>
       </div>
       ${ats?`<div class="sub hint">${chkSvg()} 完成于 ${fmtTime(ats)}</div>`:''}
       ${anote?`<div class="sub note-line">${icoNote()} ${esc(anote.text)} <span class="hint">${fmtTime(anote.time)}</span></div>`:''}
@@ -3179,7 +3217,7 @@ function gameActivityTpl(){
     </div>`;
   }).join('');
   const archivedN=(D.game.actArchive||[]).length;
-  const archHint=archivedN?`<div class="hint" style="margin:8px 0 0">📦 已自动归档 ${archivedN} 个过期活动至「模板库」页签，可一键引入复用。</div>`:'';
+  const archHint=archivedN?`<div class="hint" style="margin:8px 0 0">${icoBox()} 已自动归档 ${archivedN} 个过期活动至「模板库」页签，可一键引入复用。</div>`:'';
   return `${rows}
     ${archHint}
     <button class="btn ghost sm" onclick="gAddAct()">＋ 新增活动</button>`;
@@ -3316,7 +3354,7 @@ function movieDelType(old){ if(MOVIE_CATS.indexOf(old)>=0){toast('内置类别�
 const MOVIE_CAT_COLOR={'电影':'#B98AA8','动漫':'#7BA8C4','电视剧':'#6E8B8B','综艺':'#C49A6C','纪录片':'#7E9A7E','自定义':'#9AA0A6'};
 /* 时长自由录入：支持「分」(纯数字) 或 「h:mm:ss / h:mm」(时分秒)，也可纯文字；不报错，并能反推分钟数 */
 function parseDuration(d){ if(d==null)return null; d=String(d).trim(); if(d==='')return null; const m=d.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/); if(m){const h=+m[1],mi=+m[2],s=m[3]?+m[3]:0;return Math.round((h*60+mi+s/60)*10)/10;} if(/^\d+(\.\d+)?$/.test(d))return parseFloat(d); return null; }
-function fmtDuration(d){ if(d==null)return ''; d=String(d).trim(); if(d==='')return ''; if(/^\d+:\d{1,2}(?::\d{1,2})?$/.test(d))return d; if(/^\d+(\.\d+)?$/.test(d))return d+' 分'; return d; }
+function fmtDuration(d){ if(d==null)return ''; d=String(d).trim(); if(d==='')return ''; if(/^\d+:\d{1,2}(?::\d{1,2})?$/.test(d))return d; if(/^\d+(\.\d+)?$/.test(d))return d+' 分钟'; return d; }
 const PLATFORMS=['腾讯','爱奇艺','B站','优酷','芒果TV','抖音','影院','网盘','其他'];
 function migrateMovie(){
   if(!Array.isArray(D.movie))D.movie=[];
@@ -3374,7 +3412,7 @@ function movieItem(it){
         ${it.cast?`<span class="tag">主演:${esc(it.cast)}</span>`:''}
         ${it.duration?`<span class="tag">${fmtDuration(it.duration)}</span>`:''}
         ${it.platform?`<span class="tag">${esc(it.platform)}</span>`:''}
-        ${it.watchLoc?`<span class="tag">${esc(it.watchLoc)}</span>`:''}
+        ${it.watchLoc&&it.watchLoc!==it.platform?`<span class="tag">${esc(it.watchLoc)}</span>`:''}
         ${it.tags?`<span class="tag alt">${esc(it.tags)}</span>`:''}
         ${it.rewatch?`<span class="tag">重温${it.rewatch}次</span>`:''}
         ${it.recommend?`<span class="tag alt">年度Top</span>`:''}
@@ -3409,12 +3447,20 @@ function movieSeriesCard(items){
   return h;
 }
 function movieEpRow(it){
+  const _plat=it.platform?esc(it.platform):'';
+  const _loc=it.watchLoc?esc(it.watchLoc):'';
+  let _meta=fmtDate(it.date);
+  if(it.duration)_meta+=' · '+fmtDuration(it.duration);
+  if(_plat)_meta+=' · '+_plat;
+  if(_loc&&_loc!==_plat)_meta+=(_loc.length>6?'<br>':' · ')+_loc;
+  if(it.src)_meta+=' · 推荐:'+esc(it.src);
   return `<div class="ep-row">
     <div class="ep-main"><span class="ep-name">${esc(it.ep||'正片')}</span>${it.epKind&&it.epKind!=='正片'?`<span class="ep-kind">${esc(it.epKind)}</span>`:''}</div>
-    <div class="ep-meta">${fmtDate(it.date)} · ${it.duration?fmtDuration(it.duration):''} · ${it.platform?esc(it.platform):''} · ${it.watchLoc?esc(it.watchLoc):''}${it.src?(' · 推荐:'+esc(it.src)):''}</div>
+    <div class="ep-meta">${_meta}</div>
     <div class="ep-acts"><button class="btn ghost sm" onclick="openEdit('movie','${it.id}')">编辑</button><button class="del" onclick="delItem('movie','${it.id}')">×</button></div>
   </div>`;
 }
+function moviePlatChg(){const el=document.getElementById('mf_loc');if(!el)return;const pv=(document.getElementById('mf_plat')||{}).value||'';if(!el.value)el.value=(pv==='影院'?'影院':'');el.placeholder=(pv==='影院'?'具体影院名，如：万达影城(朝阳店)':'如：酒店3201房 / 高铁上');}
 function movieToggleFold(arg){const name=(arg&&arg.dataset)?arg.dataset.series:arg;movieFold[name]=!movieFold[name];const c=(arg&&arg.closest)?arg.closest('.series-card'):null;if(c)c.classList.toggle('folded');}
 function renderMovieStats(){
   const all=D.movie||[];
@@ -3488,7 +3534,7 @@ function movieForm(){
     </div>
     <div class="field"><label>${epLabel}</label><input type="text" id="mf_ep" value="${epV}" placeholder="第5期 / 先导片 / 全片" onkeydown="if(event.key==='Enter')addMovie()"></div>
     <div class="row">
-      <div class="field"><label>类别</label><select id="mf_cat" onchange="movieCatChg()">${movieAllTypes().map(c=>`<option ${c===catV?'selected':''}>${esc(c)}</option>`).join('')}</select> <button class="btn ghost sm" onclick="movieAddType()">＋</button> <button class="btn ghost sm" onclick="movieRenameType($('#mf_cat').value)">✎</button> <button class="btn ghost sm" onclick="movieDelType($('#mf_cat').value)">🗑</button></div>
+      <div class="field"><label>类别</label><select id="mf_cat" onchange="movieCatChg()">${movieAllTypes().map(c=>`<option ${c===catV?'selected':''}>${esc(c)}</option>`).join('')}</select> <button class="btn ghost sm" onclick="movieAddType()">＋</button> <button class="btn ghost sm" onclick="movieRenameType($('#mf_cat').value)">${icoPencil()}</button> <button class="btn ghost sm" onclick="movieDelType($('#mf_cat').value)">${icoTrash()}</button></div>
       <div class="field"><label>国别</label><input type="text" id="mf_country" value="${countryV}"></div>
       <div class="field"><label>导演</label><input type="text" id="mf_dir" value="${dirV}"></div>
     </div>
@@ -3498,10 +3544,10 @@ function movieForm(){
       <div class="field" style="flex:0 0 120px"><label>时间</label><input type="text" id="mf_date_t" class="timepick" readonly placeholder="选择" value="${timeV}" onclick="openTP(this,this.value)"></div>
     </div>
     <div class="b4">
-      <div class="field"><label>时长（分 或 h:mm:ss）</label><input type="text" id="mf_dur" value="${durV}" placeholder="如 95 或 1:41:55"></div>
+      <div class="field"><label>时长（分钟 或 h:mm:ss）</label><input type="text" id="mf_dur" value="${durV}" placeholder="如 95 或 1:41:55"></div>
       <div class="field"><label>性质</label><select id="mf_kind">${['正片','花絮','特辑','其他'].map(o=>`<option ${o===kindV?'selected':''}>${esc(o)}</option>`).join('')}</select></div>
-      <div class="field"><label>观看平台</label><select id="mf_plat"><option value="">请选择</option>${PLATFORMS.map(p=>`<option ${p===platV?'selected':''}>${esc(p)}</option>`).join('')}</select></div>
-      <div class="field"><label>观影地点</label><select id="mf_loc"><option value="">请选择</option>${['影院','居家','朋友家'].map(o=>`<option ${o===locV?'selected':''}>${esc(o)}</option>`).join('')}</select></div>
+      <div class="field"><label>观看平台</label><select id="mf_plat" onchange="moviePlatChg()"><option value="">请选择</option>${PLATFORMS.map(p=>`<option ${p===platV?'selected':''}>${esc(p)}</option>`).join('')}</select></div>
+      <div class="field"><label>观影地点</label><input id="mf_loc" type="text" value="${esc(locV)}" placeholder="${platV==='影院'?'具体影院名，如：万达影城(朝阳店)':'如：酒店3201房 / 高铁上'}"></div>
     </div>
     <div class="field"><label>个人标签(逗号分隔)</label><input type="text" id="mf_tags" value="${tagsV}" placeholder="科幻,悬疑"></div>
     <div class="field"><label>短评 / 感想</label><textarea id="mf_comment">${commentV}</textarea></div>
@@ -3611,7 +3657,7 @@ function quarterItem(it){
   const done=c>=t&&t>0;
   let body='';
   if(it.mode==='milestone'){const ms=(it.milestones||[]);const md=ms.filter(m=>m.done).length;body=`<div class="sub">${md}/${ms.length} 里程碑</div>`+ms.map(m=>`<div class="sub"><input type="checkbox" ${m.done?'checked':''} onchange="qMs('${it.id}','${m.id}',this.checked)"> ${esc(m.name)}</div>`).join('');}
-  else if(it.mode==='binary'){body=`<div class="sub">二元目标：${done?'已完成✅':'未完成'}</div>`;}
+  else if(it.mode==='binary'){body=`<div class="sub">二元目标：${done?'已完成${chkSvg()}':'未完成'}</div>`;}
   else body=`<div class="sub">${c} / ${t}</div>`;
   return `<div class="item ${done?'done':''}">
     <div class="body">
@@ -3844,7 +3890,7 @@ function renderWish(){
         <button type="button" class="${wishGroupBy==='category'?'on':''}" onclick="wishGroupBy='category';wishPage=1;renderWish()">按分类</button>
       </span>
       <span style="flex:1"></span>
-      <button class="btn ghost sm ${wishArch?'on':''}" onclick="wishArch=!wishArch;wishPage=1;renderWish()">📦 ${wishArch?'返回活跃':'已归档'}</button>
+      <button class="btn ghost sm ${wishArch?'on':''}" onclick="wishArch=!wishArch;wishPage=1;renderWish()">${icoBox()} ${wishArch?'返回活跃':'已归档'}</button>
     </div>`;
     if(wishGroupBy==='reason'){
       html+=wishReasonChips();
@@ -3917,7 +3963,7 @@ function wishItem(it, showReason){
       ${it.note?`<div class="emptybox">📝 ${esc(it.note)}</div>`:''}
     </div>
     <div class="item-acts">
-      ${archived?`<button class="btn ghost sm" onclick="unarchive('wish','${it.id}')">↩ 取消归档</button>`:`<button class="btn ghost sm" onclick="archiveOne('wish','${it.id}')">📦 归档</button>`}
+      ${archived?`<button class="btn ghost sm" onclick="unarchive('wish','${it.id}')">${icoUndo()} 取消归档</button>`:`<button class="btn ghost sm" onclick="archiveOne('wish','${it.id}')">${icoBox()} 归档</button>`}
       <button class="btn ghost sm" onclick="openEdit('wish','${it.id}')">✏️ 编辑</button>
       <button class="btn ghost sm" onclick="wishBuy('${it.id}')">${done?'取消实现':'标记实现'}</button>
       <button class="del" onclick="delItem('wish','${it.id}')">×</button>
@@ -4564,7 +4610,7 @@ function renderChecklist(){
       <button class="btn ghost sm" onclick="openEdit('checklist','${x.id}')">✏️ 编辑</button>
       <button class="del" onclick="chkDel('${x.id}')">×</button>
     </div>`;}).join(''):'<div class="hint">还没有每日必做事项，在下面添加一行（如：抖音续火）</div>';
-  return `${foldCard("✅ 每日打卡", "fc_5", false, `
+  return `${foldCard("${chkSvg()} 每日打卡", "fc_5", false, `
     <div class="pbar" style="margin-bottom:10px"><i style="width:${pct}%"></i></div>
     ${list}
     <div class="row" style="margin-top:10px;align-items:flex-end">
@@ -5037,6 +5083,34 @@ function bootTheme(){
   if(THEME_PALETTE[th]){applyTheme(th);return;}
   applyTheme(autoSeason());
 }
+/* 液态玻璃背景：动态光斑层 + 磨砂卡片（v75.6.1）。着色全部来自根级主题变量，48 色皮肤自动染色。 */
+function getGlass(){return (D&&D._meta&&D._meta.glass)||'mid';}
+function setGlass(lv){if(D&&D._meta){D._meta.glass=lv;save();}applyGlass();}
+function applyGlass(){
+  const lv=getGlass();
+  document.body.classList.toggle('glass-on',lv!=='off');
+  document.body.classList.remove('glass-light','glass-mid','glass-strong');
+  if(lv==='light')document.body.classList.add('glass-light');
+  else if(lv==='strong')document.body.classList.add('glass-strong');
+  else if(lv==='mid')document.body.classList.add('glass-mid');
+  renderGlassCtl();
+}
+function renderGlassCtl(){
+  const el=document.getElementById('glassCtl');if(!el)return;
+  const lv=getGlass();
+  const opts=[['off','关'],['light','轻'],['mid','中'],['strong','强']];
+  el.innerHTML=opts.map(o=>`<span class="chip ${lv===o[0]?'on':''}" onclick="setGlass('${o[0]}')">${o[1]}</span>`).join('');
+}
+function initGlass(){
+  const main=document.querySelector('.main');if(!main)return;
+  if(!document.getElementById('glassLayer')){
+    const layer=document.createElement('div');
+    layer.className='glass-layer';layer.id='glassLayer';
+    layer.innerHTML='<div class="gp"></div><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>';
+    main.insertBefore(layer,main.firstChild);
+  }
+  applyGlass();
+}
 /* ============ 双色搭配（v71 补回 v66 功能） ============ */
 let bcA='#4F7365', bcB='#97A6B2';
 function bcSyncFromSaved(){ if(D&&D._meta&&D._meta.dual){ bcA=D._meta.dual.a||bcA; bcB=D._meta.dual.b||bcB; } }
@@ -5111,7 +5185,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.6.0';
+const APP_VER='v75.6.1';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -5307,7 +5381,7 @@ function renderSyncModal(){
   html+=`<div style="border-top:1px dashed var(--border);margin-top:14px;padding-top:12px">
     <b>💾 本地文件 & 三重备份</b>
     <div class="hint" style="margin:6px 0">这里是<b>可选的额外备份</b>（把数据再多存一份到本机硬盘 / 坚果云）。<br><b>三端数据互通只看上方「云同步」，这一整块不配也完全不影响使用。</b></div>
-    <div class="hint" style="margin-bottom:8px;color:${__SERVER__?'#2d8659':'#b8860b'}">${__SERVER__?'✅ 已连本地服务（硬盘模式）':'⚠️ 未检测到本地服务，请先运行 server.js'}</div>
+    <div class="hint" style="margin-bottom:8px;color:${__SERVER__?'#2d8659':'#b8860b'}">${__SERVER__?'${chkSvg()} 已连本地服务（硬盘模式）':'⚠️ 未检测到本地服务，请先运行 server.js'}</div>
     <div style="border:var(--bw) solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px">
       <b>GitHub 仓库（本机 server.js 自动提交备份）</b>
       <div class="hint" style="margin:4px 0">仅在电脑运行 server.js 时生效：每次保存自动 git 提交推送。<b>若只是想三端互通，用上方「云同步」即可，这里可以留空。</b></div>
@@ -5326,7 +5400,7 @@ function renderSyncModal(){
   </div>`;
   /* 数据码：不依赖云端，设备间直接互传（云同步失败时的可靠兜底）*/
   html+=`<div style="border-top:1px dashed var(--border);margin-top:14px;padding-top:12px">
-    <b>📦 数据码（不依赖云端，设备间直接互传）</b>
+    <b>${icoBox()} 数据码（不依赖云端，设备间直接互传）</b>
     <div class="hint" style="margin:6px 0">导出：把本机<b>全部数据</b>生成一段码，复制到其他设备粘贴即可。<br><b>推荐用「合并导入」</b>：两份数据逐条取并集，两边的东西都保住；「覆盖导入」才会整份替换本机。</div>
     <button class="btn ghost" onclick="exportDataCode()">导出本机数据码</button>
     <textarea id="db_code" placeholder="粘贴数据码后点「合并导入」" style="font-size:calc(var(--fs)*0.733);margin:8px 0"></textarea>
@@ -5692,7 +5766,7 @@ async function init(){
   currentModule=(D._meta&&D._meta.activeModule)||'note';
   // 主题
   bootTheme();
-  renderNav();renderModule();renderTopDate();renderSyncRow();renderVer();applyFs();applyFw();applyFont();initSelectUpgrade();setupTouchDrag();
+  renderNav();renderModule();renderTopDate();renderSyncRow();renderVer();applyFs();applyFw();applyFont();initSelectUpgrade();setupTouchDrag();initGlass();
   // 非侵入式区块折叠：监听 #content 变化自动给 .card-h 接线点击折叠（绝不改写卡片内部）
   try{
     const _ce=document.getElementById('content');
@@ -5762,6 +5836,8 @@ const PLAN_ROW_ST={plan:'待办',done:'已完成',skip:'跳过',off:'已停用'}
 
 let planTab='live', planFilter='全部', planOpen=null, planSec='overview';
 let planPrepTab='trans', planLibCat='全部', planLibQ='', planLibPlace='全部';
+let planGoodsEdit=false;          // 物品清单：false=查看态(分类折叠精简) / true=编辑态(详细表单)
+let planGoodsFold={};             // 查看态各分类折叠状态
 let planLedgerTab='exp', planNewType='出游', planPickCb=null;
 let planUndoStack=[];
 
@@ -5920,7 +5996,7 @@ function planNewForm(){
   return `<div class="card"><div class="card-h"><h2>＋ 新建事项</h2></div>
     <div class="row">
       <div class="field" style="flex:2;min-width:200px"><label>事项标题 *</label><input id="pl_title" placeholder="如：十一洛阳行 / 二建备考"></div>
-      <div class="field"><label>事项类型</label><select id="pl_type">${planAllTypes().map(t=>`<option ${planNewType===t?'selected':''}>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="planAddType()">＋</button> <button class="btn ghost sm" onclick="planRenameType($('#pl_type').value)">✎</button> <button class="btn ghost sm" onclick="planDelType($('#pl_type').value)">🗑</button></div>
+      <div class="field"><label>事项类型</label><select id="pl_type">${planAllTypes().map(t=>`<option ${planNewType===t?'selected':''}>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="planAddType()">＋</button> <button class="btn ghost sm" onclick="planRenameType($('#pl_type').value)">${icoPencil()}</button> <button class="btn ghost sm" onclick="planDelType($('#pl_type').value)">${icoTrash()}</button></div>
       <div class="field"><label>地点 / 关键词</label><input id="pl_place" placeholder="如：洛阳"></div>
     </div>
     <div class="row">
@@ -5958,7 +6034,7 @@ function renderPlanDetail(it){
   let html=`<div class="pl-bar">
     <button class="btn ghost sm" onclick="planBack()">‹ 返回列表</button>
     <div class="pl-bar-t">${PLAN_TYPE_IC[it.type]||icoPin()} ${esc(it.title||'未命名事项')}${it.status==='archived'?'<span class="tag">已归档</span>':''}</div>
-    <button class="btn ghost sm" onclick="planUndo()" title="撤销上一步（保留 20 步）">↶ 撤销</button>
+    <button class="btn ghost sm" onclick="planUndo()" title="撤销上一步（保留 20 步）">${icoUndo()} 撤销</button>
   </div>
   <div class="pl-secbar">${secs.map(s=>`<div class="pl-sec ${planSec===s[0]?'on':''}" onclick="planSec='${s[0]}';renderPlan()"><span>${s[2]}</span>${s[1]}</div>`).join('')}</div>`;
   if(planSec==='overview')html+=planOverview(it);
@@ -5985,10 +6061,10 @@ function planOverview(it){
   else if(it.start&&it.end&&today>=it.start&&today<=it.end){cdTxt='进行中 · 第 '+(dDiff(it.start,today)+1)+' 天 / 共 '+(dDiff(it.start,it.end)+1)+' 天';cdCls='on';}
   else if(it.end&&today>it.end){cdTxt='已结束 '+dDiff(it.end,today)+' 天';cdCls='off';}
   const bal=planBalance(it);
-  let html=`<div class="card"><div class="card-h"><h2>📊 概览</h2><span class="spacer"></span><span class="pl-cd2 ${cdCls}">${cdTxt}</span></div>
+  let html=`<div class="card"><div class="card-h"><h2>📊 概览</h2><span class="tag" style="margin-left:4px">${esc(it.type)}</span><span class="spacer"></span><span class="pl-cd2 ${cdCls}">${cdTxt}</span></div>
     <div class="row">
       <div class="field" style="flex:2;min-width:180px"><label>事项标题</label><input value="${esc(it.title)}" onchange="planSet('${it.id}','title',this.value)"></div>
-      <div class="field"><label>事项类型</label><select onchange="planTypeChange('${it.id}',this.value)">${planAllTypes().map(t=>`<option ${it.type===t?'selected':''}>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="planAddType()">＋</button> <button class="btn ghost sm" onclick="planRenameType('${it.type}')">✎</button> <button class="btn ghost sm" onclick="planDelType('${it.type}')">🗑</button></div>
+      <div class="field"><label>事项类型</label><select onchange="planTypeChange('${it.id}',this.value)">${planAllTypes().map(t=>`<option ${it.type===t?'selected':''}>${t}</option>`).join('')}</select> <button class="btn ghost sm" onclick="planAddType()">＋</button> <button class="btn ghost sm" onclick="planRenameType('${it.type}')">${icoPencil()}</button> <button class="btn ghost sm" onclick="planDelType('${it.type}')">${icoTrash()}</button></div>
       <div class="field"><label>地点 / 关键词</label><input value="${esc(it.place)}" placeholder="如：洛阳" onchange="planSet('${it.id}','place',this.value)"></div>
     </div>
     <div class="row">
@@ -5996,7 +6072,7 @@ function planOverview(it){
       <div class="field"><label>结束日期</label><input type="date" value="${esc(it.end)}" onchange="planSetR('${it.id}','end',this.value)"></div>
       <div class="field"><label>状态</label><select onchange="planSetR('${it.id}','status',this.value)"><option value="live" ${it.status!=='archived'?'selected':''}>筹备中</option><option value="archived" ${it.status==='archived'?'selected':''}>已归档</option></select></div>
     </div>
-    <div class="field"><label>整体备注</label><textarea placeholder="这次筹备的总体思路、要注意的事…" onchange="planSet('${it.id}','note',this.value)">${esc(it.note)}</textarea></div>
+    <div class="field" style="flex:1 1 100%"><label>整体备注（总体思路、注意事项…）</label><textarea rows="4" style="min-height:92px" placeholder="这次筹备的总体思路、要注意的事…" onchange="planSet('${it.id}','note',this.value)">${esc(it.note)}</textarea></div>
   </div>`;
 
   // 数字卡
@@ -6021,7 +6097,7 @@ function planOverview(it){
         ${it.members.map(m=>{const b=bal.per[m.id]||{share:0,paid:0,trans:0,net:0};
           return `<div class="pl-balrow"><span class="nm">${esc(m.name||m.code)}</span><span>${fmtMoney(b.share)}</span><span>${fmtMoney(b.paid)}</span><span>${fmtMoney(b.trans)}</span><span class="${b.net>0.005?'neg':(b.net<-0.005?'pos':'')}">${it.ledger.settled?'已结清':fmtMoney(b.net)}</span></div>`;}).join('')}
       </div>
-      ${it.ledger.settled?`<div class="hint" style="margin-top:8px">✅ 已于 ${esc(it.ledger.settled.date)} 结清${it.ledger.settled.note?'：'+esc(it.ledger.settled.note):''} <button class="btn ghost sm" onclick="planUnsettle('${it.id}')">撤销结清</button></div>`
+      ${it.ledger.settled?`<div class="hint" style="margin-top:8px">${chkSvg()} 已于 ${esc(it.ledger.settled.date)} 结清${it.ledger.settled.note?'：'+esc(it.ledger.settled.note):''} <button class="btn ghost sm" onclick="planUnsettle('${it.id}')">撤销结清</button></div>`
         :`<div class="hint" style="margin-top:8px">结余仅作参考。差不多了就点 <button class="btn ghost sm" onclick="planSettle('${it.id}')">就此两清</button></div>`}
     </div>`;
   }
@@ -6120,20 +6196,30 @@ function planPrep(it,cfg){
   else html+=planTickets(it);
   return html;
 }
-/* 往返大交通：按人分行 */
+/* 往返大交通：按出发日期自动分组 + 途经点 + 一气呵成/分段式 */
 function planTrans(it){
+  const mode=it.prep.transMode||'分段式';
+  const rd=t=>(t.date)||(t.dir==='去'?(it.start||''):(t.dir==='返'?(it.end||''):''));
   let html=`<div class="card"><div class="card-h"><h2>🚄 往返大交通</h2><span class="spacer"></span>
     <button class="btn ghost sm" onclick="planTransAdd('${it.id}','去')">＋ 去程</button>
     <button class="btn ghost sm" onclick="planTransAdd('${it.id}','返')">＋ 返程</button></div>`;
-  if(!it.prep.trans.length)html+=`<div class="hint">还没有车次。按人分别添加去程 / 返程，可记放票时间、多档票价与已购状态。</div>`;
-  ['去','返'].forEach(dir=>{
-    const rows=it.prep.trans.filter(t=>t.dir===dir);
-    if(!rows.length)return;
-    html+=`<div class="pl-grouph">${dir==='去'?'▶ 去程':'◀ 返程'}</div>`;
+  html+=`<div class="row" style="gap:8px;align-items:center;margin:-2px 0 8px">
+    <span class="hint" style="margin:0">行程结构</span>
+    <span class="chip ${mode==='一气呵成'?'on':''}" onclick="planTransSetMode('${it.id}','一气呵成')">一气呵成</span>
+    <span class="chip ${mode==='分段式'?'on':''}" onclick="planTransSetMode('${it.id}','分段式')">分段式</span>
+    <span class="hint" style="margin:0;flex:1;min-width:160px">${mode==='一气呵成'?'整段一条记录即可，途经点填在下方「途经点」栏':'可分多段，每段一个车次，途经点填在对应段'}</span>
+  </div>`;
+  if(!it.prep.trans.length)html+=`<div class="hint">还没有车次。按人分别添加去程 / 返程，可记放票时间、多档票价、途经点与已购状态。</div>`;
+  const groups={};
+  it.prep.trans.forEach(t=>{const k=rd(t)||'未设日期';(groups[k]=groups[k]||[]).push(t);});
+  Object.keys(groups).sort((a,b)=>a.localeCompare(b)).forEach(k=>{
+    const rows=groups[k];
+    html+=`<div class="pl-grouph">📅 ${k==='未设日期'?'未设日期':dMd(k)} <span class="hint">${rows.length} 段</span></div>`;
     rows.forEach(t=>{
       const m=it.members.find(x=>x.id===t.memberId);
       html+=`<div class="pl-box ${t.bought?'ok':''}">
         <div class="pl-boxh">
+          <span class="tag ${t.dir==='去'?'':'alt'}" style="margin:0">${t.dir==='去'?'▶ 去程':'◀ 返程'}</span>
           <select class="pl-mini" onchange="planTransSet('${it.id}','${t.id}','memberId',this.value)">
             <option value="">未指定成员</option>
             ${it.members.map(x=>`<option value="${x.id}" ${t.memberId===x.id?'selected':''}>${esc(x.name||x.code)}</option>`).join('')}
@@ -6144,10 +6230,12 @@ function planTrans(it){
         </div>
         <div class="row">
           <div class="field"><label>车次 / 航班</label><input value="${esc(t.train||'')}" placeholder="K1094 / MU5100" onchange="planTransSet('${it.id}','${t.id}','train',this.value)"></div>
+          <div class="field"><label>出发日期</label><input type="date" value="${esc(rd(t))}" onchange="planTransSet('${it.id}','${t.id}','date',this.value);renderPlan()"></div>
           <div class="field"><label>出发站</label><input value="${esc(t.from||'')}" placeholder="${esc((m&&m.origin)||'出发站')}" onchange="planTransSet('${it.id}','${t.id}','from',this.value)"></div>
           <div class="field"><label>到达站</label><input value="${esc(t.to||'')}" onchange="planTransSet('${it.id}','${t.id}','to',this.value)"></div>
         </div>
         <div class="row">
+          <div class="field"><label>途经点</label><input value="${esc(t.via||'')}" placeholder="郑州 · 武汉（多段用 · 隔开）" onchange="planTransSet('${it.id}','${t.id}','via',this.value)"></div>
           <div class="field"><label>发车时刻</label><input value="${esc(t.dep||'')}" placeholder="21:35" onchange="planTransSet('${it.id}','${t.id}','dep',this.value)"></div>
           <div class="field"><label>到达时刻</label><input value="${esc(t.arr||'')}" placeholder="次日 07:12" onchange="planTransSet('${it.id}','${t.id}','arr',this.value)"></div>
           <div class="field"><label>总用时</label><input value="${esc(t.dur||'')}" placeholder="9h37m" onchange="planTransSet('${it.id}','${t.id}','dur',this.value)"></div>
@@ -6163,7 +6251,8 @@ function planTrans(it){
   });
   return html+`</div>`;
 }
-function planTransAdd(id,dir){const it=planFind(id);if(!it)return;planOpen=id;planSnap('新增车次');it.prep.trans.push({id:uid(),dir:dir,memberId:(it.members[0]||{}).id||'',train:'',from:'',to:'',dep:'',arr:'',dur:'',sellTime:'',price:'',fareOpts:'',bought:false,note:''});save();renderPlan();}
+function planTransSetMode(id,v){const it=planFind(id);if(!it)return;it.prep.transMode=v;save();renderPlan();}
+function planTransAdd(id,dir){const it=planFind(id);if(!it)return;planOpen=id;planSnap('新增车次');it.prep.trans.push({id:uid(),dir:dir,date:dir==='去'?(it.start||''):(dir==='返'?(it.end||''):''),memberId:(it.members[0]||{}).id||'',train:'',from:'',to:'',via:'',dep:'',arr:'',dur:'',sellTime:'',price:'',fareOpts:'',bought:false,note:''});save();renderPlan();}
 function planTransSet(id,rid,k,v){const it=planFind(id);if(!it)return;const r=it.prep.trans.find(x=>x.id===rid);if(!r)return;r[k]=v;save();}
 function planTransDel(id,rid){const it=planFind(id);if(!it)return;if(!confirm('删除这条车次？'))return;planOpen=id;planSnap('删除车次');const a=it.prep.trans;a.splice(a.findIndex(x=>x.id===rid),1);save();renderPlan();}
 
@@ -6203,37 +6292,105 @@ function planWxFill(id){
 function planWxSet(id,rid,k,v){const it=planFind(id);if(!it)return;const r=it.prep.weather.rows.find(x=>x.id===rid);if(!r)return;r[k]=v;save();}
 function planWxDel(id,rid){const it=planFind(id);if(!it)return;const a=it.prep.weather.rows;a.splice(a.findIndex(x=>x.id===rid),1);save();renderPlan();}
 
-/* 物品清单：三分栏（都带/各自带/需购买）× 五类分组 */
+/* 物品清单：查看态（按分类折叠精简行）/ 编辑态（详细表单）＋ 分类自定义 ＋ 购买人 */
+function planGoodsCats(it){return (it.prep.goodsCats&&it.prep.goodsCats.length)?it.prep.goodsCats:PLAN_GOODS_CATS;}
 function planGoods(it){
   const gs=it.prep.goods;
   const total=gs.length,doneN=gs.filter(x=>x.done).length;
+  const cats=planGoodsCats(it);
   let html=`<div class="card"><div class="card-h"><h2>🎒 物品清单</h2><span class="spacer"></span>
     <span class="hint">${doneN}/${total} 已备齐</span>
+    <button class="btn ghost sm" onclick="planGoodsEdit=!planGoodsEdit;renderPlan()">${planGoodsEdit?'查看态':'编辑态'}</button>
     <button class="btn ghost sm" onclick="planGoodsAdd('${it.id}')">＋ 一项</button>
-    <button class="btn ghost sm" onclick="planGoodsTpl('${it.id}')">套用清单模板</button>
-    <button class="btn ghost sm" onclick="planGoodsSaveTpl('${it.id}')">存为清单模板</button></div>`;
+    <button class="btn ghost sm" onclick="planGoodsTpl('${it.id}')">套用模板</button>
+    <button class="btn ghost sm" onclick="planGoodsSaveTpl('${it.id}')">存为模板</button>
+    <button class="btn ghost sm" onclick="planGoodsCatMgr('${it.id}')" title="管理分类">${icoGear()}</button></div>`;
   if(total)html+=`<div class="progbar ${doneN>=total?'ok':''}" style="margin-bottom:10px"><i style="width:${total?Math.round(doneN/total*100):0}%"></i></div>`;
-  PLAN_GOODS_OWN.forEach(own=>{
-    const sub=gs.filter(g=>(g.own||'都带')===own);
-    html+=`<div class="pl-grouph">${own==='都带'?'🤝 都要带':own==='各自带'?'🙋 各自带':'🛍 购买清单'} <span class="hint">${sub.length} 项</span></div>`;
-    if(!sub.length){html+=`<div class="hint" style="padding:2px 0 8px">暂无</div>`;return;}
-    PLAN_GOODS_CATS.forEach(cat=>{
-      const rows=sub.filter(g=>(g.cat||'其他')===cat);
+
+  if(!planGoodsEdit){
+    /* —— 查看态：按分类折叠，精简只读行 —— */
+    if(!total)html+=`<div class="hint">还没有物品，点「＋ 一项」添加，或「套用模板」。</div>`;
+    const known=new Set(cats);
+    cats.forEach(cat=>{
+      const rows=gs.filter(g=>(g.cat||'其他')===cat);
       if(!rows.length)return;
-      html+=`<div class="pl-catline"><span class="dot"></span>${cat}</div>`;
-      html+=rows.map(g=>`<div class="pl-gdrow ${g.done?'done':''}">
-        <input type="checkbox" ${g.done?'checked':''} onchange="planGoodsSet('${it.id}','${g.id}','done',this.checked);renderPlan()">
-        <input class="gd-n" value="${esc(g.name||'')}" placeholder="物品名称" onchange="planGoodsSet('${it.id}','${g.id}','name',this.value)">
-        <input class="gd-q" value="${esc(g.qty||'')}" placeholder="数量" onchange="planGoodsSet('${it.id}','${g.id}','qty',this.value)">
-        <select class="gd-s" onchange="planGoodsSet('${it.id}','${g.id}','cat',this.value);renderPlan()">${PLAN_GOODS_CATS.map(c=>`<option ${(g.cat||'其他')===c?'selected':''}>${c}</option>`).join('')}</select>
-        <select class="gd-s" onchange="planGoodsSet('${it.id}','${g.id}','own',this.value);renderPlan()">${PLAN_GOODS_OWN.map(c=>`<option ${(g.own||'都带')===c?'selected':''}>${c}</option>`).join('')}</select>
-        ${own==='需购买'?`<label class="pl-chk sm"><input type="checkbox" ${g.toHotel?'checked':''} onchange="planGoodsSet('${it.id}','${g.id}','toHotel',this.checked)">寄到酒店</label>`:''}
-        <input class="gd-r" value="${esc(g.note||'')}" placeholder="备注" onchange="planGoodsSet('${it.id}','${g.id}','note',this.value)">
-        <button class="del" onclick="planGoodsDel('${it.id}','${g.id}')">×</button>
-      </div>`).join('');
+      const fold=planGoodsFold[cat],cd=rows.filter(g=>g.done).length;
+      html+=`<div class="pl-catline" onclick="planGoodsFold['${cat}']=!planGoodsFold['${cat}'];renderPlan()" style="cursor:pointer">
+        <span class="dot"></span>${esc(cat)} <span class="hint">${rows.length} 项${cd?' · 已备 '+cd:''}</span>
+        <span class="spacer"></span><span class="pl-daycaret">${fold?'▸':'▾'}</span></div>`;
+      if(!fold)html+=rows.map(g=>planGoodsViewRow(it,g)).join('');
     });
-  });
+    const stray=gs.filter(g=>!known.has(g.cat||'其他'));
+    if(stray.length){
+      html+=`<div class="pl-catline"><span class="dot"></span>其他 <span class="hint">${stray.length} 项</span></div>`+stray.map(g=>planGoodsViewRow(it,g)).join('');
+    }
+  }else{
+    /* —— 编辑态：都带/各自带/需购买 × 分类 详细表单 —— */
+    PLAN_GOODS_OWN.forEach(own=>{
+      const sub=gs.filter(g=>(g.own||'都带')===own);
+      html+=`<div class="pl-grouph">${own==='都带'?'🤝 都要带':own==='各自带'?'🙋 各自带':'🛍 购买清单'} <span class="hint">${sub.length} 项</span></div>`;
+      if(!sub.length){html+=`<div class="hint" style="padding:2px 0 8px">暂无</div>`;return;}
+      cats.forEach(cat=>{
+        const rows=sub.filter(g=>(g.cat||'其他')===cat);
+        if(!rows.length)return;
+        html+=`<div class="pl-catline"><span class="dot"></span>${esc(cat)}</div>`;
+        html+=rows.map(g=>planGoodsEditRow(it,g)).join('');
+      });
+    });
+  }
   return html+`</div>`;
+}
+function planGoodsViewRow(it,g){
+  const own=g.own||'都带';
+  let badge='';
+  if(own==='需购买'){
+    const who=(g.buyer&&g.buyer!=='本人')?(' · 购:'+esc(g.buyer)):'';
+    badge=`<span class="tag alt" style="margin:0">需购买${who}</span>`;
+  }else if(own==='各自带')badge=`<span class="tag" style="margin:0">各自带</span>`;
+  return `<div class="pl-gdrow ${g.done?'done':''}" onclick="planGoodsToggleDone('${it.id}','${g.id}')">
+    <input type="checkbox" ${g.done?'checked':''} onclick="event.stopPropagation();planGoodsToggleDone('${it.id}','${g.id}')">
+    <span class="gd-n">${esc(g.name||'未命名')}</span>
+    ${g.qty?`<span class="gd-q">×${esc(g.qty)}</span>`:''}
+    ${badge}
+    ${g.note?`<span class="gd-r" style="color:var(--muted);font-size:calc(var(--fs)*0.8)">${esc(g.note)}</span>`:''}
+  </div>`;
+}
+function planGoodsEditRow(it,g){
+  const members=it.members;
+  return `<div class="pl-gdrow ${g.done?'done':''}">
+    <input type="checkbox" ${g.done?'checked':''} onchange="planGoodsSet('${it.id}','${g.id}','done',this.checked);renderPlan()">
+    <input class="gd-n" value="${esc(g.name||'')}" placeholder="物品名称" onchange="planGoodsSet('${it.id}','${g.id}','name',this.value)">
+    <input class="gd-q" value="${esc(g.qty||'')}" placeholder="数量" onchange="planGoodsSet('${it.id}','${g.id}','qty',this.value)">
+    <select class="gd-s" onchange="planGoodsSet('${it.id}','${g.id}','cat',this.value);renderPlan()">${planGoodsCats(it).map(c=>`<option ${(g.cat||'其他')===c?'selected':''}>${c}</option>`).join('')}</select>
+    <select class="gd-s" onchange="planGoodsSet('${it.id}','${g.id}','own',this.value);renderPlan()">${PLAN_GOODS_OWN.map(c=>`<option ${(g.own||'都带')===c?'selected':''}>${c}</option>`).join('')}</select>
+    ${g.own==='需购买'?`<select class="gd-s" onchange="planGoodsSet('${it.id}','${g.id}','buyer',this.value)"><option value="本人" ${(g.buyer||'本人')==='本人'?'selected':''}>本人</option>${members.map(m=>`<option ${(g.buyer||'')===(m.name||m.code)?'selected':''}>${esc(m.name||m.code)}</option>`).join('')}</select>`:''}
+    ${g.own==='需购买'?`<label class="pl-chk sm"><input type="checkbox" ${g.toHotel?'checked':''} onchange="planGoodsSet('${it.id}','${g.id}','toHotel',this.checked)">寄到酒店</label>`:''}
+    <input class="gd-r" value="${esc(g.note||'')}" placeholder="备注" onchange="planGoodsSet('${it.id}','${g.id}','note',this.value)">
+    <button class="del" onclick="planGoodsDel('${it.id}','${g.id}')">×</button>
+  </div>`;
+}
+function planGoodsToggleDone(id,gid){const it=planFind(id);if(!it)return;const g=it.prep.goods.find(x=>x.id===gid);if(!g)return;g.done=!g.done;save();renderPlan();}
+function planGoodsCatMgr(id){
+  const it=planFind(id);if(!it)return;
+  const cats=planGoodsCats(it);
+  const acts=['＋ 新增分类'].concat(cats.map(c=>'改名：'+c),cats.map(c=>'删除：'+c));
+  pickChip('物品分类管理（其他可改名；删除后物品归入其他）',acts,'',v=>{
+    if(!v)return;
+    if(v.indexOf('新增')===0){const n=prompt('新分类名称：','');if(!n)return;if(cats.indexOf(n)>=0){toast('已存在');return;}it.prep.goodsCats=cats.concat([n]);save();renderPlan();toast('已新增「'+n+'」');}
+    else if(v.indexOf('改名')>=0){const old=v.replace('改名：','');const n=prompt('把「'+old+'」改名为：',old);if(!n||n===old)return;planGoodsRenameCat(it,old,n);}
+    else if(v.indexOf('删除')>=0){const c=v.replace('删除：','');if(c==='其他'){toast('「其他」不可删除');return;}if(!confirm('删除分类「'+c+'」？其下物品会归入「其他」。'))return;planGoodsDelCat(it,c);}
+  });
+}
+function planGoodsRenameCat(it,old,nu){
+  const cats=planGoodsCats(it).slice();const i=cats.indexOf(old);if(i<0){toast('分类不存在');return;}
+  cats[i]=nu;it.prep.goodsCats=cats;
+  it.prep.goods.forEach(g=>{if((g.cat||'其他')===old)g.cat=nu;});
+  save();renderPlan();toast('已改名');
+}
+function planGoodsDelCat(it,c){
+  it.prep.goodsCats=planGoodsCats(it).filter(x=>x!==c);
+  it.prep.goods.forEach(g=>{if((g.cat||'其他')===c)g.cat='其他';});
+  save();renderPlan();toast('已删除，物品归入其他');
 }
 function planGoodsAdd(id){const it=planFind(id);if(!it)return;it.prep.goods.push({id:uid(),name:'',qty:'1',cat:'其他',own:'都带',done:false,toHotel:false,note:''});save();renderPlan();}
 function planGoodsSet(id,gid,k,v){const it=planFind(id);if(!it)return;const g=it.prep.goods.find(x=>x.id===gid);if(!g)return;g[k]=v;save();}
@@ -6369,9 +6526,9 @@ function planSched(it){
   let html=`<div class="card"><div class="card-h"><h2>🗓 日程表</h2><span class="spacer"></span>
     <button class="btn ghost sm" onclick="planDayAdd('${it.id}')">＋ 一天</button>
     ${it.start&&it.end?`<button class="btn ghost sm" onclick="planDayFill('${it.id}')">按周期铺满</button>`:''}
-    <button class="btn ghost sm" onclick="planSetR('${it.id}','pinAllDates',${!it.pinAllDates})">${it.pinAllDates?'✔ 日期常驻展开':'日期常驻展开'}</button>
-    <button class="btn ghost sm" onclick="planUndo()">↶ 撤销</button></div>
-    <div class="hint">日期行三态：默认只显示日期 → 点日期临时展开 → 点 📌 固定展开（写入数据，下次打开还是展开）。行左侧 ≡ 可拖拽换序，长按可跨时段拖动。</div>`;
+    <button class="btn ghost sm" onclick="planSetR('${it.id}','pinAllDates',${!it.pinAllDates})">${it.pinAllDates?'${chkSvg()} 日期常驻展开':'日期常驻展开'}</button>
+    <button class="btn ghost sm" onclick="planUndo()">${icoUndo()} 撤销</button></div>
+    <div class="hint">日期行三态：默认只显示日期 → 点日期临时展开 → 点固定键 固定展开（写入数据，下次打开还是展开）。行左侧 ≡ 可拖拽换序，长按可跨时段拖动。</div>`;
   const days=it.days;
   if(!days.length)html+=`<div class="empty" style="padding:26px 10px"><div class="em">🗓</div>还没有日程，点「＋ 一天」或「按周期铺满」</div>`;
   const archived=days.filter(d=>d.off);
@@ -6403,7 +6560,7 @@ function planDayCard(it,d,idx){
       <span class="pl-daybits">${bits.map(b=>`<span>${esc(b)}</span>`).join('')}</span>
       ${hasPlanB?`<span class="pl-plansw"><button class="chip ${d.activePlan!=='B'?'on':''}" onclick="planDaySetPlan('${it.id}','${d.id}','A')">方案A</button><button class="chip ${d.activePlan==='B'?'on':''}" onclick="planDaySetPlan('${it.id}','${d.id}','B')">方案B</button></span>`:''}
       <span class="spacer"></span>
-      <button class="pl-mini-b ${d.pinned?'on':''}" onclick="planDayPin('${it.id}','${d.id}')" title="固定展开">📌</button>
+      <button class="pl-mini-b ${d.pinned?'on':''}" onclick="planDayPin('${it.id}','${d.id}')" title="固定展开">${icoPin()}</button>
       <button class="pl-mini-b" onclick="planDayMenu('${it.id}','${d.id}')" title="这一天的操作">⋯</button>
     </div>`;
   if(exp){
@@ -6455,6 +6612,7 @@ function planRowBox(it,d,sg,r){
       <span class="drag" draggable="true" data-kind="planrow" data-id="${r.id}" data-day="${d.id}" data-seg="${sg.id}"
         ondragstart="planDragRow={d:'${d.id}',s:'${sg.id}',r:'${r.id}'};liftStart(this,event)" ondragend="liftEnd()"
         ondragover="event.preventDefault()" ondrop="planRowDrop('${it.id}','${d.id}','${sg.id}','${r.id}')" title="拖拽换序 / 跨时段跨天">≡</span>${planRowMv(it.id,d.id,sg.id,r.id)}
+      <span class="pl-rowchk" title="已完成">${done?chkSvg():''}</span>
       <input class="pl-time" value="${esc(r.time||'')}" placeholder="09:00" onchange="planRowSet('${it.id}','${d.id}','${sg.id}','${r.id}','time',this.value)">
       <input class="pl-rtitle" value="${esc(r.title||'')}" placeholder="行程内容，如 白马寺" onchange="planRowSet('${it.id}','${d.id}','${sg.id}','${r.id}','title',this.value)">
       ${tk?`<span class="tag ${tk.state==='已抢到'?'done':'alt'}" title="已挂票务卡">🎫${esc(tk.name||'')}</span>`:''}
