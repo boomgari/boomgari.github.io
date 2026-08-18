@@ -121,25 +121,14 @@ body.night .tag.actual{background:#1A2A36;color:#5A9EC4;}
 body.night .ep-kind{background:rgba(176,122,46,.2);color:#D4A56C;}
 body.night .del:hover{background:#2A1A1A;}
 body.night .pl-tkcd.hot{background:#3A2222;color:#E08080;}
-/* 日常小记首卡（hero）：v75.6.6 —— 实体主题色 + 智能文字色
- * 设计原则：hero 始终保持不透明主题渐变（不受 glass 透明度影响），
- * 作为工作台第一张卡片要有足够的存在感和可读性。
- * 文字颜色由 JS 通过 --hero-text CSS 变量根据主题色亮度自动设置（ink 函数）。
- * ::after 微暗化层确保即使浅色皮肤也有足够对比度。 */
-.note-hero{color:var(--hero-text,#fff);border:none;border-radius:var(--radius);padding:16px;margin-bottom:14px;overflow:visible;text-shadow:var(--hero-shadow,0 1px 3px rgba(0,0,0,.3));background:linear-gradient(135deg,var(--accent),var(--accent-soft));position:relative;z-index:1;min-height:200px;flex-shrink:0;}
+/* 日常小记首卡（hero）：v75.7 —— 液态玻璃化（推翻 v75.6.6「必须不透明」旧规）
+ * 设计原则：hero = 半透明主题色薄染 + backdrop-filter 磨砂，背景光斑透出 = 玻璃质感；
+ * 文字色由 JS 通过 --hero-text 按主题色亮度自动设置（ink 函数）+ text-shadow 保可读。
+ * 保留 v75.6.5 三防御：overflow:visible / min-height:200px / flex-shrink:0，确保不再消失。 */
+.note-hero{color:var(--hero-text,#fff);border:1px solid rgba(255,255,255,.45);border-radius:calc(var(--radius) + 2px);padding:16px;margin-bottom:14px;overflow:visible;text-shadow:var(--hero-shadow,0 1px 3px rgba(0,0,0,.3));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);position:relative;z-index:1;min-height:200px;flex-shrink:0;box-shadow:0 8px 24px rgba(0,0,0,.12);}
+.card.note-hero{background:linear-gradient(135deg,var(--hero-bg1,rgba(230,126,34,.6)),var(--hero-bg2,rgba(240,160,80,.46)));}
 .note-hero::before{display:none;}
-/* 微暗化对比度保障层：从上到下极淡渐变，不破坏主题色观感但确保白字可读 */
-.note-hero::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.06) 0%,rgba(0,0,0,.14) 100%);z-index:0;}
-/* glass 模式：hero 不随玻璃变透明，只做视觉融合（轻微模糊即可或完全不做）*/
-body.glass-on:not(.night) .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
-body.glass-light:not(.night) .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
-body.glass-mid:not(.night) .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
-body.glass-strong:not(.night) .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
-body.night .note-hero{background:linear-gradient(135deg,var(--accent),var(--accent-soft));}
-body.night.glass-on .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
-body.night.glass-light .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
-body.night.glass-mid .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
-body.night.glass-strong .note-hero{backdrop-filter:none;-webkit-backdrop-filter:none;}
+.note-hero::after{display:none;}
 /* ===== 卡片/通用 ===== */
 .card{background:var(--card);border:var(--bw) solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.02);}
 .card-h{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
@@ -289,6 +278,17 @@ body.night.glass-on .ov-card{box-shadow:0 4px 18px rgba(0,0,0,.2), inset 0 1px 0
 .ep-meta{font-size:12px;color:var(--muted);flex:1;min-width:160px;}
 .ep-acts{display:flex;gap:4px;align-items:center;}
 .series-add{margin-top:8px;}
+/* v75.7 观影状态分区 */
+.mv-status-chips{display:flex;gap:8px;margin:0 0 10px;flex-wrap:wrap;}
+.mv-zone-title{font-size:14px;font-weight:700;margin:14px 0 8px;display:flex;align-items:center;gap:8px;color:var(--text);}
+.mv-zone-title .mv-cnt{font-size:12px;color:var(--muted);font-weight:400;}
+.mv-live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4d4f;flex:none;}
+.mv-done-head{display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 0;font-weight:700;font-size:14px;color:var(--text);border-top:1px solid var(--border);margin-top:6px;}
+.mv-done-head .arr{color:var(--muted);}
+.mv-month-chips{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap;}
+.mv-pill{font-size:11px;padding:1px 7px;border-radius:9px;font-weight:500;vertical-align:middle;}
+.mv-pill-w{background:#FFF1E6;color:#D2691E;}
+.mv-pill-d{background:#EAF7EE;color:#2E8B57;}
 /* 心愿单 · 规格与比价表 */
 .spec-line{margin-top:5px;font-size:calc(var(--fs)*0.833);color:var(--text);background:var(--tint);border-radius:7px;padding:5px 9px;display:inline-block;}
 .cmp-box{margin-top:9px;border:var(--bw) solid var(--border);border-radius:10px;background:var(--bg);padding:9px 10px 10px;}
@@ -3434,8 +3434,11 @@ let movieStatsRange='month';
 let movieFold={};            // 系列卡片折叠态（按系列名）
 let movieFormMode='single';  // 'single' 独立作品 / 'series' 分集系列
 let moviePrefill=null;       // 点「＋添加一期」时带入的系列首次信息
-let moviePage=1;              // 列表分页（每页 MOVIE_PAGE_SIZE 张）
+let moviePage=1;              // 列表分页（每页 MOVIE_PAGE_SIZE 张，仅其他列表复用）
 const MOVIE_PAGE_SIZE=6;
+let movieStatus='all';        // 观影状态筛选：all / watching(正在看) / done(已看完)
+let movieMonth='';            // 已看完区按月份快速跳转（YYYY-MM）
+let movieDoneFold=true;       // 已看完区默认折叠
 const MOVIE_CATS=['电影','动漫','电视剧','综艺','纪录片'];
 function movieCustomTypes(){ if(!D.movie)D.movie={}; if(!Array.isArray(D.movie.custom))D.movie.custom=['自定义']; return D.movie.custom; }
 function movieAllTypes(){ return MOVIE_CATS.concat(movieCustomTypes()); }
@@ -3458,38 +3461,60 @@ function migrateMovie(){
     if(it.epKind===undefined)it.epKind='正片';
     if(it.src===undefined)it.src='';
     if(it.srcUrl===undefined)it.srcUrl='';
+    if(it.status===undefined)it.status='done'; // 老数据=已记录历史，默认「已追完」
   });
 }
-function renderMovie(){
-  if(movieView==='stats'){renderMovieStats();return;}
-  let html=`<div class="tabs">
-    <div class="tab ${movieFilter==='全部'?'on':''}" onclick="movieFilter='全部';moviePage=1;renderMovie()">全部</div>
-    ${movieAllTypes().map(c=>`<div class="tab ${movieFilter===c?'on':''}" onclick="movieFilter='${c}';moviePage=1;renderMovie()">${c}</div>`).join('')}
-    <div class="tab" style="margin-left:auto" onclick="movieView='stats';renderMovie()">📊 统计</div>
-  </div>
-  <div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="clearAll('movie')">清空全部</button></div>`;
-  let list=D.movie.filter(x=>movieFilter==='全部'||x.category===movieFilter);
+function movieZoneCards(list){
+  if(!list||!list.length)return '';
   const groups={};
   list.forEach(it=>{const gk=it.series||it.name||'未命名';if(!groups[gk])groups[gk]={items:[]};groups[gk].items.push(it);});
   const groupArr=Object.entries(groups).map(([k,g])=>{const sorted=g.items.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));return {key:k,items:sorted,latest:sorted[0]?sorted[0].date:''};}).sort((a,b)=>(b.latest||'').localeCompare(a.latest||''));
+  return groupArr.map(({key,items})=>{const asSeries=items.length>1||items.some(i=>i.mode==='series');return asSeries?movieSeriesCard(items):movieItem(items[0]);}).join('');
+}
+function mvStatusPill(s){s=s||'done';return s==='watching'?'<span class="mv-pill mv-pill-w">🔴 正在看</span>':'<span class="mv-pill mv-pill-d">已追完</span>';}
+function mvMonthOf(x){return String(x.date||'').slice(0,7);}
+function mvMonthLabel(m){const p=String(m||'').split('-');return p.length===2?p[0]+'年'+p[1]+'月':m;}
+function mvMonthKeys(list){const s=new Set();(list||[]).forEach(x=>{const m=mvMonthOf(x);if(m)s.add(m);});return Array.from(s).sort().reverse();}
+function renderMovie(){
+  if(movieView==='stats'){renderMovieStats();return;}
+  let html=`<div class="tabs">
+    <div class="tab ${movieFilter==='全部'?'on':''}" onclick="movieFilter='全部';moviePage=1;movieStatus='all';movieMonth='';renderMovie()">全部</div>
+    ${movieAllTypes().map(c=>`<div class="tab ${movieFilter===c?'on':''}" onclick="movieFilter='${c}';moviePage=1;movieStatus='all';movieMonth='';renderMovie()">${c}</div>`).join('')}
+    <div class="tab" style="margin-left:auto" onclick="movieView='stats';renderMovie()">📊 统计</div>
+  </div>
+  <div style="text-align:right;margin-bottom:8px"><button class="btn ghost sm" onclick="clearAll('movie')">清空全部</button></div>`;
+  html+=`<div class="mv-status-chips">
+    <div class="chip ${movieStatus==='all'?'on':''}" onclick="movieStatus='all';movieMonth='';moviePage=1;renderMovie()">全部状态</div>
+    <div class="chip ${movieStatus==='watching'?'on':''}" onclick="movieStatus='watching';movieMonth='';moviePage=1;renderMovie()">🔴 正在看</div>
+    <div class="chip ${movieStatus==='done'?'on':''}" onclick="movieStatus='done';movieMonth='';moviePage=1;renderMovie()">已看完</div>
+  </div>`;
+  let list=D.movie.filter(x=>movieFilter==='全部'||x.category===movieFilter);
+  const watching=list.filter(x=>(x.status||'done')==='watching');
+  const done=list.filter(x=>(x.status||'done')==='done');
+  const showWatching=movieStatus!=='done';
+  const showDone=movieStatus!=='watching';
   if(list.length===0)html+=`<div class="empty"><div class="em">🎬</div>暂无观影记录</div>`;
-  const ps=MOVIE_PAGE_SIZE;
-  const totalP=Math.max(1,Math.ceil(groupArr.length/ps));
-  if(moviePage>totalP)moviePage=totalP;
-  if(moviePage<1)moviePage=1;
-  const pageGroups=groupArr.slice((moviePage-1)*ps,moviePage*ps);
-  pageGroups.forEach(({key,items})=>{
-    const asSeries=items.length>1||items.some(i=>i.mode==='series');
-    html+= asSeries?movieSeriesCard(items):movieItem(items[0]);
-  });
-  html+=`<div id="movieFormCard">${movieForm()}</div>`;
-  if(groupArr.length>ps){
-    html+=`<div class="pager">
-      <button class="btn ghost sm" ${moviePage<=1?'disabled':''} onclick="if(moviePage>1){moviePage--;renderMovie();}">‹ 上一页</button>
-      <span class="pager-info">第 ${moviePage}/${totalP} 页 · 共 ${groupArr.length} 部</span>
-      <button class="btn ghost sm" ${moviePage>=totalP?'disabled':''} onclick="if(moviePage<${totalP}){moviePage++;renderMovie();}">下一页 ›</button>
-    </div>`;
+  if(showWatching&&watching.length){
+    html+=`<div class="mv-zone-title"><span class="mv-live"></span>正在看 <span class="mv-cnt">· 置顶 · 共 ${watching.length} 部/系列</span></div>`;
+    html+=movieZoneCards(watching);
   }
+  if(showDone&&done.length){
+    const folded=(movieStatus==='done')?false:(movieDoneFold===undefined?true:movieDoneFold);
+    html+=`<div class="mv-done-head" onclick="movieDoneFold=!movieDoneFold;renderMovie()"><span class="arr">${folded?'▸':'▾'}</span> 已看完 <span class="mv-cnt">${done.length} 部/系列 · 点开回顾</span></div>`;
+    html+=`<div class="mv-done-body" style="${folded?'display:none':''}">`;
+    const months=mvMonthKeys(done);
+    if(months.length>1){
+      html+=`<div class="mv-month-chips">`+months.map(m=>`<div class="chip ${movieMonth===m?'on':''}" onclick="movieMonth='${m}';renderMovie()">${mvMonthLabel(m)}</div>`).join('')+`</div>`;
+    }
+    let dd=done;
+    if(movieMonth)dd=done.filter(x=>mvMonthOf(x)===movieMonth);
+    html+=movieZoneCards(dd);
+    if(movieMonth)html+=`<div class="hint" style="text-align:center;margin:6px 0;cursor:pointer" onclick="movieMonth='';renderMovie()">← 返回全部已看完</div>`;
+    html+=`</div>`;
+  }else if(showDone&&!done.length&&list.length){
+    html+=`<div class="hint" style="text-align:center;margin:8px 0">「已看完」暂无记录</div>`;
+  }
+  html+=`<div id="movieFormCard">${movieForm()}</div>`;
   $('#content').innerHTML=html;
 }
 function movieItem(it){
@@ -3497,7 +3522,7 @@ function movieItem(it){
   const prog=it.progress||it.ep||'';
   return `<div class="item">
     <div class="body">
-      <div class="ttitle">${esc(it.name)} <span class="tag">${esc(it.category)}</span></div>
+      <div class="ttitle">${esc(it.name)} <span class="tag">${esc(it.category)}</span> ${mvStatusPill(it.status)}</div>
       <div class="sub">${it.country?('国别:'+esc(it.country)+' '):''}${it.director?('导演:'+esc(it.director)):''}</div>
       ${prog?`<div class="sub">进度：${esc(prog)} ${it.category==='电影'?'<a href="#" onclick="movieDone(\''+it.id+'\')">看完</a>':''}</div>`:''}
       <div class="meta-grid">
@@ -3529,7 +3554,7 @@ function movieSeriesCard(items){
   const stars='★'.repeat(Math.round(avg))+'☆'.repeat(5-Math.round(avg));
   let h=`<div class="series-card${folded?' folded':''}">
     <div class="series-head" data-series="${esc(name)}" onclick="movieToggleFold(this)">
-      <div class="series-title">${esc(name)} <span class="tag">${esc(head.category)}</span> <span class="arr"></span></div>
+      <div class="series-title">${esc(name)} <span class="tag">${esc(head.category)}</span> ${mvStatusPill(head.status)} <span class="arr"></span></div>
       <div class="series-sub">${head.country?esc(head.country)+' · ':''}${head.director?('导演 '+esc(head.director)):''} · ${stars} · 已看 ${items.length} 期/集</div>
     </div>`;
   h+=`<div class="series-eps">`;
@@ -3619,6 +3644,7 @@ function movieForm(){
         <button type="button" class="${isSeries?'on':''}" onclick="movieSetMode('series')">分集系列</button>
       </div>
     </div>
+    <div class="field"><label>状态</label><select id="mf_status">${['watching','done'].map(s=>`<option value="${s}" ${(pf.status||'watching')===s?'selected':''}>${s==='watching'?'正在看':'已追完'}</option>`).join('')}</select></div>
     ${seriesHint}
     <div class="field"><label>${isSeries?'系列名称 *':'名称 *'}</label>
       <input type="text" id="mf_name" list="mf_series_list" value="${nameV}" oninput="movieSeriesNameChg()" onkeydown="if(event.key==='Enter')addMovie()">
@@ -3678,7 +3704,7 @@ function movieSeriesNameChg(){
 function openAddEp(arg){const series=(arg&&arg.dataset)?arg.dataset.series:arg;
   const arr=(D.movie||[]).filter(x=>(x.series||x.name)===series);
   const b=arr.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''))[0]||{};
-  moviePrefill={mode:'series',series:series,name:series,cat:b.category||'电影',country:b.country||'',director:b.director||'',cast:b.cast||'',platform:b.platform||'',watchLoc:b.watchLoc||'',tags:b.tags||'',rewatch:b.rewatch||0,recommend:!!b.recommend,rating:b.rating||5,likeLevel:b.likeLevel||'非常喜欢',ep:'',epKind:'正片',date:new Date().toISOString().slice(0,10),time:'',duration:'',comment:'',src:'',srcUrl:''};
+  moviePrefill={mode:'series',series:series,name:series,cat:b.category||'电影',country:b.country||'',director:b.director||'',cast:b.cast||'',platform:b.platform||'',watchLoc:b.watchLoc||'',tags:b.tags||'',rewatch:b.rewatch||0,recommend:!!b.recommend,rating:b.rating||5,likeLevel:b.likeLevel||'非常喜欢',ep:'',epKind:'正片',date:new Date().toISOString().slice(0,10),time:'',duration:'',comment:'',src:'',srcUrl:'',status:b.status||'done'};
   movieFormMode='series';
   const c=document.getElementById('movieFormCard');
   if(c){c.innerHTML=movieForm();if(c.scrollIntoView)c.scrollIntoView({behavior:'smooth',block:'start'});c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),1400);}
@@ -3707,7 +3733,8 @@ function addMovie(){
     likeLevel:mfVal('mf_like'),
     date:(mfVal('mf_date_d')||new Date().toISOString().slice(0,10))+'T'+(mfVal('mf_date_t')||'00:00'),
     link:mfVal('mf_link'),comment:mfVal('mf_comment'),
-    src:mfVal('mf_src'),srcUrl:mfVal('mf_srcurl')
+    src:mfVal('mf_src'),srcUrl:mfVal('mf_srcurl'),
+    status:mfVal('mf_status')||'watching'
   };
   D.movie.unshift(it);
   movieFormMode='single';moviePrefill=null;
@@ -4683,7 +4710,7 @@ function renderChecklist(){
     // 展开态才渲染子项区（含输入框），修复「无子项时点不开添加子项」
     const subsHtml=exp?`<div style="margin-top:6px;padding-left:26px">
       ${subs.length?`<div style="font-size:calc(var(--fs)*0.75);color:var(--accent);margin-bottom:4px">🔁 以下 ${subs.length} 个成员每日循环（每天自动重置勾选）</div>`:''}
-      ${subs.map(s=>{const sd=done[x.id+'__'+s.id];const st=ts[x.id+'__'+s.id];return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;white-space:nowrap"><label style="display:flex;align-items:center;gap:6px;flex:1;min-width:0"><input type="checkbox" ${sd?'checked':''} onchange="chkSubToggle('${x.id}','${s.id}',this.checked)"><span style="font-size:calc(var(--fs)*0.867);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name)}${sd?chkSvg():''}</span></label><span style="font-size:calc(var(--fs)*0.75);color:var(--muted);flex:none">${st?fmtTime(st):''}</span><button class="btn ghost sm" style="flex:none" onclick="chkSubDel('${x.id}','${s.id}')">×</button></div>`;}).join('')}
+      ${subs.map(s=>{const sd=done[x.id+'__'+s.id];const st=ts[x.id+'__'+s.id];return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><input type="checkbox" ${sd?'checked':''} style="flex:none" onchange="chkSubToggle('${x.id}','${s.id}',this.checked)"><span style="flex:1;min-width:0;font-size:calc(var(--fs)*0.867);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name)}${sd?chkSvg():''}</span><span style="font-size:calc(var(--fs)*0.75);color:var(--muted);flex:none">${st?fmtTime(st):''}</span><button class="btn ghost sm" style="flex:none" onclick="chkSubDel('${x.id}','${s.id}')">×</button></div>`;}).join('')}
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input class="inp" id="cksub_${x.id}" placeholder="加子项（如人名）" style="flex:1;min-width:120px;font-size:calc(var(--fs)*0.867)" onkeydown="if(event.key==='Enter')chkSubAdd('${x.id}')"><label style="display:inline-flex;align-items:center;gap:3px;font-size:calc(var(--fs)*0.8);color:var(--muted);white-space:nowrap;cursor:pointer"><input type="checkbox" id="cksub_loop_${x.id}" checked> 每日循环</label><button class="btn ghost sm" onclick="chkSubAdd('${x.id}')">＋</button></div>
     </div>`:'';
     const mainTs=subs.length?'':ts[x.id];
@@ -4829,6 +4856,7 @@ const EDIT_SCHEMA={
   ]},
   movie:{title:'观影记录',fields:[
     {k:'category',l:'类别',t:'sel',o:['电影','动漫','电视剧','综艺','纪录片','自定义']},
+    {k:'status',l:'状态',t:'sel',o:['watching','done'],ol:['正在看','已追完']},
     {k:'name',l:'名称',t:'text'},
     {k:'mode',l:'记录类型',t:'sel',o:['single','series'],ol:['独立作品','分集系列']},
     {k:'series',l:'系列名称(分集)',t:'text'},
@@ -5008,6 +5036,7 @@ function saveEdit(){
   const nameKey=['title','name','desc','text'].find(k=>k in it);
   if(nameKey&&!String(it[nameKey]||'').trim()){toast('名称/标题不能为空');return;}
   arr[idx]=it;
+  if(EDITING.mod==='movie'&&it.series&&it.status){arr.forEach(x=>{if(x.series===it.series)x.status=it.status;});}
   save();renderNav();renderModule();closeEdit();toast('已保存修改');
 }
 
@@ -5170,6 +5199,10 @@ function setPalette(accent,tint,soft){
  const isDark=ht==='#fff';
  d.setProperty('--hero-text',ht);
  d.setProperty('--hero-shadow',isDark?'0 1px 3px rgba(0,0,0,.35)':'0 1px 0 rgba(255,255,255,.45)');
+ /* v75.7: 首卡玻璃薄染背景（主题色半透明渐变，非实色） */
+ const _hr=parseInt(accent.slice(1),16),_sr=parseInt(soft.slice(1),16);
+ d.setProperty('--hero-bg1',`rgba(${(_hr>>16)&255},${(_hr>>8)&255},${_hr&255},0.6)`);
+ d.setProperty('--hero-bg2',`rgba(${(_sr>>16)&255},${(_sr>>8)&255},${_sr&255},0.46)`);
  /* 心情/天气气泡：白字时用半透明白气泡；深字时用半透明深气泡 */
  d.setProperty('--hero-bubble',isDark?'rgba(255,255,255,.22)':'rgba(0,0,0,.10)');
  d.setProperty('--hero-bubble-text',isDark?'#fff':'inherit');
@@ -5312,7 +5345,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.6.6';
+const APP_VER='v75.7.0';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
