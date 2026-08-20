@@ -1,4 +1,4 @@
-const CACHE='mwb-v75.7.0';
+const CACHE='mwb-v75.8.0';
 const ASSETS=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./icon-maskable-512.png'];
 self.addEventListener('install',e=>{
   // 逐个缓存：单个资源失败（如字体缺失）不影响其余，避免 addAll 原子失败导致整批未缓存

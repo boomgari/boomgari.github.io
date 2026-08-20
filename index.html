@@ -1200,8 +1200,9 @@ function migrateGame(g,def){
   });
   if(!Array.isArray(g.activities))g.activities=[];
   g.activities=g.activities.map(a=>{a=a||{};
-    const tasks=Array.isArray(a.tasks)?a.tasks.map(t=>typeof t==='string'?{id:uid(),name:t,goal:0}:{id:(t&&t.id)||uid(),name:(t&&(t.name||t.title))||'',goal:(t&&t.goal)?+t.goal:0}):
-      (Array.isArray(a.taskList)?a.taskList.map(x=>({id:uid(),name:typeof x==='string'?x:(x&&x.name)||'',goal:0})):[]);
+    const normTask=t=>{ if(typeof t==='string')return {id:uid(),name:t,goal:0,cycle:'daily',ttype:'check',tk:{total:0,consumed:0,perDay:0}}; const o={id:(t&&t.id)||uid(),name:(t&&(t.name||t.title))||'',goal:(t&&t.goal)?+t.goal:0}; o.cycle=(t&&t.cycle)||'daily'; o.ttype=(t&&t.ttype)||((+o.goal>1)?'count':'check'); o.tk=(t&&t.tk&&typeof t.tk==='object')?{total:+(t.tk.total||0),consumed:+(t.tk.consumed||0),perDay:+(t.tk.perDay||0)}:{total:0,consumed:0,perDay:0}; return o; };
+    const tasks=Array.isArray(a.tasks)?a.tasks.map(normTask):
+      (Array.isArray(a.taskList)?a.taskList.map(x=>normTask(typeof x==='string'?x:{name:(x&&x.name)||''})):[]);
     const normDt=(s,end)=>{if(!s)return '';if(!s.includes('T'))s=s+(end?'T23:59':'T00:00');return s;};
     const na={id:a.id||uid(),name:a.name||a.title||'',type:a.type||'其他',start:normDt(a.start||a.startDate||'',false),end:normDt(a.end||a.endDate||'',true),series:a.series||'',flex:Array.isArray(a.flex)?a.flex:[],reward:a.reward||'',priority:a.priority||'',link:a.link||'',tasks:tasks};
     na.countLabel=a.countLabel||'碎片';na.countTarget=+a.countTarget||0;na.countNow=+a.countNow||0;
@@ -2847,7 +2848,8 @@ function xtCard(t,drag){
   const chips=log.map((s,i)=>`<span class="trk-chip">${s.fan}番 · ${s.time}<span class="hint"> ${rw(i)}</span></span>`).join('');
   const pick=`<div class="xt-pick">${[0,1,2,3,4,5,6].map(f=>`<button class="chip ${gameXTSel==f?'on':''}" onclick="gameXTSel=${f};renderGame()">${f}番</button>`).join('')}<button class="btn" onclick="xtAdd('${t.id}')">记录本场</button></div>`;
   const exp=gameXTExp[t.id];
-  const list=exp?`<div class="trk-list">${log.slice().reverse().map((s,i)=>{const idx=log.length-1-i;return `<div class="trk-row"><span>${s.fan}番胜</span><span class="hint">${s.time} · ${rw(idx)}</span>${idx===0?'':`<button class="del sm" onclick="xtDel('${t.id}',${idx})">×</button>`}</div>`;}).join('')}</div>`:'';
+  const disp=log.map((s,origIdx)=>({s,origIdx})).sort((a,b)=>((b.s.date||'')+(b.s.time||'')).localeCompare((a.s.date||'')+(a.s.time||'')));
+  const list=exp?`<div class="trk-list">${disp.map(({s,origIdx})=>`<div class="trk-row"><span>${s.fan}番胜</span><span class="hint">${s.date} ${s.time} · ${rw(origIdx)}</span><button class="del sm" onclick="xtDel('${t.id}',${origIdx})">×</button></div>`).join('')}</div>`:'';
   return `<div class="item g-item trk ${done?'done':''}">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">本周 ${n} / ${target} 场 · 累计番胜 ${log.reduce((s,x)=>s+(+x.fan||0),0)}${done?' · <span class="tag done">达成'+target+'场</span>':''}</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${chips?`<div class="trk-chips">${chips}</div>`:''}${pick}${list}</div><button class="note-btn" onclick="gameXTExpToggle('${t.id}')">${exp?'收起':'序列'}</button></div>`;
 }
 function xtAdd(id){const t=gWeeklyFind(id);if(!t)return;t.xtLog=t.xtLog||[];t.xtLog.push({fan:gameXTSel,time:new Date().toTimeString().slice(0,5),date:todayStr()});save();renderGame();}
@@ -2856,7 +2858,8 @@ function gameXTExpToggle(id){gameXTExp[id]=!gameXTExp[id];renderGame();}
 function bgCard(t,drag){
   const log=t.bgLog||[],total=log.reduce((s,x)=>s+(+x.coin||0),0),exp=gameBGExp[t.id];
   const pick=`<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:4px"><input class="inp" id="bg_rank_${t.id}" placeholder="名次" style="width:80px"><input class="inp" id="bg_coin_${t.id}" placeholder="鼬乐币" style="width:90px"><button class="btn" onclick="bgAdd('${t.id}')">记录</button></div>`;
-  const list=exp?`<div class="trk-list">${log.slice().reverse().map((s,i)=>{const idx=log.length-1-i;return `<div class="trk-row"><span>第${s.rank}名</span><span class="hint">${s.coin}鼬乐币 · ${s.time}</span>${idx===0?'':`<button class="del sm" onclick="bgDel('${t.id}',${idx})">×</button>`}</div>`;}).join('')}</div>`:'';
+  const disp=log.map((s,origIdx)=>({s,origIdx})).sort((a,b)=>((b.s.date||'')+(b.s.time||'')).localeCompare((a.s.date||'')+(a.s.time||'')));
+  const list=exp?`<div class="trk-list">${disp.map(({s,origIdx})=>`<div class="trk-row"><span>第${s.rank}名</span><span class="hint">${s.date} ${s.time} · ${s.coin}鼬乐币</span><button class="del sm" onclick="bgDel('${t.id}',${origIdx})">×</button></div>`).join('')}</div>`:'';
   return `<div class="item g-item trk">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">已记录 ${log.length} 场 · 累计鼬乐币 ${total}</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${pick}${list}</div><button class="note-btn" onclick="gameBGExpToggle('${t.id}')">${exp?'收起':'序列'}</button></div>`;
 }
 function bgAdd(id){const t=gWeeklyFind(id);if(!t)return;t.bgLog=t.bgLog||[];const r=document.getElementById('bg_rank_'+id),c=document.getElementById('bg_coin_'+id);const rank=+(r?r.value:0)||0,coin=+(c?c.value:0)||0;if(!rank&&!coin){toast('填名次或鼬乐币');return;}t.bgLog.push({rank,coin,time:new Date().toTimeString().slice(0,5),date:todayStr()});save();renderGame();}
@@ -2909,18 +2912,25 @@ function actCardInner(a,prog){
     const key=a.id+'_'+t.id;
     const goal=+t.goal||0;
     const cyc=t.cycle||'daily';
-    const done=goal>1? (actTaskCountEff(a,t)>=goal) : !!actTaskDoneEff(a,t);
-    const ts=(goal>1)?null:(prog.activity_ts||{})[key];
+    const tt=t.ttype||((goal>1)?'count':'check');
+    const tk=t.tk||{total:0,consumed:0,perDay:0};
+    const done=(tt==='count')?actTaskCountEff(a,t)>=goal:(tt==='ticket')?((+tk.total>0)&&(+tk.consumed>=(+tk.total))):!!actTaskDoneEff(a,t);
+    const ts=(tt==='check')?(prog.activity_ts||{})[key]:null;
     const nt=gameNote(key);const ex=gameNoteExp[key];
     const nb=ex?`<div class="note-edit"><textarea class="inp" id="gn_${key}" placeholder="补充备注（奖励/细节）">${nt?esc(nt.text):''}</textarea><button class="btn ghost sm" onclick="gameNoteSave('${key}')">保存备注</button></div>`:'';
     let ctrl;
-    if(goal>1){
+    if(tt==='count'){
       const cnt=actTaskCountEff(a,t);
-      ctrl=`<div class="body" style="flex:1;min-width:60px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div></div><button class="btn ghost sm" onclick="gActTaskCount('${a.id}','${t.id}',-1)">－1</button><span style="min-width:48px;text-align:center;font-weight:600">${cnt}/${goal}</span><button class="btn ghost sm" onclick="gActTaskCount('${a.id}','${t.id}',1)">＋1</button><input class="cycle-n" type="number" min="0" value="${goal}" title="子任务计数目标(0=勾选)" style="width:50px" onchange="gActTaskGoalSet('${a.id}','${t.id}',this.value)">`;
+      ctrl=`<div class="body" style="flex:1;min-width:60px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div></div><button class="btn ghost sm" onclick="gActTaskCount('${a.id}','${t.id}',-1)">－1</button><span style="min-width:48px;text-align:center;font-weight:600">${cnt}/${goal}</span><button class="btn ghost sm" onclick="gActTaskCount('${a.id}','${t.id}',1)">＋1</button><input class="cycle-n" type="number" min="0" value="${goal}" title="计次目标(0=勾选)" style="width:50px" onchange="gActTaskGoalSet('${a.id}','${t.id}',this.value)">`;
+    } else if(tt==='ticket'){
+      const total=+tk.total||0,cons=+tk.consumed||0,rem=Math.max(0,total-cons);
+      ctrl=`<div class="body" style="flex:1;min-width:60px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div><div class="sub hint">门票 总${total} · 耗${cons} · 余${rem}${(+tk.perDay>0&&rem>0)?(' · 约'+Math.ceil(rem/(+tk.perDay))+'天'):''}</div></div><button class="btn ghost sm" onclick="gActTaskTkInc('${a.id}','${t.id}',-1)">－1</button><span style="min-width:42px;text-align:center;font-weight:600">${cons}</span><button class="btn ghost sm" onclick="gActTaskTkInc('${a.id}','${t.id}',1)">＋1</button><button class="btn ghost sm" onclick="gActTaskTkEdit('${a.id}','${t.id}')" title="设置总门票/每日上限">设门票</button>`;
     } else {
       ctrl=chkBox(done,"gProgAct('"+a.id+"','"+t.id+"',this.checked)")+`<div class="body" style="flex:1;min-width:90px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div>${ts?`<div class="sub hint">${chkSvg()} ${fmtTime(ts)}</div>`:''}${nt?`<div class="sub note-line">${icoNote()} ${esc(nt.text)} <span class="hint">${fmtTime(nt.time)}</span></div>`:''}</div>`;
     }
-    return `<div class="item g-item ${done?'done':''}" style="padding:7px 8px;margin-bottom:5px;flex-wrap:wrap;gap:4px">${ctrl}<select class="cycle-sel" title="完成周期" onchange="gActTaskCycle('${a.id}','${t.id}',this.value)"><option value="daily" ${cyc==='daily'?'selected':''}>每天</option><option value="ndays" ${cyc==='ndays'?'selected':''}>每${t.cycleN||3}天</option><option value="once" ${cyc==='once'?'selected':''}>一次</option></select>${cyc==='ndays'?`<input class="cycle-n" type="number" min="2" value="${t.cycleN||3}" title="每 N 天" onchange="gActTaskCycleN('${a.id}','${t.id}',this.value)">`:''}<button class="note-btn" title="备注" onclick="gameNoteToggle('${key}')">${icoNote()}</button></div>${nb}`;
+    const typeSel=`<select class="cycle-sel" title="完成方式" onchange="gActTaskTypeSet('${a.id}','${t.id}',this.value)"><option value="check" ${tt==='check'?'selected':''}>勾选</option><option value="count" ${tt==='count'?'selected':''}>计次</option><option value="ticket" ${tt==='ticket'?'selected':''}>门票</option></select>`;
+    const cycSel=(tt==='check')?`<select class="cycle-sel" title="完成周期" onchange="gActTaskCycle('${a.id}','${t.id}',this.value)"><option value="daily" ${cyc==='daily'?'selected':''}>每天</option><option value="ndays" ${cyc==='ndays'?'selected':''}>每${t.cycleN||3}天</option><option value="once" ${cyc==='once'?'selected':''}>一次</option></select>${cyc==='ndays'?`<input class="cycle-n" type="number" min="2" value="${t.cycleN||3}" title="每 N 天" onchange="gActTaskCycleN('${a.id}','${t.id}',this.value)">`:''}`:'';
+    return `<div class="item g-item ${done?'done':''}" style="padding:7px 8px;margin-bottom:5px;flex-wrap:wrap;gap:4px">${ctrl}${typeSel}${cycSel}<button class="note-btn" title="备注" onclick="gameNoteToggle('${key}')">${icoNote()}</button></div>${nb}`;
   }).join('');
   const flex=(a.flex||[]).map((f,i)=>`<span class="tag" style="display:inline-flex;align-items:center;gap:4px">${esc(f.k||'字段')}:<input value="${esc(f.v||'')}" placeholder="值" style="width:62px;border:none;background:transparent;font-size:calc(var(--fs)*0.8);color:inherit;padding:0" onchange="gActFlexSet('${a.id}',${i},'v',this.value)"></span>`).join('');
   let progHtml='';const bars=[];
@@ -3092,7 +3102,7 @@ function gActDT(arg,val){
   else{if(!d)d=todayStr();if(!t)t='00:00';a[key]=d+'T'+t;}
   save();renderGame();
 }
-function gActTasks(aid,text){const a=gActFind(aid);if(!a)return;const defCyc=a.cycleDef||'daily';const defN=+a.cycleNDef||3;a.tasks=text.split('\n').filter(x=>x.trim()).map(x=>({id:uid(),name:x.trim(),cycle:defCyc,cycleN:defN}));save();}
+function gActTasks(aid,text){const a=gActFind(aid);if(!a)return;const defCyc=a.cycleDef||'daily';const defN=+a.cycleNDef||3;a.tasks=text.split('\n').filter(x=>x.trim()).map(x=>({id:uid(),name:x.trim(),cycle:defCyc,cycleN:defN,tk:{total:0,consumed:0,perDay:0}}));save();}
 function gActTaskCycle(aid,tid,v){const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;t.cycle=v;save();}
 function gActTaskCycleN(aid,tid,v){const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;t.cycleN=+v;save();}
 function gDailyCount(wd,tid,v){const t=(D.game.daily[wd]||[]).find(x=>x.id===tid);if(!t)return;t.countLog=t.countLog||[];t.count=+v;save();}
@@ -3358,8 +3368,9 @@ function actTaskCountEff(a,t){
   return +sc.count||0;
 }
 function actTaskComplete(a,t){
-  const goal=+t.goal||0;
-  if(goal>1)return actTaskCountEff(a,t)>=goal;
+  let ty=t.ttype; if(!ty)ty=(+t.goal>1)?'count':'check';
+  if(ty==='count')return actTaskCountEff(a,t)>=(+t.goal||0);
+  if(ty==='ticket'){const tk=t.tk||{total:0,consumed:0};return (+tk.total||0)>0 && (+tk.consumed||0)>=(+tk.total||0);}
   return actTaskDoneEff(a,t);
 }
 function gActTaskCount(aid,tid,delta){
@@ -3374,6 +3385,28 @@ function gActTaskCount(aid,tid,delta){
 function gActTaskGoalSet(aid,tid,v){
   const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
   t.goal=Math.max(0,+v||0);save();renderGame();
+}
+function gActTaskTypeSet(aid,tid,type){
+  const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  t.ttype=type;
+  if(type==='ticket'){t.tk=t.tk||{total:0,consumed:0,perDay:0};}
+  if(type==='count'&&!(+t.goal>0))t.goal=1;
+  save();renderGame();
+}
+function gActTaskTkInc(aid,tid,delta){
+  const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  t.tk=t.tk||{total:0,consumed:0,perDay:0};
+  t.tk.consumed=Math.max(0,(+t.tk.consumed||0)+delta);
+  save();renderNav();renderGame();
+}
+function gActTaskTkEdit(aid,tid){
+  const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  t.tk=t.tk||{total:0,consumed:0,perDay:0};
+  let v=prompt('设置该门票型子任务的总门票数（系统赠送+购买合计）：',(+t.tk.total||0));
+  if(v===null)return; const total=Math.max(0,+v||0);
+  let p=prompt('每日消耗上限（可选，0=不限）：',(+t.tk.perDay||0));
+  const perDay=Math.max(0,+p||0);
+  t.tk.total=total;t.tk.perDay=perDay;save();renderGame();
 }
 function gActCountSet(aid,key,val){const a=gActFind(aid);if(!a||a.progType!=='count')return;if(key==='label')a.countLabel=val;else if(key==='target')a.countTarget=Math.max(0,+val||0);else if(key==='now')a.countNow=Math.max(0,+val||0);save();renderNav();renderGame();}
 function gActCountInc(aid,delta){const a=gActFind(aid);if(!a||a.progType!=='count')return;a.countNow=Math.max(0,(+a.countNow||0)+delta);save();renderNav();renderGame();}
@@ -3411,7 +3444,7 @@ function gActFromLib(libid){
   na.archivedAt=undefined;
   na.countNow=0;
   na.actDone={};na.actTaskLast={};
-  na.tasks=(na.tasks||[]).map(t=>({id:uid(),name:t.name,cycle:t.cycle||'daily',cycleN:t.cycleN||3,goal:+t.goal||0}));
+  na.tasks=(na.tasks||[]).map(t=>({id:uid(),name:t.name,cycle:t.cycle||'daily',cycleN:t.cycleN||3,goal:+t.goal||0,ttype:t.ttype||((+t.goal>1)?'count':'check'),tk:(t.tk&&typeof t.tk==='object')?{total:+(t.tk.total||0),consumed:+(t.tk.consumed||0),perDay:+(t.tk.perDay||0)}:{total:0,consumed:0,perDay:0}}));
   na.progType=na.progType||'binary';
   na.flex=(na.flex||[]).map(f=>({k:f.k||'',v:f.v||''}));
   delete na.actTaskDone;
@@ -4710,7 +4743,7 @@ function renderChecklist(){
     // 展开态才渲染子项区（含输入框），修复「无子项时点不开添加子项」
     const subsHtml=exp?`<div style="margin-top:6px;padding-left:26px">
       ${subs.length?`<div style="font-size:calc(var(--fs)*0.75);color:var(--accent);margin-bottom:4px">🔁 以下 ${subs.length} 个成员每日循环（每天自动重置勾选）</div>`:''}
-      ${subs.map(s=>{const sd=done[x.id+'__'+s.id];const st=ts[x.id+'__'+s.id];return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><input type="checkbox" ${sd?'checked':''} style="flex:none" onchange="chkSubToggle('${x.id}','${s.id}',this.checked)"><span style="flex:1;min-width:0;font-size:calc(var(--fs)*0.867);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name)}${sd?chkSvg():''}</span><span style="font-size:calc(var(--fs)*0.75);color:var(--muted);flex:none">${st?fmtTime(st):''}</span><button class="btn ghost sm" style="flex:none" onclick="chkSubDel('${x.id}','${s.id}')">×</button></div>`;}).join('')}
+      ${subs.map(s=>{const sd=done[x.id+'__'+s.id];const st=ts[x.id+'__'+s.id];const nameSpan=sd?`<span style="flex:none;font-size:calc(var(--fs)*0.8);color:var(--muted)">已完成</span>`:`<span style="flex:1;min-width:0;font-size:calc(var(--fs)*0.867);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name)}</span>`;return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><input type="checkbox" ${sd?'checked':''} style="flex:none" onchange="chkSubToggle('${x.id}','${s.id}',this.checked)">${nameSpan}<span style="font-size:calc(var(--fs)*0.75);color:var(--muted);flex:none">${st?fmtTime(st):''}</span><button class="btn ghost sm" style="flex:none" onclick="chkSubDel('${x.id}','${s.id}')">×</button></div>`;}).join('')}
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input class="inp" id="cksub_${x.id}" placeholder="加子项（如人名）" style="flex:1;min-width:120px;font-size:calc(var(--fs)*0.867)" onkeydown="if(event.key==='Enter')chkSubAdd('${x.id}')"><label style="display:inline-flex;align-items:center;gap:3px;font-size:calc(var(--fs)*0.8);color:var(--muted);white-space:nowrap;cursor:pointer"><input type="checkbox" id="cksub_loop_${x.id}" checked> 每日循环</label><button class="btn ghost sm" onclick="chkSubAdd('${x.id}')">＋</button></div>
     </div>`:'';
     const mainTs=subs.length?'':ts[x.id];
@@ -5345,7 +5378,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.7.0';
+const APP_VER='v75.8.0';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
