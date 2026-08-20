@@ -470,7 +470,7 @@ body.touch-drag *{cursor:grabbing!important;}
 .inp{min-height:36px;}
 textarea.inp{min-height:52px;}
 .g-item{position:relative;align-items:center;}
-.note-btn{background:var(--tint);border:var(--bw) solid var(--border);color:var(--on-tint);border-radius:9px;padding:4px 8px;font-size:calc(var(--fs)*0.833);line-height:1.2;cursor:pointer;flex:0 0 auto;align-self:flex-start;}
+.note-btn{background:var(--tint);border:var(--bw) solid var(--border);color:var(--on-tint);border-radius:9px;padding:4px 8px;font-size:calc(var(--fs)*0.833);line-height:1.2;cursor:pointer;flex:0 0 auto;align-self:center;}
 .note-btn:active{filter:brightness(.96);}
 .note-edit{margin:-4px 0 9px;padding:9px 12px;background:var(--bg);border:var(--bw) solid var(--border);border-radius:10px;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;}
 .note-edit textarea{flex:1;min-width:160px;}
@@ -2921,10 +2921,10 @@ function actCardInner(a,prog){
     let ctrl;
     if(tt==='count'){
       const cnt=actTaskCountEff(a,t);
-      ctrl=`<div class="body" style="flex:1;min-width:60px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div></div><button class="btn ghost sm" onclick="gActTaskCount('${a.id}','${t.id}',-1)">－1</button><span style="min-width:48px;text-align:center;font-weight:600">${cnt}/${goal}</span><button class="btn ghost sm" onclick="gActTaskCount('${a.id}','${t.id}',1)">＋1</button><input class="cycle-n" type="number" min="0" value="${goal}" title="计次目标(0=勾选)" style="width:50px" onchange="gActTaskGoalSet('${a.id}','${t.id}',this.value)">`;
+      ctrl=`<div class="body" style="flex:1;min-width:60px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div><div class="sub hint">已 ${cnt} / ${goal}</div></div><input class="cycle-n" type="number" min="0" value="${cnt}" title="当前已完成次数（直接填）" style="width:50px" onchange="gActTaskCountSet('${a.id}','${t.id}',this.value)"><span style="color:var(--muted);font-size:calc(var(--fs)*0.8)">/</span><input class="cycle-n" type="number" min="0" value="${goal}" title="目标次数" style="width:50px" onchange="gActTaskGoalSet('${a.id}','${t.id}',this.value)"><button class="btn ghost sm" onclick="gActTaskCountSet('${a.id}','${t.id}','${goal}')" title="直接标记为完成">完成</button>`;
     } else if(tt==='ticket'){
       const total=+tk.total||0,cons=+tk.consumed||0,rem=Math.max(0,total-cons);
-      ctrl=`<div class="body" style="flex:1;min-width:60px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div><div class="sub hint">门票 总${total} · 耗${cons} · 余${rem}${(+tk.perDay>0&&rem>0)?(' · 约'+Math.ceil(rem/(+tk.perDay))+'天'):''}</div></div><button class="btn ghost sm" onclick="gActTaskTkInc('${a.id}','${t.id}',-1)">－1</button><span style="min-width:42px;text-align:center;font-weight:600">${cons}</span><button class="btn ghost sm" onclick="gActTaskTkInc('${a.id}','${t.id}',1)">＋1</button><button class="btn ghost sm" onclick="gActTaskTkEdit('${a.id}','${t.id}')" title="设置总门票/每日上限">设门票</button>`;
+      ctrl=`<div class="body" style="flex:1;min-width:60px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div><div class="sub hint">门票 总${total} · 耗${cons} · 余${rem}${(+tk.perDay>0&&rem>0)?(' · 约'+Math.ceil(rem/(+tk.perDay))+'天'):''}</div></div><button class="btn ghost sm" onclick="gActTaskTkDone('${a.id}','${t.id}')" title="自动挂机，全部消耗完即完成">全部挂完</button><button class="btn ghost sm" onclick="gActTaskTkEdit('${a.id}','${t.id}')" title="设置总门票/每日上限">设门票</button>`;
     } else {
       ctrl=chkBox(done,"gProgAct('"+a.id+"','"+t.id+"',this.checked)")+`<div class="body" style="flex:1;min-width:90px"><div class="ttitle" style="font-size:calc(var(--fs)*0.9)">${esc(t.name)}</div>${ts?`<div class="sub hint">${chkSvg()} ${fmtTime(ts)}</div>`:''}${nt?`<div class="sub note-line">${icoNote()} ${esc(nt.text)} <span class="hint">${fmtTime(nt.time)}</span></div>`:''}</div>`;
     }
@@ -3386,18 +3386,27 @@ function gActTaskGoalSet(aid,tid,v){
   const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
   t.goal=Math.max(0,+v||0);save();renderGame();
 }
+function gActTaskCountSet(aid,tid,val){
+  const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  D.game.actSubCount=D.game.actSubCount||{};
+  const key=a.id+'_'+tid;const per=actSubPeriod(a,t);
+  const sc=D.game.actSubCount[key]=D.game.actSubCount[key]||{period:per,count:0};
+  if(sc.period!==per){sc.period=per;sc.count=0;}
+  sc.count=Math.max(0,+val||0);
+  save();renderNav();renderGame();
+}
+function gActTaskTkDone(aid,tid){
+  const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
+  t.tk=t.tk||{total:0,consumed:0,perDay:0};
+  t.tk.consumed=t.tk.total;
+  save();renderNav();renderGame();
+}
 function gActTaskTypeSet(aid,tid,type){
   const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
   t.ttype=type;
   if(type==='ticket'){t.tk=t.tk||{total:0,consumed:0,perDay:0};}
   if(type==='count'&&!(+t.goal>0))t.goal=1;
   save();renderGame();
-}
-function gActTaskTkInc(aid,tid,delta){
-  const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
-  t.tk=t.tk||{total:0,consumed:0,perDay:0};
-  t.tk.consumed=Math.max(0,(+t.tk.consumed||0)+delta);
-  save();renderNav();renderGame();
 }
 function gActTaskTkEdit(aid,tid){
   const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;
@@ -4747,15 +4756,15 @@ function renderChecklist(){
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input class="inp" id="cksub_${x.id}" placeholder="加子项（如人名）" style="flex:1;min-width:120px;font-size:calc(var(--fs)*0.867)" onkeydown="if(event.key==='Enter')chkSubAdd('${x.id}')"><label style="display:inline-flex;align-items:center;gap:3px;font-size:calc(var(--fs)*0.8);color:var(--muted);white-space:nowrap;cursor:pointer"><input type="checkbox" id="cksub_loop_${x.id}" checked> 每日循环</label><button class="btn ghost sm" onclick="chkSubAdd('${x.id}')">＋</button></div>
     </div>`:'';
     const mainTs=subs.length?'':ts[x.id];
-    return `<div class="item ${on?'done':''}" style="padding:8px 10px">
-      <input type="checkbox" ${on?'checked':''} onchange="chkToggle('${x.id}',this.checked)">
-      <div class="body"><div class="ttitle">${esc(x.name)} ${subs.length?`<span class="hint">${p.cur}/${p.tot}</span>`:''}</div>
-      ${mainTs?`<div class="sub hint">${chkInline()} ${fmtTime(mainTs)}</div>`:''}
-      ${subsHtml}
-      <div class="hint" style="cursor:pointer;margin-top:4px" onclick="chkExpToggle('${x.id}')">${exp?'收起子项':(subs.length?('展开子项 '+subs.length+' 个'):'＋ 添加子项')}</div>
+    return `<div class="item ${on?'done':''}" style="padding:8px 10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;flex:1 1 100%">
+        <input type="checkbox" ${on?'checked':''} style="flex:none" onchange="chkToggle('${x.id}',this.checked)">
+        <div class="body" style="flex:1;min-width:0"><div class="ttitle">${esc(x.name)} ${subs.length?`<span class="hint">${p.cur}/${p.tot}</span>`:''}</div>${mainTs?`<div class="sub hint">${chkInline()} ${fmtTime(mainTs)}</div>`:''}</div>
+        <button class="btn ghost sm" style="flex:none" onclick="openEdit('checklist','${x.id}')">✏️ 编辑</button>
+        <button class="del" style="flex:none" onclick="chkDel('${x.id}')">×</button>
       </div>
-      <button class="btn ghost sm" onclick="openEdit('checklist','${x.id}')">✏️ 编辑</button>
-      <button class="del" onclick="chkDel('${x.id}')">×</button>
+      <div style="flex:1 1 100%">${subsHtml}</div>
+      <div class="hint" style="cursor:pointer;margin-top:4px;flex:1 1 100%" onclick="chkExpToggle('${x.id}')">${exp?'收起子项':(subs.length?('展开子项 '+subs.length+' 个'):'＋ 添加子项')}</div>
     </div>`;}).join(''):'<div class="hint">还没有每日必做事项，在下面添加一行（如：抖音续火）</div>';
   return `${foldCard(`${chkSvg()} 每日打卡`, "fc_5", false, `
     <div class="pbar" style="margin-bottom:10px"><i style="width:${pct}%"></i></div>
@@ -5378,7 +5387,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.8.0';
+const APP_VER='v75.8.1';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
