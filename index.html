@@ -835,6 +835,52 @@ textarea.inp{min-height:52px;}
 .sk-done{margin-top:8px;width:100%;padding:12px;border:none;border-radius:11px;background:var(--accent);color:#fff;font-size:15px;font-weight:600}
 .sk-cancel{margin-top:8px;width:100%;padding:10px;border:1px solid var(--border);border-radius:11px;background:var(--bg);color:var(--muted);font-size:14px}
 </style>
+<style>
+/* ===== v75.9.1：首卡统一配方 / 序列灰标题分组 / 同行水平对齐 / 弹窗留边 ===== */
+/* 首卡：日常小记与囤货整理共用 --hero-bg1/--hero-bg2（由 setPalette 按当前主题色计算） */
+.stock-hero{background:linear-gradient(135deg,var(--hero-bg1,rgba(120,140,160,.62)),var(--hero-bg2,rgba(150,168,184,.48)));color:#fff;text-shadow:var(--hero-shadow,0 1px 3px rgba(0,0,0,.28))}
+.stock-hero .sub{color:var(--hero-sub,#FFFBF0);opacity:1;font-weight:500}
+.stock-hero .stat{background:var(--hero-row-bg,rgba(255,255,255,.18));border:1px solid var(--hero-row-bd,rgba(255,255,255,.3))}
+.stock-hero .stat span{color:var(--hero-sub,#FFFBF0);opacity:1}
+.note-hero{color:#fff}
+/* 首卡内部行：同一行元素强制水平居中对齐（铁律 #3） */
+.note-hero .nh-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--hero-row-bg,rgba(255,255,255,.14));border:1px solid var(--hero-row-bd,rgba(255,255,255,.26));padding:9px 12px;border-radius:12px;margin-top:9px}
+.note-hero .nh-lb{display:inline-flex;align-items:center;line-height:1.2;font-size:calc(var(--fs)*0.867);white-space:nowrap}
+.note-hero .nh-sub{display:inline-flex;align-items:center;line-height:1.2;color:var(--hero-sub,#FFFBF0);font-size:calc(var(--fs)*0.8)}
+.note-hero .nh-bub{display:inline-flex;align-items:center;justify-content:center;min-height:32px;box-sizing:border-box;background:var(--hero-bubble,rgba(255,255,255,.2));border:1px solid var(--hero-bubble-bd,rgba(255,255,255,.3));color:var(--hero-bubble-text,#fff);padding:4px 13px;border-radius:20px;font-size:calc(var(--fs)*0.867);line-height:1.2;cursor:pointer}
+.note-hero .nh-tag{display:inline-flex;align-items:center;line-height:1.2;background:var(--hero-bubble,rgba(255,255,255,.18));border:1px solid var(--hero-bubble-bd,rgba(255,255,255,.28));color:var(--hero-bubble-text,#fff);padding:3px 10px;border-radius:20px;font-size:calc(var(--fs)*0.733);white-space:nowrap}
+.note-hero .note-sl{display:inline-flex;align-items:center;justify-content:center;min-height:30px;box-sizing:border-box;line-height:1.2;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff}
+.note-hero .nh-big{display:inline-flex;align-items:center;line-height:1.1;font-weight:700;color:#fff}
+.note-hero .nh-ml{margin-left:auto}
+.note-hero .note-cup{display:inline-flex;align-items:center;gap:4px;line-height:1.2}
+/* 序列：灰色小分组标题 + 每行严格同一水平线 */
+.tk-gh{display:flex;align-items:center;gap:6px;min-height:26px;padding:4px 10px;box-sizing:border-box;font-size:calc(var(--fs)*0.7);color:var(--muted);letter-spacing:.4px;background:color-mix(in srgb,var(--muted) 10%,transparent);border-bottom:var(--bw) solid var(--border);line-height:1.2}
+.tk-row{display:flex;align-items:center;gap:8px;min-height:34px;padding:5px 10px;box-sizing:border-box;border-bottom:var(--bw) solid var(--border);background:var(--card)}
+.tk-row:last-child{border-bottom:none}
+.tk-k{flex:0 0 auto;display:inline-flex;align-items:center;line-height:1;font-size:calc(var(--fs)*0.833);font-weight:600;white-space:nowrap}
+.tk-t{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:flex-end;line-height:1;font-size:calc(var(--fs)*0.767);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tk-x{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:none;background:none;color:#C25B5B;font-size:calc(var(--fs)*1.05);line-height:1;border-radius:6px;cursor:pointer}
+.tk-x:hover{background:#FBEDED}
+body.night .tk-x:hover{background:rgba(194,91,91,.18)}
+/* 结界满票预警条 */
+.jj-warn{display:flex;align-items:center;gap:7px;min-height:32px;padding:6px 11px;box-sizing:border-box;margin-top:5px;border-radius:9px;background:color-mix(in srgb,var(--red,#C25B5B) 14%,transparent);border:1px solid color-mix(in srgb,var(--red,#C25B5B) 34%,transparent);color:var(--red,#C25B5B);font-size:calc(var(--fs)*0.8);font-weight:600;line-height:1.25;flex-wrap:wrap}
+/* 周常操作行：按钮 / 输入框 / 提示文字同高同基线 */
+.g-metrics{align-items:center}
+.g-metrics .gm,.g-metrics .btn{min-height:32px;box-sizing:border-box;display:inline-flex;align-items:center}
+.g-metrics .gm input{min-height:30px;box-sizing:border-box}
+.xt-pick{align-items:center}
+.xt-pick .chip,.xt-pick .btn{min-height:32px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;line-height:1;margin-top:0;margin-bottom:0}
+.gw-ops{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px}
+.gw-ops .btn,.gw-ops .chip,.gw-ops .inp,.gw-ops .hint{min-height:32px;box-sizing:border-box;display:inline-flex;align-items:center;line-height:1.2;margin:0}
+.gw-flow{display:inline-flex;align-items:center;gap:5px;min-height:28px;line-height:1.2;font-size:calc(var(--fs)*0.8);color:var(--muted);background:none;border:none;padding:0;cursor:pointer;margin-top:4px}
+/* 弹窗留边：不再与手机左右边缘融为一体 */
+.sk-ov{padding:0 12px 10px;box-sizing:border-box}
+.sk-sheet{width:100%;max-width:369px;border:1px solid var(--border);border-radius:16px}
+@media(max-width:480px){
+  .tk-row{flex-wrap:nowrap}
+  .tk-t{font-size:calc(var(--fs)*0.72)}
+}
+</style>
 </head>
 <body data-theme="auto">
 <div class="app">
@@ -1056,8 +1102,8 @@ const YYS_WEEKLY_BASE=[
 function yysWeeklyDefault(){
   return YYS_WEEKLY_BASE.map(x=>{
     const t={id:uid(),name:x.name,type:x.type,shop:!!x.shop,count:0,goal:x.goal||0,score:0,icon:x.icon||'',reward:x.reward||''};
-    if(x.type==='xietong'){t.xtLog=[];t.xtGoal=10;t.xtThreshold=3;t.reward=t.reward||'累计番胜≥3：蓝票+勾玉；<3：金币（每场按累计番胜判定）';}
-    if(x.type==='baigui'){t.bgLog=[];t.reward=t.reward||'按名次记录鼬乐币，每周清零';}
+    if(x.type==='xietong'){t.xtLog=[];t.xtGoal=10;t.xtThreshold=3;t.reward=t.reward||XT_REWARD_NEW;}
+    if(x.type==='baigui'){t.bgLog=[];t.reward=t.reward||BG_REWARD_NEW;}
     if(x.type==='jiejie'){t.jj={count:0,done:false};t.reward=t.reward||'结界突破券满 30 清';}
     if(x.type==='points'){t.reward=t.reward||'积分累计，达目标自动完成';}
     if(x.type==='count'){t.reward=t.reward||'按次积累，达目标自动完成';}
@@ -1109,14 +1155,19 @@ function defaultData(){
   };
 }
 
+/* v75.9.1 协同对弈奖励说明：旧默认文案按「累计番胜」判定，与实际规则不符，予以纠正。 */
+const BG_REWARD_OLD='按名次记录鼬乐币，每周清零';
+const BG_REWARD_NEW='每周上限 600 鼬乐币，累计达 600 自动标记完成（可手动恢复未完成继续记录）';
+const XT_REWARD_OLD='累计番胜≥3：蓝票+勾玉；<3：金币（每场按累计番胜判定）';
+const XT_REWARD_NEW='前10场（门票30万金币）：0-2番纯金币·2番回本 / 3-4番金币+勾玉 / 5-6番勾玉+蓝票；第11场起门票10万，任意番胜均为纯金币';
 function migrateWeeklyV64(){
   if(D._meta&&D._meta.weeklyV64)return;
   D._meta=D._meta||{};
-  const wk=weekKey();
+  /* v75.9.1：原本这里会按周裁剪 xtLog/bgLog 并清零 jj，属破坏性操作。改为只补齐字段，绝不删除记录。 */
   (D.game.weekly||[]).forEach(t=>{
-    if(t.type==='xietong'&&Array.isArray(t.xtLog))t.xtLog=t.xtLog.filter(e=>(e.date||'')>=wk);
-    if(t.type==='baigui'&&Array.isArray(t.bgLog))t.bgLog=t.bgLog.filter(e=>(e.date||'')>=wk);
-    if(t.type==='jiejie'&&t.jj){t.jj={count:0,done:false,log:[]};}
+    if(t.type==='xietong'&&!Array.isArray(t.xtLog))t.xtLog=[];
+    if(t.type==='baigui'&&!Array.isArray(t.bgLog))t.bgLog=[];
+    if(t.type==='jiejie'&&t.jj){if(!Array.isArray(t.jj.log))t.jj.log=[];if(!Array.isArray(t.jj.clears))t.jj.clears=[];}
   });
   (D.game.weekly||[]).forEach(t=>{ if(t.type==='xietong'&&(t.name==='协同斗技'))t.name='协同对弈'; });
   const OLD_SHOP='商店兑换（荣誉2蓝+2黑碎 / 勋章1黑蛋 / 寮黑包+2蓝）';
@@ -1262,6 +1313,12 @@ function migrateGame(g,def){
     if(t.type==='xietong'&&!Array.isArray(t.xtLog))t.xtLog=[];
     if(t.type==='baigui'&&!Array.isArray(t.bgLog))t.bgLog=[];
     if(t.type==='jiejie'){if(!t.jj||typeof t.jj!=='object')t.jj={count:0,done:false};if(!Array.isArray(t.jj.log))t.jj.log=[];}
+    /* v75.9.1 新增字段补全（只补默认值，不覆盖已有数据） */
+    if(t.type==='baigui'){if(typeof t.bgUndone!=='boolean')t.bgUndone=false;if(!(+t.bgCap>0))t.bgCap=600;}
+    if(t.type==='jiejie'){if(!Array.isArray(t.jj.clears))t.jj.clears=[];if(!(+t.jjCap>0))t.jjCap=30;}
+    /* 协同对弈奖励说明：仅当仍是旧的错误默认文案时才纠正，用户自己改过的一律保留 */
+    if(t.type==='xietong'&&t.reward===XT_REWARD_OLD)t.reward=XT_REWARD_NEW;
+    if(t.type==='baigui'&&t.reward===BG_REWARD_OLD)t.reward=BG_REWARD_NEW;
   });
   if(!g.foster||typeof g.foster!=='object')g.foster={};
   for(let i=0;i<7;i++){(g.daily[i]||[]).forEach(t=>{if(t&&t.flex==='reward'&&!Array.isArray(t.countLog))t.countLog=[];});}
@@ -2851,26 +2908,29 @@ function gameWeeklyCard(prog){
     if(t.type==='baigui')return bgCard(t,drag);
     if(t.type==='jiejie')return jjCard(t,drag);
     const done=weeklyDone(t);const ty=weeklyType(t);
+    /* v75.9.1：真蛇/六道之门等计次项——按钮去掉「＋」号（改「完成一次」），并补上真实机制说明 */
+    const tip=gWeeklyTip(t);
+    const tipHtml=tip?('<div class="sub hint">'+tip+'</div>'):'';
     let sub='';
     if(ty==='points'){
       const score=+t.score||0,goal=+t.goal||600,cnt=+t.count||0;
       const status=done?('<span class="tag done">已达成'+goal+'</span>'):('<span class="hint">还差 '+(goal-score)+'</span>');
-      sub='<div class="sub">已打 '+cnt+' 次 · 积分 '+score+' / '+goal+' '+status+'</div>'
+      sub='<div class="sub">已打 '+cnt+' 次 · 积分 '+score+' / '+goal+' '+status+'</div>'+tipHtml
         +'<div class="g-metrics">'
         +'<span class="gm">次数<input type="number" class="inp" value="'+(cnt||'')+'" style="width:66px" onchange="gWeeklySet(\''+t.id+'\',\'count\',+this.value);renderGame()"></span>'
         +'<span class="gm">积分<input type="number" class="inp" value="'+(score||'')+'" style="width:78px" onchange="gWeeklySet(\''+t.id+'\',\'score\',+this.value);renderGame()"></span>'
         +'<span class="gm">目标<input type="number" class="inp" value="'+goal+'" style="width:78px" onchange="gWeeklySet(\''+t.id+'\',\'goal\',+this.value);renderGame()"></span>'
-        +'<button class="btn ghost sm" onclick="gWeeklyFlowAdd(\''+t.id+'\')">＋打卡</button>'
+        +'<button class="btn ghost sm" onclick="gWeeklyFlowAdd(\''+t.id+'\')">完成一次</button>'
         +'</div>'+weeklyFlowHtml(t);
     } else if(ty==='count'){
       const cnt=+t.count||0,goal=+t.goal||0,reached=goal>0&&cnt>=goal;
       const status=reached?('<span class="tag done">已达成'+goal+'次</span>'):(goal?('<span class="hint">还差 '+(goal-cnt)+' 次</span>'):'<span class="hint">记录次数</span>');
       const note=reached?('<div class="sub hint">前'+goal+'次奖励已拿满，后续场次仅普通金币</div>'):'';
-      sub='<div class="sub">已打 '+cnt+(goal?(' / '+goal):'')+' 次</div>'+(goal&&!reached?('<div class="sub hint">还差 '+(goal-cnt)+' 次</div>'):(reached?'<div class="sub hint">已达成目标次数</div>':''))+note
+      sub='<div class="sub">已打 '+cnt+(goal?(' / '+goal):'')+' 次</div>'+(goal&&!reached?('<div class="sub hint">还差 '+(goal-cnt)+' 次</div>'):(reached?'<div class="sub hint">已达成目标次数</div>':''))+note+tipHtml
         +'<div class="g-metrics">'
         +'<span class="gm">次数<input type="number" class="inp" value="'+(cnt||'')+'" style="width:66px" onchange="gWeeklySet(\''+t.id+'\',\'count\',+this.value);renderGame()"></span>'
         +'<span class="gm">目标<input type="number" class="inp" placeholder="可选" value="'+(goal||'')+'" style="width:78px" onchange="gWeeklySet(\''+t.id+'\',\'goal\',+this.value);renderGame()"></span>'
-        +'<button class="btn ghost sm" onclick="gWeeklyFlowAdd(\''+t.id+'\')">＋打卡</button>'
+        +'<button class="btn ghost sm" onclick="gWeeklyFlowAdd(\''+t.id+'\')">完成一次</button>'
         +'</div>'+weeklyFlowHtml(t);
     } else {
       sub='<div class="sub">'+(t.shop?'<span class="tag alt">商店</span>':'')+'</div>';
@@ -2884,6 +2944,12 @@ function gameWeeklyCard(prog){
   }).join('');
   return items
     +'<div class="emptybox">💡 惠比寿：某些活动本周没做但已提前存好，下周做同样活动会自动补领上周奖励。</div>';
+}
+function gWeeklyTip(t){
+  const ty=weeklyType(t);
+  if(ty!=='points'&&ty!=='count')return '';
+  /* v75.9.1：真蛇/六道之门——按用户确认的纠正机制写真实说明，不杜撰 */
+  return '真实机制：入口每周刷新，但次数/进度累计不清零；惠比寿会把次数暂存（最多 4 次），下周打一次即自动补领上周奖励——不是「库存+2」。';
 }
 /* ===== 阴阳师：通用辅助（按天备注 / 寄养 / item 拖拽 / 特殊周常追踪） ===== */
 let gameNoteExp={},gameXTExp={},gameBGExp={},gameXTSel=0,gameDragItem=null,gameFosterExp=false,gameJjExp={},gameDailyRewardExp={};
@@ -2917,46 +2983,80 @@ function gWeeklyMove(id,dir){const arr=D.game.weekly;if(!arr)return;const i=arr.
 function gActMove(id,dir){const arr=D.game.activities;if(!arr)return;const i=arr.findIndex(x=>x.id===id);if(i<0)return;const j=i+dir;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];save();renderGame();}
 function noteTypeMove(type,dir){const o=noteOrder();const i=o.indexOf(type);if(i<0)return;const j=i+dir;if(j<0||j>=o.length)return;[o[i],o[j]]=[o[j],o[i]];D.note.typeOrder=o;save();renderNote();}
 function gameWeeklyTitle(t){const ic=(t.icon&&t.icon.trim())||({xietong:'⚔️',baigui:'🎲',jiejie:'🛡️',text:'📌',count:'🔢',points:'💯'}[t.type]||'📌');return ic+' '+esc(t.name);}
+/* v75.9.1 协同对弈：
+   - 本周场次按 weekKey 界定，往期记录永久保留（周一不再清空，历史时间不会再丢）。
+   - 移除「累计番胜」与主卡奖励气泡；序列每行只显示「N番胜 + 日期 时间」，用灰色小标题分「前 10 场 / 第 11 场起 / 往期」。
+   - 奖励规则（写在卡片说明里，不塞进每行）：前10场门票30万金币，0-2番纯金币(2番回本)、3-4番金币+勾玉、5-6番勾玉+蓝票；第11场起门票10万，任意番胜均为纯金币。 */
 function xtCard(t,drag){
-  const log=t.xtLog||[],n=log.length,target=(+t.xtGoal||10),thr=(+t.xtThreshold||3),done=n>=target;
-  const rw=i=>{let c=0;for(let k=0;k<=i;k++)c+=(+((log[k]||{}).fan)||0);return c>=thr?'蓝票+勾玉':'金币';};
-  const chips=log.map((s,i)=>`<span class="trk-chip">${s.fan}番 · ${s.time}<span class="hint"> ${rw(i)}</span></span>`).join('');
+  const log=t.xtLog||[],target=(+t.xtGoal||10),wk=weekKey();
+  const all=log.map((s,i)=>({s,i}));
+  const cur=all.filter(o=>(o.s.date||'')>=wk),past=all.filter(o=>(o.s.date||'')<wk);
+  const n=cur.length,done=n>=target;
+  const asc=cur.slice().sort((a,b)=>(((a.s.date||'')+(a.s.time||'')).localeCompare((b.s.date||'')+(b.s.time||'')))||(a.i-b.i));
+  const ord={};asc.forEach((o,k)=>{ord[o.i]=k+1;});
+  const desc=arr=>arr.slice().sort((a,b)=>((b.s.date||'')+(b.s.time||'')).localeCompare((a.s.date||'')+(a.s.time||'')));
+  const row=o=>`<div class="tk-row"><span class="tk-k">${(+o.s.fan||0)}番胜</span><span class="tk-t">${esc(o.s.date||'')} ${esc(o.s.time||'')}</span><button class="tk-x" title="删除此场" onclick="xtDel('${t.id}',${o.i})">×</button></div>`;
+  const grp=(title,arr)=>arr.length?(`<div class="tk-gh">${title}</div>`+desc(arr).map(row).join('')):'';
   const pick=`<div class="xt-pick">${[0,1,2,3,4,5,6].map(f=>`<button class="chip ${gameXTSel==f?'on':''}" onclick="gameXTSel=${f};renderGame()">${f}番</button>`).join('')}<button class="btn" onclick="xtAdd('${t.id}')">记录本场</button></div>`;
   const exp=gameXTExp[t.id];
-  const disp=log.map((s,origIdx)=>({s,origIdx})).sort((a,b)=>((b.s.date||'')+(b.s.time||'')).localeCompare((a.s.date||'')+(a.s.time||'')));
-  const list=exp?`<div class="trk-list">${disp.map(({s,origIdx})=>`<div class="trk-row"><span>${s.fan}番胜</span><span class="hint">${s.date} ${s.time} · ${rw(origIdx)}</span><button class="del sm" onclick="xtDel('${t.id}',${origIdx})">×</button></div>`).join('')}</div>`:'';
-  return `<div class="item g-item trk ${done?'done':''}">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">本周 ${n} / ${target} 场 · 累计番胜 ${log.reduce((s,x)=>s+(+x.fan||0),0)}${done?' · <span class="tag done">达成'+target+'场</span>':''}</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${chips?`<div class="trk-chips">${chips}</div>`:''}${pick}${list}</div><button class="note-btn" onclick="gameXTExpToggle('${t.id}')">${exp?'收起':'序列'}</button></div>`;
+  const list=exp?`<div class="trk-list">${grp('前 '+target+' 场',asc.filter(o=>ord[o.i]<=target))}${grp('第 '+(target+1)+' 场起',asc.filter(o=>ord[o.i]>target))}${grp('往期',past)}</div>`:'';
+  const sub='本周 '+n+' / '+target+' 场'+(past.length?(' · 往期 '+past.length+' 场'):'')+(done?(' · <span class="tag done">前'+target+'场已打满</span>'):'');
+  return `<div class="item g-item trk ${done?'done':''}">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">${sub}</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${pick}${list}</div><button class="note-btn" onclick="gameXTExpToggle('${t.id}')">${exp?'收起':'序列'}</button></div>`;
 }
 function xtAdd(id){const t=gWeeklyFind(id);if(!t)return;t.xtLog=t.xtLog||[];t.xtLog.push({fan:gameXTSel,time:new Date().toTimeString().slice(0,5),date:todayStr()});save();renderGame();}
 function xtDel(id,i){const t=gWeeklyFind(id);if(!t||!t.xtLog)return;t.xtLog.splice(i,1);save();renderGame();}
 function gameXTExpToggle(id){gameXTExp[id]=!gameXTExp[id];renderGame();}
+/* v75.9.1 百鬼棋局：本周累计按 weekKey 统计（往期记录保留）。
+   累计达 600 鼬乐币自动标记完成；可手动「恢复未完成」继续记录，下周一自动恢复自动判定。
+   序列用灰色小标题分「计入上限 / 超出上限 / 往期」，每行只显示名次·币 + 日期时间。 */
 function bgCard(t,drag){
-  const log=t.bgLog||[],total=log.reduce((s,x)=>s+(+x.coin||0),0),exp=gameBGExp[t.id];
-  const pick=`<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:4px"><input class="inp" id="bg_rank_${t.id}" placeholder="名次" style="width:80px"><input class="inp" id="bg_coin_${t.id}" placeholder="鼬乐币" style="width:90px"><button class="btn" onclick="bgAdd('${t.id}')">记录</button></div>`;
-  const disp=log.map((s,origIdx)=>({s,origIdx})).sort((a,b)=>((b.s.date||'')+(b.s.time||'')).localeCompare((a.s.date||'')+(a.s.time||'')));
-  const list=exp?`<div class="trk-list">${disp.map(({s,origIdx})=>`<div class="trk-row"><span>第${s.rank}名</span><span class="hint">${s.date} ${s.time} · ${s.coin}鼬乐币</span><button class="del sm" onclick="bgDel('${t.id}',${origIdx})">×</button></div>`).join('')}</div>`:'';
-  return `<div class="item g-item trk">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">已记录 ${log.length} 场 · 累计鼬乐币 ${total}</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${pick}${list}</div><button class="note-btn" onclick="gameBGExpToggle('${t.id}')">${exp?'收起':'序列'}</button></div>`;
+  const log=t.bgLog||[],wk=weekKey(),cap=(+t.bgCap||600),exp=gameBGExp[t.id];
+  const all=log.map((s,i)=>({s,i}));
+  const cur=all.filter(o=>(o.s.date||'')>=wk),past=all.filter(o=>(o.s.date||'')<wk);
+  const asc=cur.slice().sort((a,b)=>(((a.s.date||'')+(a.s.time||'')).localeCompare((b.s.date||'')+(b.s.time||'')))||(a.i-b.i));
+  const total=cur.reduce((s,o)=>s+(+o.s.coin||0),0);
+  const reached=total>=cap,undone=!!t.bgUndone,done=reached&&!undone;
+  let acc=0;const inCap=[],overCap=[];
+  asc.forEach(o=>{ if(acc<cap){inCap.push(o);acc+=(+o.s.coin||0);} else overCap.push(o); });
+  const desc=arr=>arr.slice().sort((a,b)=>((b.s.date||'')+(b.s.time||'')).localeCompare((a.s.date||'')+(a.s.time||'')));
+  const row=o=>`<div class="tk-row"><span class="tk-k">${o.s.rank?('第'+o.s.rank+'名'):'—'} · ${(+o.s.coin||0)}币</span><span class="tk-t">${esc(o.s.date||'')} ${esc(o.s.time||'')}</span><button class="tk-x" title="删除此条" onclick="bgDel('${t.id}',${o.i})">×</button></div>`;
+  const grp=(title,arr)=>arr.length?(`<div class="tk-gh">${title}</div>`+desc(arr).map(row).join('')):'';
+  const list=exp?`<div class="trk-list">${grp('计入上限',inCap)}${grp('超出上限',overCap)}${grp('往期',past)}</div>`:'';
+  const ops=`<div class="gw-ops"><input class="inp" id="bg_rank_${t.id}" placeholder="名次" style="width:76px"><input class="inp" id="bg_coin_${t.id}" placeholder="鼬乐币" style="width:92px"><button class="btn" onclick="bgAdd('${t.id}')">记录</button>${reached?`<button class="btn ghost sm" onclick="bgToggleDone('${t.id}')">${done?'恢复未完成，继续记录':('标记达成'+chkSvg())}</button>`:''}</div>`;
+  const st=done?(' · <span class="tag done">'+chkSvg()+' 本周上限已达成</span>'):(reached?' · <span class="hint">已达上限（手动改为未完成，可继续记录）</span>':(' · <span class="hint">还差 '+(cap-total)+'</span>'));
+  const sub='本周 '+cur.length+' 场 · 鼬乐币 '+total+' / '+cap+st+(past.length?(' · 往期 '+past.length+' 场'):'');
+  return `<div class="item g-item trk ${done?'done':''}">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">${sub}</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${ops}${list}</div><button class="note-btn" onclick="gameBGExpToggle('${t.id}')">${exp?'收起':'序列'}</button></div>`;
 }
+function bgToggleDone(id){const t=gWeeklyFind(id);if(!t)return;t.bgUndone=!t.bgUndone;save();renderNav();renderGame();}
 function bgAdd(id){const t=gWeeklyFind(id);if(!t)return;t.bgLog=t.bgLog||[];const r=document.getElementById('bg_rank_'+id),c=document.getElementById('bg_coin_'+id);const rank=+(r?r.value:0)||0,coin=+(c?c.value:0)||0;if(!rank&&!coin){toast('填名次或鼬乐币');return;}t.bgLog.push({rank,coin,time:new Date().toTimeString().slice(0,5),date:todayStr()});save();renderGame();}
 function bgDel(id,i){const t=gWeeklyFind(id);if(!t||!t.bgLog)return;t.bgLog.splice(i,1);save();renderGame();}
 function gameBGExpToggle(id){gameBGExp[id]=!gameBGExp[id];renderGame();}
+/* v75.9.1 结界突破券：
+   - 彻底去掉 ＋1／－1 气泡（手机上臃肿且 30 封顶后 ＋1 无意义）。
+   - 定位：随时满、随时清，不随周刷新（放在周常只是归类，周一不再清零）。
+   - 偷懒流程：攒满了点「我攒满了（30）」→ 卡片弹红色预警条「已满 30，尽快清票」→ 清完点「标记已清」，
+     自动记下清票日期时间并归零，开始下一轮。全程只需两次点击。
+   - 旧的逐张记录 jj.log 一律保留（只读可删），新增 jj.clears 存清票历史。 */
 function jjCard(t,drag){
-  const jj=t.jj||{count:0,done:false,log:[]},full=jj.count>=30;
-  const log=(jj.log||[]).map((e,i)=>`<div class="trk-row"><span>第${i+1}次</span><span class="hint">${esc(e.time)}</span></div>`).join('');
-  const input=`<div class="row" style="align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">
-    <button class="btn ghost sm" onclick="jjInc('${t.id}')">＋1</button>
-    <button class="btn ghost sm" ${(jj.count>0)?'':'disabled style="opacity:.4"'} onclick="jjDec('${t.id}')">－1</button>
-    <input class="inp" id="jj_${t.id}" value="${jj.count||''}" style="width:64px;text-align:center;font-size:calc(var(--fs)*1.1)" onchange="jjSet('${t.id}',this.value)">
-    <span class="hint">/ 30</span>
-    ${full?'<button class="btn ghost sm" onclick="jjDone(\''+t.id+'\')">'+(jj.done?'已清'+chkSvg():'需尽快打完'+chkSvg())+'</button>':''}
-    ${(jj.log&&jj.log.length)?`<button class="note-btn" onclick="gameJjExp['${t.id}']=!gameJjExp['${t.id}'];renderGame()">${gameJjExp[t.id]?'收起':'每次时间'}</button>`:''}
-  </div>${ (gameJjExp[t.id]&&jj.log&&jj.log.length)?`<div class="trk-list">${log}</div>`:'' }`;
-  return `<div class="item g-item trk ${full?'jj-full':''}">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">满 30 自动出现勾选（需尽快打完）；每 ＋1 自动记一次时间</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${input}</div></div>`;
+  const jj=t.jj||(t.jj={count:0,done:false,log:[],clears:[]});
+  if(!Array.isArray(jj.log))jj.log=[];
+  if(!Array.isArray(jj.clears))jj.clears=[];
+  const cap=(+t.jjCap||30),cnt=+jj.count||0,full=cnt>=cap,exp=gameJjExp[t.id];
+  const warn=full?`<div class="jj-warn"><span>⚠️ 已满 ${cap} / ${cap}，尽快清票（再得到的券不会计入）</span></div>`:'';
+  const ops=`<div class="gw-ops">${full?`<button class="btn" onclick="jjClear('${t.id}')">标记已清</button>`:`<button class="btn" onclick="jjFill('${t.id}')">我攒满了（${cap}）</button>`}<span class="hint">当前</span><input class="inp" id="jj_${t.id}" value="${cnt||''}" placeholder="0" style="width:62px;text-align:center" onchange="jjSet('${t.id}',this.value)"><span class="hint">/ ${cap} 张</span>${(jj.clears.length||jj.log.length)?`<button class="btn ghost sm" onclick="gameJjExp['${t.id}']=!gameJjExp['${t.id}'];renderGame()">${exp?'收起':'序列'}</button>`:''}</div>`;
+  const cRows=jj.clears.map((e,i)=>({e,i})).reverse().map(({e,i})=>`<div class="tk-row"><span class="tk-k">清 ${(+e.n||cap)} 张</span><span class="tk-t">${esc((e.date||'')+' '+(e.time||''))}</span><button class="tk-x" title="删除此条" onclick="jjClearDel('${t.id}',${i})">×</button></div>`).join('');
+  const lRows=jj.log.map((e,i)=>`<div class="tk-row"><span class="tk-k">第 ${i+1} 张</span><span class="tk-t">${esc((e.date||'')+' '+(e.time||''))}</span><button class="tk-x" title="删除此条" onclick="jjLogDel('${t.id}',${i})">×</button></div>`).join('');
+  const list=exp?`<div class="trk-list">${jj.clears.length?('<div class="tk-gh">已清记录</div>'+cRows):''}${jj.log.length?('<div class="tk-gh">历史逐张记录</div>'+lRows):''}</div>`:'';
+  const last=jj.clears.length?jj.clears[jj.clears.length-1]:null;
+  const sub='当前 '+cnt+' / '+cap+' 张 · 随时满随时清，不随周刷新'+(last?(' · 上次清票 '+esc((last.date||'')+' '+(last.time||''))):'');
+  return `<div class="item g-item trk ${full?'jj-full':''}">${drag}<div style="flex:1"><div class="ttitle">${gameWeeklyTitle(t)}</div><div class="sub">${sub}</div>${t.reward?`<div class="sub hint">${esc(t.reward)}</div>`:''}${warn}${ops}${list}</div></div>`;
 }
-function jjSet(id,v){const t=gWeeklyFind(id);if(!t)return;t.jj=t.jj||{count:0,done:false,log:[]};t.jj.count=+v||0;if(t.jj.count<30)t.jj.done=false;save();renderGame();}
-function jjInc(id){const t=gWeeklyFind(id);if(!t)return;t.jj=t.jj||{count:0,done:false,log:[]};t.jj.count=(+t.jj.count||0)+1;t.jj.log=t.jj.log||[];t.jj.log.push({time:new Date().toTimeString().slice(0,5),date:todayStr()});if(t.jj.count<30)t.jj.done=false;save();renderGame();}
-function jjDec(id){const t=gWeeklyFind(id);if(!t||!t.jj)return;if((+t.jj.count||0)<=0)return;t.jj.count-=1;t.jj.log=t.jj.log||[];if(t.jj.log.length)t.jj.log.pop();if(t.jj.count<30)t.jj.done=false;save();renderGame();}
-function jjDone(id){const t=gWeeklyFind(id);if(!t||!t.jj)return;t.jj.done=!t.jj.done;save();renderGame();}
+function jjEnsure(t){t.jj=t.jj||{count:0,done:false,log:[],clears:[]};if(!Array.isArray(t.jj.log))t.jj.log=[];if(!Array.isArray(t.jj.clears))t.jj.clears=[];return t.jj;}
+function jjSet(id,v){const t=gWeeklyFind(id);if(!t)return;const jj=jjEnsure(t);jj.count=Math.max(0,+v||0);if(jj.count>0)jj.done=false;save();renderNav();renderGame();}
+function jjFill(id){const t=gWeeklyFind(id);if(!t)return;const jj=jjEnsure(t);jj.count=(+t.jjCap||30);jj.done=false;save();renderNav();renderGame();}
+function jjClear(id){const t=gWeeklyFind(id);if(!t)return;const jj=jjEnsure(t);const cap=(+t.jjCap||30);jj.clears.push({n:(+jj.count||cap),date:todayStr(),time:new Date().toTimeString().slice(0,5)});jj.count=0;jj.done=true;save();renderNav();renderGame();toast('已记录清票时间，重新开始累计');}
+function jjClearDel(id,i){const t=gWeeklyFind(id);if(!t)return;const jj=jjEnsure(t);jj.clears.splice(i,1);save();renderGame();}
+function jjLogDel(id,i){const t=gWeeklyFind(id);if(!t)return;const jj=jjEnsure(t);jj.log.splice(i,1);save();renderGame();}
 function gameActivityCard(prog){
   const acts=D.game.activities.filter(a=>{const s=new Date(a.end||'2099-12-31');s.setHours(23,59,59);return new Date()<=s;});
   let html='';
@@ -3080,7 +3180,9 @@ function weeklyDone(t){
   const ty=weeklyType(t);
   if(ty==='count'){const g=+t.goal||0;return g>0&&(+t.count||0)>=g;}
   if(ty==='points'){const g=+t.goal||600;return (+t.score||0)>=g;}
-  if(ty==='xietong'){const g=(+t.xtGoal||10);return (+((t.xtLog||[]).length))>=g;}
+  /* v75.9.1：协同/百鬼改为按 weekKey 只统计本周（往期记录保留，不再周一清空） */
+  if(ty==='xietong'){const g=(+t.xtGoal||10),wk=weekKey();return (t.xtLog||[]).filter(e=>(e.date||'')>=wk).length>=g;}
+  if(ty==='baigui'){const cap=(+t.bgCap||600),wk=weekKey();const tot=(t.bgLog||[]).filter(e=>(e.date||'')>=wk).reduce((s,x)=>s+(+x.coin||0),0);return tot>=cap&&!t.bgUndone;}
   if(ty==='jiejie'){return !!(t.jj&&t.jj.done);}
   const p=(D.game.progress[weekKey()]||{}).weekly||{};return !!p[t.id];
 }
@@ -3156,8 +3258,8 @@ function gTplSet(tid,key,val){const t=gTplFind(tid);if(!t)return;t[key]=val;save
 function gWeeklyFind(tid){return D.game.weekly.find(x=>x.id===tid);}
 function gWeeklySet(tid,key,val){const t=gWeeklyFind(tid);if(!t)return;t[key]=val;
   if(key==='type'){
-    if(val==='xietong'){if(!Array.isArray(t.xtLog))t.xtLog=[];if(!t.xtGoal)t.xtGoal=10;if(!t.xtThreshold)t.xtThreshold=3;if(!t.reward)t.reward='累计番胜≥3：蓝票+勾玉；<3：金币（每场按累计番胜判定）';}
-    if(val==='baigui'){if(!Array.isArray(t.bgLog))t.bgLog=[];if(!t.reward)t.reward='按名次记录鼬乐币，每周清零';}
+    if(val==='xietong'){if(!Array.isArray(t.xtLog))t.xtLog=[];if(!t.xtGoal)t.xtGoal=10;if(!t.xtThreshold)t.xtThreshold=3;if(!t.reward)t.reward=XT_REWARD_NEW;}
+    if(val==='baigui'){if(!Array.isArray(t.bgLog))t.bgLog=[];if(!t.reward)t.reward=BG_REWARD_NEW;}
     if(val==='jiejie'){if(!t.jj||typeof t.jj!=='object')t.jj={count:0,done:false};if(!t.reward)t.reward='结界突破券满 30 清';}
     if(val==='points'&&!t.reward)t.reward='积分累计，达目标自动完成';
     if(val==='count'&&!t.reward)t.reward='按次积累，达目标自动完成';
@@ -3293,8 +3395,8 @@ function gameWeeklyTpl(){
 }
 function gAddWeekly(type){const t={id:uid(),name:'',shop:false,type:type||'text',count:0,goal:0,score:0,icon:'',reward:''};
   if(type==='points'){t.goal=600;t.reward='积分累计，达目标自动完成';}
-  if(type==='xietong'){t.name='协同对弈';t.xtLog=[];t.xtGoal=10;t.xtThreshold=3;t.reward='累计番胜≥3：蓝票+勾玉；<3：金币（每场按累计番胜判定）';}
-  if(type==='baigui'){t.name='百鬼棋局';t.bgLog=[];t.reward='按名次记录鼬乐币，每周清零';}
+  if(type==='xietong'){t.name='协同对弈';t.xtLog=[];t.xtGoal=10;t.xtThreshold=3;t.reward=XT_REWARD_NEW;}
+  if(type==='baigui'){t.name='百鬼棋局';t.bgLog=[];t.reward=BG_REWARD_NEW;}
   if(type==='jiejie'){t.name='结界突破券检查';t.jj={count:0,done:false};t.reward='结界突破券满 30 清';}
   if(type==='count'){t.reward='按次积累，达目标自动完成';}
   if(type==='text'){t.reward='勾选完成';}
@@ -3578,7 +3680,7 @@ function migrateMovie(){
     if(it.epKind===undefined)it.epKind='正片';
     if(it.src===undefined)it.src='';
     if(it.srcUrl===undefined)it.srcUrl='';
-    if(it.status===undefined)it.status='done'; // 老数据=已记录历史，默认「已追完」
+    if(it.status===undefined)it.status='watching'; // 老数据默认「正在看」（置顶活跃区），已明确看完的才会是 done；避免全部挤进「已看完」导致「正在看」空着
   });
 }
 function movieZoneCards(list){
@@ -3588,7 +3690,7 @@ function movieZoneCards(list){
   const groupArr=Object.entries(groups).map(([k,g])=>{const sorted=g.items.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));return {key:k,items:sorted,latest:sorted[0]?sorted[0].date:''};}).sort((a,b)=>(b.latest||'').localeCompare(a.latest||''));
   return groupArr.map(({key,items})=>{const asSeries=items.length>1||items.some(i=>i.mode==='series');return asSeries?movieSeriesCard(items):movieItem(items[0]);}).join('');
 }
-function mvStatusPill(s){s=s||'done';return s==='watching'?'<span class="mv-pill mv-pill-w">🔴 正在看</span>':'<span class="mv-pill mv-pill-d">已追完</span>';}
+function mvStatusPill(s){s=s||'watching';return s==='watching'?'<span class="mv-pill mv-pill-w">🔴 正在看</span>':'<span class="mv-pill mv-pill-d">已追完</span>';}
 function mvMonthOf(x){return String(x.date||'').slice(0,7);}
 function mvMonthLabel(m){const p=String(m||'').split('-');return p.length===2?p[0]+'年'+p[1]+'月':m;}
 function mvMonthKeys(list){const s=new Set();(list||[]).forEach(x=>{const m=mvMonthOf(x);if(m)s.add(m);});return Array.from(s).sort().reverse();}
@@ -3606,8 +3708,8 @@ function renderMovie(){
     <div class="chip ${movieStatus==='done'?'on':''}" onclick="movieStatus='done';movieMonth='';moviePage=1;renderMovie()">已看完</div>
   </div>`;
   let list=D.movie.filter(x=>movieFilter==='全部'||x.category===movieFilter);
-  const watching=list.filter(x=>(x.status||'done')==='watching');
-  const done=list.filter(x=>(x.status||'done')==='done');
+  const watching=list.filter(x=>(x.status||'watching')==='watching');
+  const done=list.filter(x=>(x.status||'watching')==='done');
   const showWatching=movieStatus!=='done';
   const showDone=movieStatus!=='watching';
   if(list.length===0)html+=`<div class="empty"><div class="em">🎬</div>暂无观影记录</div>`;
@@ -4682,34 +4784,34 @@ function renderNote(){
   const order=noteOrder();
   let html=`
   <div class="card note-hero">
-    <div style="font-size:calc(var(--fs)*0.867);opacity:.9">${greet()}</div>
-    <div style="font-size:calc(var(--fs)*1.467);font-weight:700;margin:2px 0">Murphy</div>
-    <div style="font-size:calc(var(--fs)*0.867);opacity:.9">${fmtDate(new Date())}</div>
+    <div class="nh-sub">${greet()}</div>
+    <div class="nh-big" style="font-size:calc(var(--fs)*1.467);margin:2px 0">Murphy</div>
+    <div class="nh-sub">${fmtDate(new Date())}</div>
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <span style="background:var(--hero-bubble,rgba(255,255,255,.22));padding:4px 12px;border-radius:20px;font-size:calc(var(--fs)*0.867);cursor:pointer;color:var(--hero-bubble-text,#fff)" onclick="noteSetMood()">${N.mood?('心情:'+N.mood):'设置心情'}</span>
-      <span style="background:var(--hero-bubble,rgba(255,255,255,.22));padding:4px 12px;border-radius:20px;font-size:calc(var(--fs)*0.867);cursor:pointer;color:var(--hero-bubble-text,#fff)" onclick="noteSetWeather()">${N.weather?('天气:'+N.weather):'设置天气'}</span>
+      <span class="nh-bub" onclick="noteSetMood()">${N.mood?('心情:'+N.mood):'设置心情'}</span>
+      <span class="nh-bub" onclick="noteSetWeather()">${N.weather?('天气:'+N.weather):'设置天气'}</span>
     </div>
-    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--hero-row-bg,rgba(0,0,0,.12));padding:8px 12px;border-radius:12px">
-      <span style="font-size:calc(var(--fs)*0.867)">🛏 睡眠</span>
-      <span class="note-sl" style="background:rgba(255,255,255,.18);color:var(--hero-row-text,#fff)" onclick="openTP(this,'${SL.bed||''}','setSleep','bed')">${SL.bed||'入睡'}</span>
-      <span style="opacity:.7">→</span>
-      <span class="note-sl" style="background:rgba(255,255,255,.18);color:var(--hero-row-text,#fff)" onclick="openTP(this,'${SL.wake||''}','setSleep','wake')">${SL.wake||'起床'}</span>
-      <span style="font-size:calc(var(--fs)*0.8);opacity:.9;margin-left:auto;font-weight:600;color:var(--hero-row-text,#fff)">${sleepDur(SL.bed,SL.wake)||'设置'}</span>
+    <div class="nh-row">
+      <span class="nh-lb">🛏 睡眠</span>
+      <span class="note-sl" onclick="openTP(this,'${SL.bed||''}','setSleep','bed')">${SL.bed||'入睡'}</span>
+      <span class="nh-lb" style="opacity:.75">→</span>
+      <span class="note-sl" onclick="openTP(this,'${SL.wake||''}','setSleep','wake')">${SL.wake||'起床'}</span>
+      <span class="nh-sub nh-ml" style="font-weight:600">${sleepDur(SL.bed,SL.wake)||'设置'}</span>
     </div>
-    <div style="margin-top:8px;background:var(--hero-row-bg,rgba(0,0,0,.12));padding:8px 12px;border-radius:12px">
+    <div class="nh-row" style="flex-direction:column;align-items:stretch;gap:0">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="font-size:calc(var(--fs)*0.867)">💧 饮水</span>
-        <span class="note-sl" style="background:rgba(255,255,255,.18);color:var(--hero-row-text,#fff)" onclick="noteSetCap()" title="点击设置一杯容量">杯 ${cap}ml</span>
-        <span style="font-size:calc(var(--fs)*1.25);font-weight:700;color:var(--hero-row-text,#fff)">${totalMl}ml</span>
-        <span style="font-size:calc(var(--fs)*0.8);opacity:.85;color:var(--hero-row-text,#fff)">≈ ${(totalMl/cap).toFixed(1)} 杯</span>
+        <span class="nh-lb">💧 饮水</span>
+        <span class="note-sl" onclick="noteSetCap()" title="点击设置一杯容量">杯 ${cap}ml</span>
+        <span class="nh-big" style="font-size:calc(var(--fs)*1.25)">${totalMl}ml</span>
+        <span class="nh-sub">≈ ${(totalMl/cap).toFixed(1)} 杯</span>
       </div>
       <div class="water-add">${[['1/4',0.25],['1/3',0.33],['1/2',0.5],['3/4',0.75],['1',1]].map(([g,f])=>`<span class="chip" onclick="noteWaterAdd(${Math.round(cap*f)})"><span>${g}杯</span><b>${Math.round(cap*f)}ml</b></span>`).join('')}<span class="chip" onclick="noteWaterCustom()"><span>＋</span><b>自定义</b></span></div>
-      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">${cupHtml}</div>
+      <div style="margin-top:8px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">${cupHtml}</div>
     </div>
-    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--hero-row-bg,rgba(0,0,0,.12));padding:8px 12px;border-radius:12px">
-      <span style="font-size:calc(var(--fs)*0.8);opacity:.9;white-space:nowrap;font-weight:600">随记概览</span>
-      <span style="font-size:calc(var(--fs)*0.867);font-weight:700;white-space:nowrap">共 ${entries.length} 条</span>
-      ${types.filter(t=>cat[t]>0).map(t=>`<span style="background:var(--hero-bubble,rgba(255,255,255,.15));padding:2px 10px;border-radius:20px;font-size:calc(var(--fs)*0.733);white-space:nowrap;color:var(--hero-bubble-text,#fff)">${t} ${cat[t]}</span>`).join('')}
+    <div class="nh-row">
+      <span class="nh-sub" style="font-weight:600;white-space:nowrap">随记概览</span>
+      <span class="nh-lb" style="font-weight:700">共 ${entries.length} 条</span>
+      ${types.filter(t=>cat[t]>0).map(t=>`<span class="nh-tag">${t} ${cat[t]}</span>`).join('')}
     </div>
   </div>
   ${renderTodayOverview()}
@@ -5545,23 +5647,30 @@ function setPalette(accent,tint,soft){
  d.setProperty('--accent-soft',soft);
  d.setProperty('--on-accent',ink(accent));
  d.setProperty('--on-tint',ink(tint));
- /* v75.6.6: Hero 首卡智能文字色 —— 基于主题色亮度自动计算，确保 48 色皮肤全适配 */
- const ht=ink(accent); /* #fff(深色背景用白字) 或 #1A1A1A(浅色背景用深色字) */
- const isDark=ht==='#fff';
- d.setProperty('--hero-text',ht);
- d.setProperty('--hero-shadow',isDark?'0 1px 3px rgba(0,0,0,.35)':'0 1px 0 rgba(255,255,255,.45)');
- /* v75.7: 首卡玻璃薄染背景（主题色半透明渐变，非实色） */
- const _hr=parseInt(accent.slice(1),16),_sr=parseInt(soft.slice(1),16);
- d.setProperty('--hero-bg1',`rgba(${(_hr>>16)&255},${(_hr>>8)&255},${_hr&255},0.6)`);
- d.setProperty('--hero-bg2',`rgba(${(_sr>>16)&255},${(_sr>>8)&255},${_sr&255},0.46)`);
- /* 心情/天气气泡：白字时用半透明白气泡；深字时用半透明深气泡 */
- d.setProperty('--hero-bubble',isDark?'rgba(255,255,255,.22)':'rgba(0,0,0,.10)');
- d.setProperty('--hero-bubble-text',isDark?'#fff':'inherit');
- /* 睡眠/饮水/随记概览行：深色半透明底 */
- d.setProperty('--hero-row-bg',isDark?'rgba(0,0,0,.12)':'rgba(0,0,0,.06)');
- d.setProperty('--hero-row-text',ht);
+ /* v75.9.1: 首卡统一配方 —— 日常小记与囤货整理共用同一套变量，恒为白字 + 米白副标题。
+    浅色皮肤（如浅橙/浅杏）下自动把渐变加深，保证白字在 48 色皮肤上都清晰可辨。 */
+ const _rgb=h=>{const n=parseInt(h.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255];};
+ const _lum=h=>{const [r,g,b]=_rgb(h);const f=c=>{c/=255;return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);};return 0.2126*f(r)+0.7152*f(g)+0.0722*f(b);};
+ const _deep=(h,amt)=>{const [r,g,b]=_rgb(h);return [Math.round(r*(1-amt)),Math.round(g*(1-amt)),Math.round(b*(1-amt))];};
+ const _L=_lum(accent);
+ const _amt=_L>0.74?0.30:(_L>0.62?0.20:(_L>0.50?0.10:0));
+ const [_r1,_g1,_b1]=_deep(accent,_amt);
+ const [_r2,_g2,_b2]=_deep(soft,Math.min(_amt+0.06,0.34));
+ d.setProperty('--hero-text','#fff');
+ d.setProperty('--hero-sub','#FFFBF0');           /* 米白副标题：比纯白柔和，与大标题区分且清晰 */
+ d.setProperty('--hero-shadow','0 1px 3px rgba(0,0,0,.28)');
+ d.setProperty('--hero-bg1',`rgba(${_r1},${_g1},${_b1},0.62)`);
+ d.setProperty('--hero-bg2',`rgba(${_r2},${_g2},${_b2},0.48)`);
+ /* 气泡：半透明白底 + 白边 + 白字，一眼可辨 */
+ d.setProperty('--hero-bubble','rgba(255,255,255,.20)');
+ d.setProperty('--hero-bubble-bd','rgba(255,255,255,.30)');
+ d.setProperty('--hero-bubble-text','#fff');
+ /* 睡眠/饮水/随记概览行：半透明白底 + 白边（与囤货 stat 同款） */
+ d.setProperty('--hero-row-bg','rgba(255,255,255,.15)');
+ d.setProperty('--hero-row-bd','rgba(255,255,255,.28)');
+ d.setProperty('--hero-row-text','#fff');
  /* 饮水快捷按钮 chip 内文字 */
- d.setProperty('--hero-chip-text',isDark?'#fff':'#333');
+ d.setProperty('--hero-chip-text','#333');
  const meta=document.querySelector('meta[name=theme-color]');if(meta)meta.content=accent;
 }
 function applyTheme(t){
@@ -5696,7 +5805,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.9.0';
+const APP_VER='v75.9.2';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
@@ -6193,11 +6302,13 @@ function dailyResetCheck(){
         if(Object.keys(ob).length===0)delete D.game.progress[old];
       }
       D._meta.lastResetWeek=wk;
-      // v64：周常整体刷新——清掉按数值类（协同/百鬼/结界）的当期累计，确保周一所有周常都重置
+      // v75.9.1：⚠️ 不再删除任何历史记录（旧版周一直接清空 xtLog/bgLog/jj，这正是历史上「丢了几条场次时间」的原因）。
+      // 协同/百鬼改为按 weekKey 只统计本周，往期记录保留在序列的「往期」分组里可查可删；
+      // 结界突破券本就「随时满、随时清」，不随周刷新，因此完全不动它的张数与记录。
       (D.game.weekly||[]).forEach(t=>{
-        if(t.type==='xietong'&&Array.isArray(t.xtLog))t.xtLog=[];
-        if(t.type==='baigui'&&Array.isArray(t.bgLog))t.bgLog=[];
-        if(t.type==='jiejie'&&t.jj){t.jj={count:0,done:false,log:[]};}
+        if(t.type==='xietong'&&!Array.isArray(t.xtLog))t.xtLog=[];
+        if(t.type==='baigui'){if(!Array.isArray(t.bgLog))t.bgLog=[];t.bgUndone=false;/* 新的一周恢复 600 自动判定 */}
+        if(t.type==='jiejie'&&t.jj){if(!Array.isArray(t.jj.log))t.jj.log=[];if(!Array.isArray(t.jj.clears))t.jj.clears=[];}
       });
     }
     // 系统动作：不推进版本号、不标记「本机有未上传改动」。
