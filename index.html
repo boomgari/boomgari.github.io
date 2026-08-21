@@ -766,6 +766,75 @@ textarea.inp{min-height:52px;}
 .item.arch{opacity:.6;}
 .btn.ghost.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent);}
 </style>
+<style>
+/* ===== 囤货整理 v75.9 ===== */
+.stock-hero{color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:calc(var(--radius) + 2px);padding:16px;margin-bottom:14px;overflow:visible;min-height:200px;flex-shrink:0;box-shadow:0 8px 24px rgba(0,0,0,.12);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 60%,transparent),color-mix(in srgb,var(--accent-soft) 48%,transparent));position:relative;text-shadow:0 1px 3px rgba(0,0,0,.28)}
+.stock-hero h1{margin:0 0 4px;font-size:21px;font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.stock-hero .sub{font-size:13px;opacity:.95;margin-bottom:16px}
+.stock-hero .stats{display:flex;gap:8px;flex-wrap:wrap}
+.stock-hero .stat{flex:1 1 0;min-width:84px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:9px 10px}
+.stock-hero .stat b{display:block;font-size:20px;line-height:1}
+.stock-hero .stat span{font-size:11px;opacity:.92}
+.stock-hero .stat.soon b{color:#fff0cf}.stock-hero .stat.warn b{color:#ffd9d2}
+.sk-sortbar{display:flex;justify-content:flex-end;margin:2px 2px 4px}
+.sk-grp{margin-bottom:2px}
+.sk-gh{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;margin:12px 2px 8px;cursor:pointer;user-select:none}
+.sk-gh .em{font-size:16px}
+.sk-gh-t{flex:0 0 auto}
+.sk-cnt{margin-left:auto;font-size:11.5px;font-weight:500;color:var(--muted)}
+.sk-fold{font-size:12px;color:var(--muted);transition:transform .2s;margin-left:6px}
+.sk-handle{font-size:16px;color:var(--accent);cursor:grab;touch-action:none;padding:0 4px}
+.sk-gh2{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;margin:14px 2px 8px}
+.sk-it{display:flex;align-items:center;gap:10px}
+.sk-it .ic{width:34px;height:34px;flex:0 0 34px;border-radius:9px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid var(--border)}
+.sk-it .body{flex:1;min-width:0}
+.sk-it .nm{font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sk-it .nm .br{font-weight:400;font-size:12px;color:var(--muted)}
+.sk-it .meta{font-size:12px;color:var(--muted);margin-top:1px}
+.sk-it .meta .mode{color:var(--accent);font-weight:600}
+.sk-pbar{height:7px;background:var(--bg);border-radius:6px;overflow:hidden;margin-top:7px}
+.sk-pbar>i{display:block;height:100%;border-radius:6px;background:var(--accent);transition:width .3s}
+.sk-pbar.low>i{background:var(--amber)}.sk-pbar.crit>i{background:var(--red)}
+.sk-bub{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;margin-top:6px}
+.sk-bub.exp{background:var(--red-bg);color:var(--red);border:1px solid color-mix(in srgb,var(--red) 30%,transparent)}
+.sk-bub.low{background:var(--amber-bg);color:var(--amber);border:1px solid color-mix(in srgb,var(--amber) 30%,transparent)}
+.sk-bub.ok{background:var(--green-bg);color:var(--green);border:1px solid color-mix(in srgb,var(--green) 30%,transparent)}
+.sk-row2{display:flex;align-items:center;gap:8px;margin-top:8px}
+.sk-sp{flex:1}
+.sk-act{font-size:12px;color:var(--accent);border:1px solid var(--border);background:var(--bg);border-radius:8px;padding:5px 9px;white-space:nowrap}
+.sk-act.del{color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)}
+.sk-search{margin:2px 2px 8px}
+.sk-search input{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;background:var(--input-bg);font-size:14px;color:var(--text);font-family:inherit;box-sizing:border-box}
+.sk-ag-cat{font-size:12px;font-weight:700;color:var(--muted);margin:12px 2px 6px}
+.ag-item{background:color-mix(in srgb,var(--card) 50%,transparent);backdrop-filter:blur(14px) saturate(135%);-webkit-backdrop-filter:blur(14px) saturate(135%);border:1px solid color-mix(in srgb,var(--accent-soft) 38%,var(--border));border-radius:var(--radius);padding:11px 12px;margin-bottom:8px;box-shadow:0 4px 18px rgba(30,40,60,.06),inset 0 1px 0 rgba(255,255,255,.55);display:flex;align-items:center;gap:8px;flex-wrap:wrap;cursor:pointer}
+.ag-item .nm{font-weight:600;font-size:14px;flex:1;min-width:0}
+.ag-item .ag-meta{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.ag-item .ar{color:var(--muted);font-size:16px;transition:transform .2s}
+.ag-item.open .ar{transform:rotate(90deg)}
+.ag-tl{width:100%;padding:4px 2px 0}
+.sk-tl{display:flex;align-items:flex-start;gap:10px;padding:11px 2px;border-bottom:1px dashed var(--border)}
+.sk-tl:last-child{border-bottom:none}
+.sk-tl .q{flex:0 0 58px;font-weight:700;font-size:12.5px;color:#fff;background:var(--accent);border-radius:8px;padding:4px 0;text-align:center;line-height:1.2}
+.sk-tl .d{flex:1;min-width:0;font-size:12.5px}
+.sk-tl .d .t{font-weight:600}
+.sk-tl .d .s{color:var(--muted);font-size:11.5px;margin-top:3px}
+.cap{font-size:11.5px;color:var(--muted);margin:2px 2px 8px}
+.sk-fab{position:fixed;right:max(14px,calc(50% - 393px/2 + 14px));bottom:18px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:26px;box-shadow:0 6px 18px rgba(30,40,60,.3);z-index:20}
+.sk-ov{position:fixed;inset:0;background:rgba(20,24,28,.42);z-index:30;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.sk-ov.show{display:flex}
+.sk-sheet{width:393px;max-width:100%;max-height:90vh;overflow:auto;background:var(--card);border-radius:16px 16px 0 0;padding:16px 16px 22px;box-shadow:0 -8px 30px rgba(0,0,0,.18)}
+.sk-sheet h3{margin:0 0 12px;font-size:16px}
+.sk-sheet .fld{margin-bottom:10px}
+.sk-sheet .fld label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.sk-sheet .fld input,.sk-sheet .fld select,.sk-sheet .fld textarea{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;background:var(--input-bg);font-size:14px;color:var(--text);font-family:inherit;box-sizing:border-box}
+.sk-sheet .fld textarea{resize:vertical;min-height:48px}
+.sk-sheet .seg{display:flex;gap:6px}
+.sk-sheet .seg button{flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-size:13px}
+.sk-sheet .seg button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sk-sheet .hint{font-size:11.5px;color:var(--muted);margin-top:3px}
+.sk-done{margin-top:8px;width:100%;padding:12px;border:none;border-radius:11px;background:var(--accent);color:#fff;font-size:15px;font-weight:600}
+.sk-cancel{margin-top:8px;width:100%;padding:10px;border:1px solid var(--border);border-radius:11px;background:var(--bg);color:var(--muted);font-size:14px}
+</style>
 </head>
 <body data-theme="auto">
 <div class="app">
@@ -934,6 +1003,7 @@ const NAV=[
   {id:'plan',name:'从长计议',ic:'🗺️'},
   {id:'movie',name:'观影记录',ic:'🎬'},
   {id:'quarter',name:'季度期望',ic:'🚩'},
+  {id:'stock',name:'囤货整理',ic:'📦'},
   {id:'wish',name:'心愿单',ic:'❤️'}
 ];
 
@@ -1031,6 +1101,8 @@ function defaultData(){
     quarter:[],
     wish:[],
     plan:{items:[],lib:[],tpl:[]},
+    stock:[],
+    stockCats:['日用品','护肤品','食物','药物','耐用品'],
     // rev 必须从 0 起：rev>baseRev 是「本机有未上传改动」的判据，
     // 若默认就是 1，全新设备一打开就被判定为「有改动」，首次同步被迫走合并路径而非直接取云端。
     _meta:{lastResetDate:'',currentTheme:'auto',activeModule:'note',updatedAt:Date.now(),rev:0}
@@ -1108,6 +1180,9 @@ function migrate(){
   D.plan.items.forEach(x=>planFix(x));
   if(!Array.isArray(D.movie))D.movie=[];
   migrateMovie();
+  if(!Array.isArray(D.stock))D.stock=[];
+  if(!Array.isArray(D.stockCats)||!D.stockCats.length)D.stockCats=STOCK_DEFAULT_CATS.slice();
+  D.stock.forEach(skFix);
   snapPrev();
 }
 /* 阴阳师的日常/周常是「模板」，同名即同一条。合并/恢复/导入时若两端 id 不同
@@ -1759,9 +1834,9 @@ function countGameTodo(){
 
 /* ================= 渲染分发 ================= */
 function renderModule(){
-  const t={note:'日常小记',work:'工作台账',fitness:'健身打卡',study:'学习计划',game:'痒痒鼠来咯',plan:'从长计议',movie:'观影记录',quarter:'季度期望',wish:'心愿单'}[currentModule];
+  const t={note:'日常小记',work:'工作台账',fitness:'健身打卡',study:'学习计划',game:'痒痒鼠来咯',plan:'从长计议',movie:'观影记录',quarter:'季度期望',stock:'囤货整理',wish:'心愿单'}[currentModule];
   $('#modTitle').textContent=t;
-  const map={note:renderNote,work:renderWork,fitness:renderFitness,study:renderStudy,game:renderGame,plan:renderPlan,movie:renderMovie,quarter:renderQuarter,wish:renderWish};
+  const map={note:renderNote,work:renderWork,fitness:renderFitness,study:renderStudy,game:renderGame,plan:renderPlan,movie:renderMovie,quarter:renderQuarter,stock:renderStock,wish:renderWish};
   (map[currentModule]||renderWork)();
   if(location.protocol.startsWith('http'))$('#content').scrollTop=0;
 }
@@ -3876,6 +3951,240 @@ function addQuarter(){
 function qMs(qid,mid,v){const it=D.quarter.find(x=>x.id===qid);if(!it)return;const m=it.milestones.find(x=>x.id===mid);m.done=v;const all=it.milestones.length;it.currentValue=all?Math.round(it.milestones.filter(x=>x.done).length/all*100):0;it.targetValue=100;save();renderQuarter();}
 function qUndo(qid){const it=D.quarter.find(x=>x.id===qid);it.currentValue=0;it.done=false;save();renderQuarter();}
 
+/* ================= 囤货整理（v75.9） ================= */
+let stockTab='use', stockFold={}, stockArchOpen={}, stockArchCat='all', stockArchQ='', stockSort=false;
+const STOCK_DEFAULT_CATS=['日用品','护肤品','食物','药物','耐用品'];
+function catIcon(c){return ({'日用品':'🧻','护肤品':'💧','食物':'🍫','药物':'💊','耐用品':'🔧'}[c]||'📦');}
+function skParse(s){if(!s)return null;const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s);return m?new Date(+m[1],+m[2]-1,+m[3]):null;}
+function skFmt(d){if(!d)return '';const y=d.getFullYear();const m=('0'+(d.getMonth()+1)).slice(-2);const dd=('0'+d.getDate()).slice(-2);return y+'-'+m+'-'+dd;}
+function skAdd(s,n){const d=skParse(s);if(!d)return '';d.setDate(d.getDate()+n);return skFmt(d);}
+function skDays(a,b){const da=skParse(a),db=skParse(b);if(!da||!db)return 0;return Math.round((db-da)/86400000);}
+function skToday(){return skFmt(new Date());}
+function skQuarter(s){const d=skParse(s);if(!d)return '';const q=Math.floor(d.getMonth()/3)+1;return (''+(d.getFullYear()%100)).padStart(2,'0')+'·Q'+q;}
+function skFix(it){if(!it)return;it.id=it.id||uid();if(it.cat==null)it.cat='其他';if(it.name==null)it.name='未命名';if(it.total==null)it.total=0;if(it.unit==null)it.unit='个';if(it.start==null)it.start='';if(it.mode==null)it.mode='remain';if(it.remain==null)it.remain=null;if(it.expMode==null)it.expMode='date';if(it.status==null)it.status='use';if(it.doneDate==null)it.doneDate='';if(it.created==null)it.created=Date.now();}
+function skExpDate(it){if(it.expMode==='date')return it.expDate||'';if(it.expMode==='dur'){let n=+it.expNum||0;if(it.expUnit==='月')n*=30;else if(it.expUnit==='年')n*=365;return it.start?skAdd(it.start,n):'';}return '';}
+function skRate(it){if(it.mode==='rate')return +it.rate||0;if(it.mode==='life'){const t=+it.total||0;let d=+it.life||0;if(it.lifeUnit==='月')d*=30;else if(it.lifeUnit==='年')d*=365;return d>0?t/d:0;}if(it.mode==='remain'){const t=+it.total||0;const rem=it.remain==null?t:+it.remain;const used=t-rem;const ds=skDays(it.start,skToday());if(used>0&&ds>0)return used/ds;}return 0;}
+function skRemain(it){return it.remain==null?(+it.total||0):(+it.remain||0);}
+function skPct(it){const t=+it.total||0;return t>0?Math.max(0,Math.min(100,Math.round(skRemain(it)/t*100))):0;}
+function skProjDone(it){const r=skRate(it);if(r>0)return skAdd(it.start,Math.ceil(skRemain(it)/r));return '';}
+function skExpiring(it){const e=skExpDate(it);if(!e||it.status!=='use')return false;const d=skDays(skToday(),e);return d>=0&&d<=30&&skRemain(it)>0;}
+function skLow(it){if(it.status!=='use')return false;const p=skProjDone(it);if(!p)return false;const d=skDays(skToday(),p);return d>=0&&d<=7;}
+function useItems(){return D.stock.filter(x=>x.status!=='done');}
+function fmtNum(n){const v=+n;if(isNaN(v))return '0';return (Math.round(v*100)/100).toString();}
+
+function renderStock(){
+  const useList=D.stock.filter(x=>x.status!=='done');
+  const lowN=useList.filter(skLow).length;
+  const expN=useList.filter(skExpiring).length;
+  let html='';
+  html+=`<div class="stock-hero"><h1>📦 囤货整理</h1><div class="sub">日用消耗 —— 不断粮、不积压</div><div class="stats"><div class="stat"><b>${useList.length}</b><span>在用</span></div><div class="stat soon"><b>${lowN}</b><span>将尽·该补</span></div><div class="stat warn"><b>${expN}</b><span>临期</span></div></div></div>`;
+  html+=`<div class="tabs"><div class="tab ${stockTab==='use'?'on':''}" onclick="stockTab='use';renderStock()">在用</div><div class="tab ${stockTab==='alert'?'on':''}" onclick="stockTab='alert';renderStock()">预警</div><div class="tab ${stockTab==='arch'?'on':''}" onclick="stockTab='arch';renderStock()">物品档案</div><div class="tab ${stockTab==='done'?'on':''}" onclick="stockTab='done';renderStock()">已归档</div></div>`;
+  if(stockTab==='use')html+=skUseView();
+  else if(stockTab==='alert')html+=skAlertView();
+  else if(stockTab==='arch')html+=skArchView();
+  else html+=skDoneView();
+  html+=`<button class="sk-fab" onclick="stockOpen('')">＋</button>`;
+  html+=`<div class="sk-ov" id="skOv" onclick="if(event.target===this)skClose()"><div id="skSheet"></div></div>`;
+  $('#content').innerHTML=html;
+}
+function skUseView(){
+  let h=`<div class="sk-sortbar"><button class="btn ghost sm" onclick="stockSort=${stockSort?'false':'true'};renderStock()">${stockSort?'完成排序':'≡ 排序分类'}</button></div>`;
+  let shown=false;
+  D.stockCats.forEach((cat,i)=>{
+    const items=useItems().filter(x=>x.cat===cat);
+    if(items.length===0)return;
+    shown=true;
+    const folded=stockFold[i]===false;
+    h+=`<div class="sk-grp" data-cat="${esc(cat)}">`;
+    h+=`<div class="sk-gh" ${stockSort?'':'onclick="stockToggleFold('+i+')"'}>
+      ${stockSort?`<span class="sk-handle" onpointerdown="stockDragStart(event,${i})">≡</span>`:''}
+      <span class="em">${catIcon(cat)}</span><span class="sk-gh-t">${esc(cat)}</span><span class="sk-cnt">${items.length} 件</span>
+      ${stockSort?'':`<span class="sk-fold" style="${folded?'transform:rotate(-90deg)':''}">▾</span>`}
+    </div>`;
+    if(!folded){h+=`<div class="sk-grp-body">`;items.forEach(it=>h+=skCard(it));h+=`</div>`;}
+    h+=`</div>`;
+  });
+  if(!shown)h+=`<div class="empty">📦 暂无在用囤货，点右下角 ＋ 添加</div>`;
+  return h;
+}
+function skAlertView(){
+  let h=`<div class="cap">临期（保质期将到，提前 30 天）+ 将尽（预计用完，提前 7 天），可生成采购清单（不与心愿单互通）</div>`;
+  const use=D.stock.filter(x=>x.status!=='use'?false:true);
+  const exp=use.filter(skExpiring), low=use.filter(skLow);
+  if(exp.length){h+=`<div class="sk-gh2">❗ 临期</div>`;exp.forEach(it=>h+=skCard(it));}
+  if(low.length){h+=`<div class="sk-gh2">⏳ 将尽</div>`;low.forEach(it=>h+=skCard(it));}
+  if(!exp.length&&!low.length)h+=`<div class="empty">✅ 暂无临期或将尽，一切正常</div>`;
+  return h;
+}
+function skCard(it){
+  const rem=skRemain(it), pct=skPct(it);
+  const exp=skExpiring(it), low=skLow(it);
+  let bub=exp?`<span class="sk-bub exp">❗ 临期 ${skExpDate(it)}，尽快用完</span>`:low?`<span class="sk-bub low">⏳ 预计 ${skProjDone(it)} 用完</span>`:`<span class="sk-bub ok">余量充足</span>`;
+  const modeLabel=it.mode==='rate'?('速率 '+fmtNum(it.rate)+it.rateUnit+'/天'):it.mode==='life'?('约可用'+fmtNum(it.life)+it.lifeUnit):'按剩余推算';
+  const brand=it.brand?`<span class="br">${esc(it.brand)}${it.spec?' · '+esc(it.spec):''}</span>`:(it.spec?`<span class="br">${esc(it.spec)}</span>`:'');
+  return `<div class="card"><div class="sk-it"><div class="ic">${catIcon(it.cat)}</div><div class="body">
+    <div class="nm">${esc(it.name)} ${brand}</div>
+    <div class="meta">剩 ${fmtNum(rem)} ${esc(it.unit)} · 启用 ${esc(it.start||'-')} · <span class="mode">${modeLabel}</span></div>
+    <div class="sk-pbar ${exp?'crit':low?'low':''}"><i style="width:${pct}%"></i></div>
+    ${bub}
+  </div></div>
+  <div class="sk-row2"><span class="sk-sp"></span><button class="sk-act" onclick="stockOpen('${it.id}','remain')">记录剩余</button><button class="sk-act" onclick="stockOpen('${it.id}')">编辑</button><button class="sk-act del" onclick="stockDel('${it.id}')">×</button></div></div>`;
+}
+function skArchView(){
+  let h=`<div class="cap">以「物品名」汇总所有批次（含已用完）；品牌为次级属性，不跨物品搜</div>`;
+  h+=`<div class="sk-search"><input placeholder="搜物品名，如 洗面奶" value="${esc(stockArchQ)}" oninput="stockArchQ=this.value;renderStock()"></div>`;
+  h+=`<div class="row" style="margin-bottom:8px;flex-wrap:wrap;gap:6px">`+['all'].concat(D.stockCats).map(c=>`<span class="chip ${stockArchCat===c?'on':''}" onclick="stockArchCat='${c}';renderStock()">${c==='all'?'全部':esc(c)}</span>`).join('')+`</div>`;
+  const q=stockArchQ.trim();
+  const byName={};
+  D.stock.forEach(it=>{if(stockArchCat!=='all'&&it.cat!==stockArchCat)return;if(q&&!it.name.includes(q))return;(byName[it.name]=byName[it.name]||[]).push(it);});
+  const names=Object.keys(byName);
+  if(names.length===0){h+=`<div class="empty">暂无匹配物品</div>`;return h;}
+  D.stockCats.forEach(cat=>{
+    const ns=names.filter(n=>byName[n][0].cat===cat);
+    if(ns.length===0)return;
+    h+=`<div class="sk-ag-cat">${esc(cat)}</div>`;
+    ns.forEach(n=>{
+      const arr=byName[n].slice().sort((a,b)=>skDays(a.start,b.start));
+      let gaps=[];for(let i=1;i<arr.length;i++){const g=skDays(arr[i-1].doneDate||arr[i-1].start,arr[i].start);if(g>0)gaps.push(g);}
+      const avg=gaps.length?Math.round(gaps.reduce((x,y)=>x+y,0)/gaps.length):0;
+      const prices=arr.filter(b=>b.price!=null).map(b=>+b.price);
+      const avgP=prices.length?Math.round(prices.reduce((x,y)=>x+y,0)/prices.length):0;
+      const open=stockArchOpen[n]===true;
+      h+=`<div class="ag-item ${open?'open':''}" onclick="stockArchToggle('${esc(n)}')">
+        <div class="nm">${esc(n)}</div>
+        <div class="ag-meta">历史${arr.length}次${avg?('·均'+avg+'天'):''}${avgP?('·均¥'+avgP):''}</div>
+        <span class="ar">›</span>
+        <div class="ag-tl ${open?'':'hide'}" onclick="event.stopPropagation()">`+arr.map(b=>skTL(b)).join('')+`</div>
+      </div>`;
+    });
+  });
+  return h;
+}
+function skTL(b){
+  const end=b.status==='done'?('用完 '+b.doneDate):'在用';
+  const price=b.price!=null?('单价 '+fmtMoney(b.price)):'';
+  return `<div class="sk-tl"><div class="q">${skQuarter(b.start||b.buy||'')}</div><div class="d"><div class="t">${esc(b.brand?b.brand+' ':'')}${esc(b.spec||'')} · 购入 ${esc(b.buy||b.start||'-')} · ${esc(end)}</div><div class="s">${price}</div></div></div>`;
+}
+function skDoneView(){
+  let h=`<div class="cap">已用完的批次收纳于此（数据保留，可回溯，不占首页）</div>`;
+  const done=D.stock.filter(x=>x.status==='done').slice().sort((a,b)=>skDays(a.doneDate,b.doneDate)).reverse();
+  if(done.length===0)h+=`<div class="empty">暂无已归档</div>`;
+  done.forEach(it=>{const days=skDays(it.start,it.doneDate);
+    h+=`<div class="card"><div class="sk-it"><div class="ic">${catIcon(it.cat)}</div><div class="body">
+      <div class="nm">${esc(it.name)} ${it.brand?`<span class="br">${esc(it.brand)}${it.spec?' · '+esc(it.spec):''}</span>`:(it.spec?`<span class="br">${esc(it.spec)}</span>`:'')}</div>
+      <div class="meta">购入 ${esc(it.buy||'-')} · 实际用完 ${esc(it.doneDate)} · 共 ${days} 天</div>
+      <span class="sk-bub ok">已归档</span></div></div>
+      <div class="sk-row2"><span class="sk-sp"></span><button class="sk-act" onclick="stockReopen('${it.id}')">恢复</button><button class="sk-act del" onclick="stockDel('${it.id}')">×</button></div></div>`;
+  });
+  return h;
+}
+function stockOpen(id,focus){
+  const it=id?D.stock.find(x=>x.id===id):null;
+  $('#skSheet').innerHTML=skModalHTML(it);
+  $('#skOv').classList.add('show');
+  if(it&&focus==='remain'){const r=document.getElementById('sk_remain');if(r)r.focus();}
+}
+function skClose(){$('#skOv').classList.remove('show');}
+function skModalHTML(it){
+  const isEdit=!!it;
+  const cats=D.stockCats;
+  const catOpts=cats.map(c=>`<option ${it&&it.cat===c?'selected':''}>${esc(c)}</option>`).join('')+`<option value="__new__">＋ 新建分类…</option>`;
+  const mode=it?it.mode:'remain';
+  const expMode=it?it.expMode:'date';
+  const units=['片','包','瓶','支','盒','桶','条','个','%'];
+  return `<div class="sk-sheet"><h3>${isEdit?'编辑囤货':'➕ 新增囤货'}</h3>
+    <div class="fld"><label>分类</label><select id="sk_cat" onchange="skCatChg()">${catOpts}</select></div>
+    <div id="sk_newcat_w" class="fld" style="display:none"><label>新分类名称</label><input id="sk_newcat" placeholder="如 药物"></div>
+    <div class="fld"><label>物品名称（自由命名）*</label><input id="sk_name" value="${esc(it?it.name:'')}" placeholder="如：洗面奶 / 安睡裤"></div>
+    <div class="row2" style="display:flex;gap:8px"><div class="fld" style="flex:1"><label>品牌</label><input id="sk_brand" value="${esc(it?it.brand:'')}" placeholder="选填"></div><div class="fld" style="flex:1"><label>规格/容量</label><input id="sk_spec" value="${esc(it?it.spec:'')}" placeholder="如 100g / 30片"></div></div>
+    <div class="row2" style="display:flex;gap:8px"><div class="fld" style="flex:1"><label>总量</label><input id="sk_total" type="number" value="${it?it.total:''}"></div><div class="fld" style="flex:1"><label>单位</label><select id="sk_unit">${units.map(u=>`<option ${it&&it.unit===u?'selected':''}>${u}</option>`).join('')}</select></div></div>
+    <div class="row2" style="display:flex;gap:8px"><div class="fld" style="flex:1"><label>购入日（选填）</label><input id="sk_buy" type="date" value="${esc(it?it.buy:'')}"></div><div class="fld" style="flex:1"><label>启用日（核心）</label><input id="sk_start" type="date" value="${esc(it?it.start:skToday())}"></div></div>
+    <div class="fld"><label>消耗预估方式</label>
+      <div class="seg" id="sk_modeSeg">
+        <button class="${mode==='remain'?'on':''}" onclick="skSeg('sk_modeSeg',this);skModeChg()">记剩余</button>
+        <button class="${mode==='rate'?'on':''}" onclick="skSeg('sk_modeSeg',this);skModeChg()">设速率</button>
+        <button class="${mode==='life'?'on':''}" onclick="skSeg('sk_modeSeg',this);skModeChg()">设寿命</button>
+      </div>
+      <div id="sk_rate_w" class="row2" style="display:${mode==='rate'?'flex':'none'};gap:8px;margin-top:6px"><div class="fld" style="flex:1"><label>每日用量</label><input id="sk_rate" type="number" value="${it&&it.rate!=null?it.rate:''}"></div><div class="fld" style="flex:1"><label>单位</label><select id="sk_rateu">${units.map(u=>`<option ${it&&it.rateUnit===u?'selected':''}>${u}</option>`).join('')}</select></div></div>
+      <div id="sk_life_w" class="row2" style="display:${mode==='life'?'flex':'none'};gap:8px;margin-top:6px"><div class="fld" style="flex:1"><label>约可用</label><input id="sk_life" type="number" value="${it&&it.life!=null?it.life:''}"></div><div class="fld" style="flex:1"><label>单位</label><select id="sk_lifeu">${['天','月','年'].map(u=>`<option ${it&&it.lifeUnit===u?'selected':''}>${u}</option>`).join('')}</select></div></div>
+      <div class="hint">记剩余=偶尔手记反推；设速率=一次设好（胸贴 4片/天）；设寿命=直接填大概能用多久（护肤品适用）</div>
+    </div>
+    <div class="fld"><label>保质期</label>
+      <div class="seg" id="sk_expSeg">
+        <button class="${expMode==='date'?'on':''}" onclick="skSeg('sk_expSeg',this);skExpChg()">填到期日</button>
+        <button class="${expMode==='dur'?'on':''}" onclick="skSeg('sk_expSeg',this);skExpChg()">填时长</button>
+      </div>
+      <div id="sk_expdate_w" style="display:${expMode==='date'?'block':'none'};margin-top:6px"><input id="sk_expdate" type="date" value="${esc(it&&it.expMode==='date'?it.expDate:'')}" placeholder="到期日"></div>
+      <div id="sk_expdur_w" class="row2" style="display:${expMode==='dur'?'flex':'none'};gap:8px;margin-top:6px"><div class="fld" style="flex:1"><label>时长</label><input id="sk_expn" type="number" value="${it&&it.expMode==='dur'?it.expNum:''}"></div><div class="fld" style="flex:1"><label>单位</label><select id="sk_expu">${['月','年','天'].map(u=>`<option ${it&&it.expMode==='dur'&&it.expUnit===u?'selected':''}>${u}</option>`).join('')}</select></div></div>
+      <div class="hint">临期提前 30 天自动亮红气泡 ❗</div>
+    </div>
+    <div class="fld"><label>当前剩余（选填，记录剩余时填）</label><input id="sk_remain" type="number" value="${it&&it.remain!=null?it.remain:''}" placeholder="不填则按总量计"></div>
+    <div class="fld"><label>单价（选填，用于花费统计）</label><input id="sk_price" type="number" value="${it&&it.price!=null?it.price:''}"></div>
+    <div class="fld"><label>备注 / 存放位置</label><textarea id="sk_note">${esc(it?it.note:'')}</textarea></div>
+    <div class="row2" style="display:flex;gap:8px;margin-top:8px">
+      ${isEdit&&it.status!=='done'?`<button class="sk-act del" onclick="stockMarkDone('${it.id}')">标记已用完</button>`:''}
+      <button class="sk-done" style="flex:1" onclick="skSave('${isEdit?it.id:''}')">保存</button>
+    </div>
+    <button class="sk-cancel" onclick="skClose()">取消</button>
+  </div>`;
+}
+function skSeg(g,b){document.querySelectorAll('#'+g+' button').forEach(x=>x.classList.remove('on'));b.classList.add('on');}
+function skModeChg(){const m=(document.querySelector('#sk_modeSeg .on')||{}).textContent;document.getElementById('sk_rate_w').style.display=m==='设速率'?'flex':'none';document.getElementById('sk_life_w').style.display=m==='设寿命'?'flex':'none';}
+function skExpChg(){const m=(document.querySelector('#sk_expSeg .on')||{}).textContent;document.getElementById('sk_expdate_w').style.display=m==='填时长'?'none':'block';document.getElementById('sk_expdur_w').style.display=m==='填时长'?'flex':'none';}
+function skCatChg(){document.getElementById('sk_newcat_w').style.display=document.getElementById('sk_cat').value==='__new__'?'block':'none';}
+function skSave(id){
+  const name=document.getElementById('sk_name').value.trim();
+  if(!name){toast('填物品名称');return;}
+  let cat=document.getElementById('sk_cat').value;
+  if(cat==='__new__'){cat=document.getElementById('sk_newcat').value.trim();if(!cat){toast('填新分类名');return;}}
+  const it={id:id||uid(),cat,name,
+    brand:document.getElementById('sk_brand').value.trim(),spec:document.getElementById('sk_spec').value.trim(),
+    total:+$('#sk_total').value||0,unit:document.getElementById('sk_unit').value,
+    buy:document.getElementById('sk_buy').value,start:document.getElementById('sk_start').value||skToday(),
+    mode:(document.querySelector('#sk_modeSeg .on')||{}).textContent==='设速率'?'rate':(document.querySelector('#sk_modeSeg .on')||{}).textContent==='设寿命'?'life':'remain',
+    rate:+$('#sk_rate').value||0,rateUnit:document.getElementById('sk_rateu').value,
+    life:+$('#sk_life').value||0,lifeUnit:document.getElementById('sk_lifeu').value,
+    expMode:(document.querySelector('#sk_expSeg .on')||{}).textContent==='填时长'?'dur':'date',
+    expDate:document.getElementById('sk_expdate').value,expNum:+$('#sk_expn').value||0,expUnit:document.getElementById('sk_expu').value,
+    remain:document.getElementById('sk_remain').value===''?null:(+$('#sk_remain').value||0),
+    price:document.getElementById('sk_price').value===''?null:(+$('#sk_price').value||0),
+    note:document.getElementById('sk_note').value.trim(),status:'use',doneDate:'',created:Date.now()};
+  if(cat&&D.stockCats.indexOf(cat)<0)D.stockCats.push(cat);
+  if(id){const i=D.stock.findIndex(x=>x.id===id);if(i>=0)D.stock[i]=it;}else D.stock.unshift(it);
+  save();skClose();renderStock();toast(id?'已更新':'已添加');
+}
+function stockDel(id){if(!confirm('删除该囤货记录？'))return;const i=D.stock.findIndex(x=>x.id===id);if(i>=0){D.stock.splice(i,1);save();renderStock();}}
+function stockMarkDone(id){const it=D.stock.find(x=>x.id===id);if(it){it.status='done';it.doneDate=skToday();save();skClose();renderStock();toast('已标记用完');}}
+function stockReopen(id){const it=D.stock.find(x=>x.id===id);if(it){it.status='use';it.doneDate='';save();renderStock();}}
+function stockToggleFold(i){stockFold[i]=stockFold[i]===false?true:false;renderStock();}
+function stockArchToggle(n){stockArchOpen[n]=stockArchOpen[n]!==true;renderStock();}
+let skDrag=null;
+function stockDragStart(ev,i){
+  ev.preventDefault();
+  const handle=ev.currentTarget;
+  const timer=setTimeout(()=>{
+    try{
+      skDrag={i,el:handle.closest('.sk-grp')};
+      const ghost=skDrag.el.cloneNode(true);
+      ghost.style.cssText='position:fixed;left:0;right:0;margin:0 auto;width:361px;z-index:200;opacity:.85;pointer-events:none';
+      document.body.appendChild(ghost);skDrag.ghost=ghost;skDrag.el.style.opacity='.3';
+      const mv=e=>{if(!skDrag)return;skDrag.ghost.style.top=(e.clientY-24)+'px';
+        const grps=[].slice.call(document.querySelectorAll('#content .sk-grp'));
+        grps.forEach(g=>g.style.boxShadow='');
+        let best=null,bm=1e9;grps.forEach(g=>{const r=g.getBoundingClientRect();const mid=r.top+r.height/2;if(Math.abs(e.clientY-mid)<bm){bm=Math.abs(e.clientY-mid);best=g;}});
+        if(best&&best!==skDrag.el)best.style.boxShadow='0 -2px 0 var(--accent)';
+        skDrag.target=best;};
+      const up=()=>{document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);
+        if(skDrag&&skDrag.target&&skDrag.target!==skDrag.el){const grps=[].slice.call(document.querySelectorAll('#content .sk-grp'));const ti=grps.indexOf(skDrag.target);if(ti>=0&&ti!==skDrag.i){const a=D.stockCats;const m=a.splice(skDrag.i,1)[0];a.splice(ti,0,m);save();}}
+        if(skDrag&&skDrag.ghost)skDrag.ghost.remove();if(skDrag)skDrag.el.style.opacity='';[].slice.call(document.querySelectorAll('#content .sk-grp')).forEach(g=>g.style.boxShadow='');skDrag=null;renderStock();};
+      document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up);
+    }catch(e){}
+  },350);
+  const cancel=()=>clearTimeout(timer);
+  handle.addEventListener('pointerup',cancel,{once:true});
+  handle.addEventListener('pointercancel',cancel,{once:true});
+}
+
 /* ================= 心愿单 ================= */
 let wishFilter='全部', wishStat='list', wishGroupBy='reason', wishReasonFilter='全部', wishArch=false, wishPage=1, wishReasonMore=false, wfReason='日常需要';
 const WISH_PLATS=['抖音','拼多多','京东','淘宝','天猫','官网'];
@@ -5387,7 +5696,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.8.1';
+const APP_VER='v75.9.0';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
