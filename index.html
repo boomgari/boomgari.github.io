@@ -177,7 +177,7 @@ textarea{resize:vertical;min-height:60px;}
 .btn.ghost{background:var(--tint);color:var(--on-tint);border:var(--bw) solid var(--border);}
 .btn.sm{padding:6px 11px;font-size:calc(var(--fs)*0.833);}
 .btn.danger{background:#C25B5B;}
-.tag{display:inline-block;font-size:calc(var(--fs)*0.767);padding:2px 9px;border-radius:20px;background:var(--tint);color:var(--on-tint);font-weight:600;margin:2px 4px 2px 0;}
+.tag{display:inline-block;font-size:calc(var(--fs)*0.767);padding:2px 9px;border-radius:20px;background:var(--tint);color:var(--on-tint);font-weight:600;margin:2px 4px 2px 0;text-shadow:none;}
 .tag.alt{background:#F0EAE2;color:#B07A3C;}
 .tag.done{background:#E3EFE7;color:#3C8C5A;text-decoration:line-through;}
 .tag.temp{background:#FFF3CD;color:#8A6D00;}
@@ -185,7 +185,7 @@ textarea{resize:vertical;min-height:60px;}
 .progbar>i{display:block;height:100%;background:var(--accent-soft);border-radius:6px;transition:width .25s;}
 .progbar.ok>i{background:#5BAE7A;}
 .act-sum{margin:2px 0 2px;font-size:calc(var(--fs)*0.8);color:var(--muted);}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:calc(var(--fs)*0.8);padding:5px 11px;border-radius:20px;border:var(--bw) solid var(--border);background:#fff;cursor:pointer;user-select:none;margin:3px 4px 3px 0;}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:calc(var(--fs)*0.8);padding:5px 11px;border-radius:20px;border:var(--bw) solid var(--border);background:#fff;cursor:pointer;user-select:none;margin:3px 4px 3px 0;text-shadow:none;}
 .chip.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent);}
 .note-sl{display:inline-flex;align-items:center;justify-content:center;min-width:52px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.22);font-size:calc(var(--fs)*0.867);font-weight:600;cursor:pointer;line-height:1.1;white-space:nowrap;}
 .note-cup{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 8px;border-radius:20px;background:rgba(255,255,255,.2);font-size:calc(var(--fs)*0.767);cursor:pointer;line-height:1.1;}
@@ -202,8 +202,8 @@ textarea{resize:vertical;min-height:60px;}
 .chips-row{display:flex;flex-wrap:wrap;gap:3px;}
 .chip.sm{padding:3px 9px;font-size:calc(var(--fs)*0.733);}
 .water-add{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
-.water-add .chip{background:rgba(255,255,255,.92);color:#243640;border-color:rgba(255,255,255,.6);font-weight:600;cursor:pointer;flex-direction:column;align-items:center;gap:1px;padding:6px 12px;line-height:1.15;}
-.water-add .chip b{font-weight:600;font-size:calc(var(--fs)*0.733);opacity:.78;}
+.water-add .chip{background:rgba(255,255,255,.92);color:#243640;border-color:rgba(255,255,255,.6);font-weight:600;cursor:pointer;flex-direction:column;align-items:center;gap:0;padding:4px 9px;line-height:1.1;}
+.water-add .chip b{font-weight:600;font-size:calc(var(--fs)*0.7);opacity:.78;}
 .water-add .chip:hover{background:#fff;}
 /* 痒痒鼠来咯 周常 数值录入（避免窄框截断） */
 .g-metrics{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:5px;}
@@ -855,6 +855,9 @@ textarea.inp{min-height:52px;}
 .note-hero .nh-big{display:inline-flex;align-items:center;line-height:1.1;font-weight:700;color:#fff}
 .note-hero .nh-ml{margin-left:auto}
 .note-hero .note-cup{display:inline-flex;align-items:center;gap:4px;line-height:1.2}
+.note-hero .nh-greet{display:block;font-size:calc(var(--fs)*1.0);line-height:1.3;font-weight:600;margin:0}
+.note-hero .nh-name{display:block;font-weight:700;font-size:calc(var(--fs)*1.467);line-height:1.1;margin:2px 0}
+.note-hero .nh-date{display:block;font-size:calc(var(--fs)*0.867);line-height:1.3;color:var(--hero-sub,#FFFBF0)}
 /* 序列：灰色小分组标题 + 每行严格同一水平线 */
 .tk-gh{display:flex;align-items:center;gap:6px;min-height:26px;padding:4px 10px;box-sizing:border-box;font-size:calc(var(--fs)*0.7);color:var(--muted);letter-spacing:.4px;background:color-mix(in srgb,var(--muted) 10%,transparent);border-bottom:var(--bw) solid var(--border);line-height:1.2}
 .tk-row{display:flex;align-items:center;gap:8px;min-height:34px;padding:5px 10px;box-sizing:border-box;border-bottom:var(--bw) solid var(--border);background:var(--card)}
@@ -4788,9 +4791,9 @@ function renderNote(){
   const order=noteOrder();
   let html=`
   <div class="card note-hero">
-    <div class="nh-sub">${greet()}</div>
-    <div class="nh-big" style="font-size:calc(var(--fs)*1.467);margin:2px 0">Murphy</div>
-    <div class="nh-sub">${fmtDate(new Date())}</div>
+    <div class="nh-greet">${greet()}</div>
+    <div class="nh-name">Murphy</div>
+    <div class="nh-date">${fmtDate(new Date())}</div>
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <span class="nh-bub" onclick="noteSetMood()">${N.mood?('心情:'+N.mood):'设置心情'}</span>
       <span class="nh-bub" onclick="noteSetWeather()">${N.weather?('天气:'+N.weather):'设置天气'}</span>
@@ -4813,7 +4816,7 @@ function renderNote(){
       <div style="margin-top:8px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">${cupHtml}</div>
     </div>
     <div class="nh-row">
-      <span class="nh-sub" style="font-weight:600;white-space:nowrap">随记概览</span>
+      <span class="nh-lb" style="font-weight:600;white-space:nowrap">随记概览</span>
       <span class="nh-lb" style="font-weight:700">共 ${entries.length} 条</span>
       ${types.filter(t=>cat[t]>0).map(t=>`<span class="nh-tag">${t} ${cat[t]}</span>`).join('')}
     </div>
@@ -5809,7 +5812,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.9.3';
+const APP_VER='v75.9.4';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
