@@ -875,7 +875,8 @@ body.night .tk-x:hover{background:rgba(194,91,91,.18)}
 .g-metrics .gm input{min-height:30px;box-sizing:border-box}
 .xt-pick{align-items:center}
 .xt-pick .chip,.xt-pick .btn{min-height:32px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;line-height:1;margin-top:0;margin-bottom:0}
-.gw-ops{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px}
+.gw-ops{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-top:5px}
+.gw-ops-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .gw-ops .btn,.gw-ops .chip,.gw-ops .inp,.gw-ops .hint{min-height:32px;box-sizing:border-box;display:inline-flex;align-items:center;line-height:1.2;margin:0}
 .gw-flow{display:inline-flex;align-items:center;gap:5px;min-height:28px;line-height:1.2;font-size:calc(var(--fs)*0.8);color:var(--muted);background:none;border:none;padding:0;cursor:pointer;margin-top:4px}
 /* 弹窗留边：不再与手机左右边缘融为一体 */
@@ -1228,6 +1229,8 @@ function migrate(){
     persistLocal();
   }
   if(!D._meta.tomb||typeof D._meta.tomb!=='object')D._meta.tomb={};
+  // v75.9.8：移除 Google Sans 字体（其「歌」等字渲染异常）。曾选过 gs 的用户自动回退到原字体。
+  if(D._meta&&D._meta.fontFamily==='gs')D._meta.fontFamily='';
   // 从长计议：新字段缺失即补默认，绝不清空既有数据
   if(!D.plan||typeof D.plan!=='object'||Array.isArray(D.plan))D.plan={items:[],lib:[],tpl:[]};
   if(!Array.isArray(D.plan.items))D.plan.items=[];
@@ -2913,14 +2916,12 @@ function gameWeeklyCard(prog){
     if(t.type==='baigui')return bgCard(t,drag);
     if(t.type==='jiejie')return jjCard(t,drag);
     const done=weeklyDone(t);const ty=weeklyType(t);
-    /* v75.9.1：真蛇/六道之门等计次项——按钮去掉「＋」号（改「完成一次」），并补上真实机制说明 */
-    const tip=gWeeklyTip(t);
-    const tipHtml=tip?('<div class="sub hint">'+tip+'</div>'):'';
+    /* v75.9.7：真蛇/六道之门等计次项——仅保留 次数/目标/完成一次，去除冗长机制说明（使用前应已理解逻辑，不必常驻展示） */
     let sub='';
     if(ty==='points'){
       const score=+t.score||0,goal=+t.goal||600,cnt=+t.count||0;
       const status=done?('<span class="tag done">已达成'+goal+'</span>'):('<span class="hint">还差 '+(goal-score)+'</span>');
-      sub='<div class="sub">已打 '+cnt+' 次 · 积分 '+score+' / '+goal+' '+status+'</div>'+tipHtml
+      sub='<div class="sub">已打 '+cnt+' 次 · 积分 '+score+' / '+goal+' '+status+'</div>'
         +'<div class="g-metrics">'
         +'<span class="gm">次数<input type="number" class="inp" value="'+(cnt||'')+'" style="width:66px" onchange="gWeeklySet(\''+t.id+'\',\'count\',+this.value);renderGame()"></span>'
         +'<span class="gm">积分<input type="number" class="inp" value="'+(score||'')+'" style="width:78px" onchange="gWeeklySet(\''+t.id+'\',\'score\',+this.value);renderGame()"></span>'
@@ -2930,8 +2931,7 @@ function gameWeeklyCard(prog){
     } else if(ty==='count'){
       const cnt=+t.count||0,goal=+t.goal||0,reached=goal>0&&cnt>=goal;
       const status=reached?('<span class="tag done">已达成'+goal+'次</span>'):(goal?('<span class="hint">还差 '+(goal-cnt)+' 次</span>'):'<span class="hint">记录次数</span>');
-      const note=reached?('<div class="sub hint">前'+goal+'次奖励已拿满，后续场次仅普通金币</div>'):'';
-      sub='<div class="sub">已打 '+cnt+(goal?(' / '+goal):'')+' 次</div>'+(goal&&!reached?('<div class="sub hint">还差 '+(goal-cnt)+' 次</div>'):(reached?'<div class="sub hint">已达成目标次数</div>':''))+note+tipHtml
+      sub='<div class="sub">已打 '+cnt+(goal?(' / '+goal):'')+' 次</div>'+(goal&&!reached?('<div class="sub hint">还差 '+(goal-cnt)+' 次</div>'):(reached?'<div class="sub hint">已达成目标次数</div>':''))
         +'<div class="g-metrics">'
         +'<span class="gm">次数<input type="number" class="inp" value="'+(cnt||'')+'" style="width:66px" onchange="gWeeklySet(\''+t.id+'\',\'count\',+this.value);renderGame()"></span>'
         +'<span class="gm">目标<input type="number" class="inp" placeholder="可选" value="'+(goal||'')+'" style="width:78px" onchange="gWeeklySet(\''+t.id+'\',\'goal\',+this.value);renderGame()"></span>'
@@ -2950,12 +2950,7 @@ function gameWeeklyCard(prog){
   return items
     +'<div class="emptybox">💡 惠比寿：某些活动本周没做但已提前存好，下周做同样活动会自动补领上周奖励。</div>';
 }
-function gWeeklyTip(t){
-  const ty=weeklyType(t);
-  if(ty!=='points'&&ty!=='count')return '';
-  /* v75.9.1：真蛇/六道之门——按用户确认的纠正机制写真实说明，不杜撰 */
-  return '真实机制：入口每周刷新，但次数/进度累计不清零；惠比寿会把次数暂存（最多 4 次），下周打一次即自动补领上周奖励——不是「库存+2」。';
-}
+function gWeeklyTip(t){ return ''; } /* v75.9.7：去除常驻机制说明（真蛇/六道之门等计次项仅保留 次数/目标/完成一次） */
 /* ===== 阴阳师：通用辅助（按天备注 / 寄养 / item 拖拽 / 特殊周常追踪） ===== */
 let gameNoteExp={},gameXTExp={},gameBGExp={},gameXTSel=0,gameDragItem=null,gameFosterExp=false,gameJjExp={},gameDailyRewardExp={};
 function gameNote(id){const d=todayStr();return (D.game.notes[d]&&D.game.notes[d][id])||null;}
@@ -3048,7 +3043,15 @@ function jjCard(t,drag){
   if(!Array.isArray(jj.clears))jj.clears=[];
   const cap=(+t.jjCap||30),cnt=+jj.count||0,full=cnt>=cap,exp=gameJjExp[t.id];
   const warn=full?`<div class="jj-warn"><span>⚠️ 已满 ${cap} / ${cap}，尽快清票（再得到的券不会计入）</span></div>`:'';
-  const ops=`<div class="gw-ops">${full?`<button class="btn" onclick="jjClear('${t.id}')">标记已清</button>`:`<button class="btn" onclick="jjFill('${t.id}')">我攒满了（${cap}）</button>`}<span class="hint">当前</span><input class="inp" id="jj_${t.id}" value="${cnt||''}" placeholder="0" style="width:62px;text-align:center" onchange="jjSet('${t.id}',this.value)"><span class="hint">/ ${cap} 张</span>${(jj.clears.length||jj.log.length)?`<button class="btn ghost sm" onclick="gameJjExp['${t.id}']=!gameJjExp['${t.id}'];renderGame()">${exp?'收起':'序列'}</button>`:''}</div>`;
+  const ops=`<div class="gw-ops">`+
+    `<div class="gw-ops-line">${full?`<button class="btn" onclick="jjClear('${t.id}')">标记已清</button>`:`<button class="btn" onclick="jjFill('${t.id}')">我攒满了（${cap}）</button>`}</div>`+
+    `<div class="gw-ops-line">`+
+      `<span class="hint">当前</span>`+
+      `<input class="inp" id="jj_${t.id}" value="${cnt||''}" placeholder="0" style="width:62px;text-align:center" onchange="jjSet('${t.id}',this.value)">`+
+      `<span class="hint">/ ${cap} 张</span>`+
+      `${(jj.clears.length||jj.log.length)?`<button class="btn ghost sm" onclick="gameJjExp['${t.id}']=!gameJjExp['${t.id}'];renderGame()">${exp?'收起':'序列'}</button>`:''}`+
+    `</div>`+
+  `</div>`;
   const cRows=jj.clears.map((e,i)=>({e,i})).reverse().map(({e,i})=>`<div class="tk-row"><span class="tk-k">清 ${(+e.n||cap)} 张</span><span class="tk-t">${esc((e.date||'')+' '+(e.time||''))}</span><button class="tk-x" title="删除此条" onclick="jjClearDel('${t.id}',${i})">×</button></div>`).join('');
   const lRows=jj.log.map((e,i)=>`<div class="tk-row"><span class="tk-k">第 ${i+1} 张</span><span class="tk-t">${esc((e.date||'')+' '+(e.time||''))}</span><button class="tk-x" title="删除此条" onclick="jjLogDel('${t.id}',${i})">×</button></div>`).join('');
   const list=exp?`<div class="trk-list">${jj.clears.length?('<div class="tk-gh">已清记录</div>'+cRows):''}${jj.log.length?('<div class="tk-gh">历史逐张记录</div>'+lRows):''}</div>`:'';
@@ -5529,10 +5532,9 @@ function syncFwUI(){const v=(D._meta&&D._meta.fontWeight)||400;const r=$('#fwRan
 const FONT_OPTS=[
 {id:'',name:'原字体',stack:"'UserFont','PingFang TC','PingFang HK','Noto Sans TC','Microsoft JhengHei','微軟正黑體','Heiti TC',sans-serif"},
 {id:'pf',name:'蘋方 HK',stack:"'PfHk','PingFang TC','PingFang HK','Noto Sans TC','Microsoft JhengHei','微軟正黑體','Heiti TC',sans-serif"},
-{id:'gs',name:'Google Sans',stack:"'GsMedium','PingFang TC','PingFang HK','Noto Sans TC','Microsoft JhengHei','微軟正黑體','Heiti TC',sans-serif"},
 {id:'sys',name:'系统字体·免下载',stack:"'PingFang TC','PingFang HK','Noto Sans TC','Microsoft JhengHei','微軟正黑體','Heiti TC',system-ui,sans-serif"}];
 /* 字体文件与体积（手机首次需后台下载，之后由 Service Worker 永久缓存，只下一次） */
-const FONT_FILES={'':{fam:'UserFont',url:'user-font.ttf',mb:11},'pf':{fam:'PfHk',url:'pf-hk.ttf',mb:16},'gs':{fam:'GsMedium',url:'gs-medium.ttf',mb:9}};
+const FONT_FILES={'':{fam:'UserFont',url:'user-font.ttf',mb:11},'pf':{fam:'PfHk',url:'pf-hk.ttf',mb:16}};
 const _fontState={};
 /* 异步加载字体：绝不阻塞首屏与 load 事件。未下载完时自动回退系统中文字体，下载完成后无缝替换。 */
 function loadFontAsync(id){
@@ -5820,7 +5822,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.9.6';
+const APP_VER='v75.9.8';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
