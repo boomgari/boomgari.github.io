@@ -279,6 +279,11 @@ body.night.glass-on .ov-card{box-shadow:0 4px 18px rgba(0,0,0,.2), inset 0 1px 0
 .ep-kind{font-size:11px;background:#fff3e6;color:#b07a2e;border-radius:6px;padding:1px 6px;}
 .ep-meta{font-size:12px;color:var(--muted);flex:1;min-width:160px;}
 .ep-acts{display:flex;gap:4px;align-items:center;}
+/* v75.9.9 系列操作行（完结 / 重刷一轮）与单集重刷时间戳 */
+.series-ops{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.series-ops .btn{min-height:30px;}
+.mv-t2{color:var(--text);opacity:.72;}
+.mv-rw{display:inline-flex;align-items:center;font-size:11px;background:var(--tint);color:var(--on-tint);border-radius:6px;padding:1px 6px;font-weight:600;}
 .series-add{margin-top:8px;}
 /* v75.7 观影状态分区 */
 .mv-status-chips{display:flex;gap:8px;margin:0 0 10px;flex-wrap:wrap;}
@@ -1150,6 +1155,7 @@ function defaultData(){
     },
     note:{entries:[],water:{cup:350,log:{}},mood:'',weather:'',sleep:{},moodLog:{},weatherLog:{},sleepLog:{},checklist:{items:[],done:{}},temp:{items:[]},listen:{sessions:[],active:null}},
     movie:[],
+    movieSeries:{},
     quarter:[],
     wish:[],
     plan:{items:[],lib:[],tpl:[]},
@@ -1859,21 +1865,26 @@ function renderNav(){
   const counts=countAll();
   $('#nav').innerHTML=NAV.map(n=>{
     const c=counts[n.id]||0;
+    /* v75.9.9：角标 ≥100 一律显示 99+，避免气泡被撑爆（精确条数在模块内头部查看） */
+    const lab=c>99?'99+':c;
     return `<div class="nav-item ${currentModule===n.id?'active':''}" onclick="go('${n.id}')">
       <span class="ic">${n.ic}</span><span>${n.name}</span>
-      ${c>0?`<span class="badge">${c}</span>`:''}</div>`;
+      ${c>0?`<span class="badge">${lab}</span>`:''}</div>`;
   }).join('');
 }
 function go(m){currentModule=m;if(D&&D._meta)D._meta.activeModule=m;save();closeSide();renderNav();renderModule();}
 function toggleSide(){$('#side').classList.toggle('open');$('#overlay').classList.toggle('show');}
 function closeSide(){$('#side').classList.remove('open');$('#overlay').classList.remove('show');}
 
+/* v75.9.9：观影角标按「部 / 系列」去重计数——同一部剧的 36 期只算 1 部 */
+function movieTitleCount(){const s=new Set();(D.movie||[]).forEach(x=>{s.add(x.series||x.name||'未命名');});return s.size;}
 function countAll(){
   const w=D.work.filter(x=>!x.done).length;
   const f=(D.fitness.today||[]).filter(x=>!x.done).length;
   const s=D.study.filter(x=>!x.done).length;
   const g=countGameTodo();
-  const mv=D.movie.length;
+  /* v75.9.9：角标改数去重后的「部/系列」，不再逐条累期/集数——36 期综艺只算 1 部 */
+  const mv=movieTitleCount();
   const q=D.quarter.filter(x=>(+x.currentValue||0)<(+x.targetValue||0)).length;
   const ws=D.wish.filter(x=>x.priority!=='已实现').length;
   const nt=(D.note.entries||[]).length;
@@ -2896,8 +2907,9 @@ function gameDailyCard(wd,prog){
       const goal=+t.goal||0, cnt=+t.count||0, doneAll=goal>0&&cnt>=goal;
       const dots=goal?Array.from({length:goal},(_,i)=>`<span class="dot ${i<cnt?'on':''}"></span>`).join(''):'';
       const pct=goal?Math.min(100,Math.round(cnt/goal*100)):0;
-      const log=(t.countLog||[]).map((e,i)=>`<div class="trk-row"><span>第${i+1}次</span><span class="hint">${esc(e.time)}</span></div>`).join('');
-      body=`<div class="g-reward">${chkBox(done,"gProg('daily','"+t.id+"',this.checked)")}<div class="body"><div class="ttitle">${esc(t.name)}</div><div class="g-reward-foot"><span class="g-count-status">已完成 ${cnt}${goal?(' / '+goal):''} 次</span><button class="btn ghost sm g-checkin" onclick="gDailyInc(${wd},'${t.id}')">打卡</button>${cnt>0?`<button class="link-btn" onclick="gDailyDec(${wd},'${t.id}')">撤销</button>`:''}${(t.countLog&&t.countLog.length)?`<button class="link-btn" onclick="gameDailyRewardExp['${t.id}']=!gameDailyRewardExp['${t.id}'];renderGame()">${gameDailyRewardExp[t.id]?'收起':'每次时间'}</button>`:''}${(gameDailyRewardExp[t.id]&&t.countLog&&t.countLog.length)?`<div class="trk-list">${log}</div>`:''}</div></div></div>`;
+      /* v75.9.9：序列每条可单独删，不必「撤销」掉最后一次（那样会丢掉它的真实时间） */
+      const log=(t.countLog||[]).map((e,i)=>`<div class="trk-row"><span>第${i+1}次</span><span class="hint">${esc(e.time)}</span><span class="spacer"></span><button class="tk-x" title="只删这一条" onclick="gDailyLogDel(${wd},'${t.id}',${i})">×</button></div>`).join('');
+      body=`<div class="g-reward">${chkBox(done,"gProg('daily','"+t.id+"',this.checked)")}<div class="body"><div class="ttitle">${esc(t.name)}</div><div class="g-reward-foot"><span class="g-count-status">已完成 ${cnt}${goal?(' / '+goal):''} 次</span><button class="btn ghost sm g-checkin" onclick="gDailyInc(${wd},'${t.id}')">打卡</button>${(t.countLog&&t.countLog.length)?`<button class="link-btn" onclick="gameDailyRewardExp['${t.id}']=!gameDailyRewardExp['${t.id}'];renderGame()">${gameDailyRewardExp[t.id]?'收起':'每次时间'}</button>`:''}${(gameDailyRewardExp[t.id]&&t.countLog&&t.countLog.length)?`<div class="trk-list">${log}</div>`:''}</div></div></div>`;
     } else {
       body=chkBox(done,"gProg('daily','"+t.id+"',this.checked)")+`<div class="body"><div class="ttitle">${esc(t.time?t.time+' ':'')}${esc(t.name)}</div>${ts?`<div class="sub hint">${chkSvg()} ${fmtTime(ts)}</div>`:''}${note?`<div class="sub note-line">${icoNote()} ${esc(note.text)} <span class="hint">${fmtTime(note.time)}</span></div>`:''}</div>`;
     }
@@ -2905,8 +2917,9 @@ function gameDailyCard(wd,prog){
     return `<div class="item g-item ${done?'done':''}">${drag}${gDailyMv(wd,t.id)}${body}<button class="note-btn" title="备注" onclick="gameNoteToggle('${t.id}')">${icoNote()}</button><button class="del" title="删除此条" onclick="gDelDaily(${wd},'${t.id}')">×</button></div>${noteBox}`;
   }).join('');
   const f=fosterToday();
-  const fosterLog=(f.log||[]).map((e,i)=>`<div class="trk-row"><span>第${i+1}次</span><span class="hint">${esc(e.time)}</span></div>`).join('');
-  const fosterHtml=`<div class="flex-row g-foster"><span>🐛 寄养（每6h，时间灵活）</span><span class="spacer"></span><span class="hint">今日 ${f.total} / 3 次${f.last?(' · 最近 '+f.last):''}</span> <button class="btn ghost sm" onclick="fosterInc()">＋1</button>${f.total>0?' <button class="btn ghost sm" onclick="fosterDec()">－1</button>':''} ${(f.log&&f.log.length)?`<button class="note-btn" onclick="gameFosterExp=!gameFosterExp;renderGame()">${gameFosterExp?'收起':'每次时间'}</button>`:''}</div>${gameFosterExp&&f.log&&f.log.length?`<div class="trk-list">${fosterLog}</div>`:''}`;
+  /* v75.9.9：去掉 ＋1／－1 步进器（误点「－1」会丢掉真实时间戳且无法恢复）→ 改「记一次」+ 可逐条删除的序列 */
+  const fosterLog=(f.log||[]).map((e,i)=>`<div class="trk-row"><span>第${i+1}次</span><span class="hint">${esc(e.time)}</span><span class="spacer"></span><button class="tk-x" title="只删这一条" onclick="fosterLogDel(${i})">×</button></div>`).join('');
+  const fosterHtml=`<div class="flex-row g-foster"><span>🐛 寄养（每6h，时间灵活）</span><span class="spacer"></span><span class="hint">今日 ${f.total} / 3 次${f.last?(' · 最近 '+f.last):''}</span> <button class="btn ghost sm" onclick="fosterInc()">记一次</button> ${(f.log&&f.log.length)?`<button class="note-btn" onclick="gameFosterExp=!gameFosterExp;renderGame()">${gameFosterExp?'收起':'每次时间'}</button>`:''}</div>${gameFosterExp&&f.log&&f.log.length?`<div class="trk-list">${fosterLog}</div>`:''}`;
   return `<div class="hint" style="margin:2px 0 6px">${['周一','周二','周三','周四','周五','周六','周日'][wd]} · 共 ${daily.length} 项</div>${items}${fosterHtml}`;
 }
 function gameWeeklyCard(prog){
@@ -2958,7 +2971,10 @@ function gameNoteToggle(id){gameNoteExp[id]=!gameNoteExp[id];renderGame();}
 function gameNoteSave(id){const el=document.getElementById('gn_'+id);const v=el?el.value.trim():'';const d=todayStr();D.game.notes[d]=D.game.notes[d]||{};if(v)D.game.notes[d][id]={text:v,time:nowISO()};else delete D.game.notes[d][id];save();renderGame();}
 function fosterToday(){const d=todayStr();const f=D.game.foster[d]||{total:0,log:[]};const last=f.log&&f.log.length?f.log[f.log.length-1].time:'';return {total:f.total||0,last,log:f.log||[]};}
 function fosterInc(){const d=todayStr();const f=D.game.foster[d]=D.game.foster[d]||{total:0,log:[]};f.log=f.log||[];f.total=(+f.total||0)+1;f.log.push({n:1,time:new Date().toTimeString().slice(0,5),date:d});save();renderGame();}
-function fosterDec(){const d=todayStr();const f=D.game.foster[d];if(!f||!f.total)return;f.total-=1;if(f.log&&f.log.length)f.log.pop();save();renderGame();}
+/* v75.9.9：fosterDec（－1）已废弃——它会丢掉真实时间戳且补回来时间也不对。保留空实现仅作兼容，界面不再触发。 */
+function fosterDec(){return;}
+/* v75.9.9：只删你指定的那一条，其余时间戳原封不动 */
+function fosterLogDel(i){const d=todayStr();const f=D.game.foster[d];if(!f||!f.log||!f.log[i])return;f.log.splice(i,1);f.total=f.log.length;save();renderGame();}
 function gameItemDrag(kind,id,wd){gameDragItem={kind,id,wd:wd==null?null:wd};}
 function gameItemDrop(kind,id,wd){
   if(!gameDragItem||gameDragItem.kind!==kind||gameDragItem.id===id)return;
@@ -3142,7 +3158,7 @@ function actCardInner(a,prog){
   const ats=(D.game.actDoneTs||{})[a.id];
   const anote=gameNote(a.id);const aexp=gameNoteExp[a.id];
   const aNoteBox=aexp?`<div class="note-edit"><textarea class="inp" id="gn_${a.id}" placeholder="活动备注（今日进度/掉落/心得）">${anote?esc(anote.text):''}</textarea><button class="btn ghost sm" onclick="gameNoteSave('${a.id}')">保存备注</button></div>`:'';
-  const countCtrl=(a.progType==='count')?`<div class="row" style="align-items:center;gap:6px;margin:4px 0;flex-wrap:wrap"><span class="tag">${esc(a.countLabel||'数量')}</span><button class="btn ghost sm" onclick="gActCountInc('${a.id}',-1)">－1</button><span style="min-width:54px;text-align:center;font-weight:600">${(+a.countNow||0)}/${(+a.countTarget||0)}</span><button class="btn ghost sm" onclick="gActCountInc('${a.id}',1)">＋1</button><span class="hint">累计计数型</span>${(+a.countTarget>0 && +a.countNow>=(+a.countTarget))?'<span class="tag done">已达成'+chkSvg()+'</span>':''}</div><div class="progbar ${((+a.countTarget>0 && +a.countNow>=(+a.countTarget))?'ok':'')}"><i style="width:${((+a.countTarget>0)?Math.min(100,Math.round((+a.countNow||0)/(+a.countTarget)*100)):0)}%"></i></div><div class="act-sum">${esc(a.countLabel||'数量')} 进度 ${(+a.countNow||0)}/${(+a.countTarget||0)}${(+a.countTarget>0)?(' · '+Math.min(100,Math.round((+a.countNow||0)/(+a.countTarget)*100))+'%'):''}${(+a.countTarget>0 && +a.countNow>=(+a.countTarget))?' · 已达成'+chkSvg():''}</div>`:'';
+  const countCtrl=(a.progType==='count')?`<div class="row" style="align-items:center;gap:6px;margin:4px 0;flex-wrap:wrap"><span class="tag">${esc(a.countLabel||'数量')}</span><span class="gm">已收集<input type="number" class="inp" value="${(+a.countNow||0)}" style="width:78px" onchange="gActCountSet('${a.id}','now',+this.value)"></span><span class="gm">目标<input type="number" class="inp" value="${(+a.countTarget||0)}" style="width:78px" onchange="gActCountSet('${a.id}','target',+this.value)"></span>${(+a.countTarget>0 && +a.countNow>=(+a.countTarget))?'<span class="tag done">已达成'+chkSvg()+'</span>':''}</div><div class="progbar ${((+a.countTarget>0 && +a.countNow>=(+a.countTarget))?'ok':'')}"><i style="width:${((+a.countTarget>0)?Math.min(100,Math.round((+a.countNow||0)/(+a.countTarget)*100)):0)}%"></i></div><div class="act-sum">${esc(a.countLabel||'数量')} 进度 ${(+a.countNow||0)}/${(+a.countTarget||0)}${(+a.countTarget>0)?(' · '+Math.min(100,Math.round((+a.countNow||0)/(+a.countTarget)*100))+'%'):''}${(+a.countTarget>0 && +a.countNow>=(+a.countTarget))?' · 已达成'+chkSvg():''}</div>`:'';
   const fk='act_main_'+a.id;
   const smartA=p.doneAll;
   const folded=isFolded(fk,smartA);
@@ -3292,7 +3308,9 @@ function gActTaskCycle(aid,tid,v){const a=gActFind(aid);if(!a)return;const t=(a.
 function gActTaskCycleN(aid,tid,v){const a=gActFind(aid);if(!a)return;const t=(a.tasks||[]).find(x=>x.id===tid);if(!t)return;t.cycleN=+v;save();}
 function gDailyCount(wd,tid,v){const t=(D.game.daily[wd]||[]).find(x=>x.id===tid);if(!t)return;t.countLog=t.countLog||[];t.count=+v;save();}
 function gDailyInc(wd,id){const t=(D.game.daily[wd]||[]).find(x=>x.id===id);if(!t)return;t.countLog=t.countLog||[];t.count=(+t.count||0)+1;t.countLog.push({time:new Date().toTimeString().slice(0,5),date:todayStr()});const goal=+t.goal||0;if(goal>0&&t.count>=goal){const key=todayStr();D.game.progress[key]=D.game.progress[key]||{};const p=D.game.progress[key];p.daily=p.daily||{};if(!p.daily[id]){p.daily[id]=true;p.daily_ts=p.daily_ts||{};p.daily_ts[id]=nowISO();}}save();renderGame();}
-function gDailyDec(wd,id){const t=(D.game.daily[wd]||[]).find(x=>x.id===id);if(!t)return;if((+t.count||0)<=0)return;t.countLog=t.countLog||[];t.count-=1;if(t.countLog.length)t.countLog.pop();const goal=+t.goal||0;if(goal>0&&t.count<goal){const key=todayStr();if(D.game.progress[key]&&D.game.progress[key].daily){delete D.game.progress[key].daily[id];if(D.game.progress[key].daily_ts)delete D.game.progress[key].daily_ts[id];}}save();renderGame();}
+function gDailyDec(){return;} // v75.9.9：废弃「撤销」(-1) 步进器——纠错请用 gDailyLogDel 逐条删
+/* v75.9.9：只删序列里指定的那一条，其余打卡时间原封不动 */
+function gDailyLogDel(wd,id,i){const t=(D.game.daily[wd]||[]).find(x=>x.id===id);if(!t||!t.countLog||!t.countLog[i])return;t.countLog.splice(i,1);t.count=t.countLog.length;const goal=+t.goal||0;if(goal>0&&t.count<goal){const key=todayStr();if(D.game.progress[key]&&D.game.progress[key].daily){delete D.game.progress[key].daily[id];if(D.game.progress[key].daily_ts)delete D.game.progress[key].daily_ts[id];}}save();renderGame();}
 function gWeeklyScore(tid,v){const t=gWeeklyFind(tid);if(!t)return;t.score=+v;save();}
 function gWeeklyGuan(tid,v){const t=gWeeklyFind(tid);if(!t)return;t.guan=+v;save();}
 function renderGameTpl(){
@@ -3441,9 +3459,7 @@ function gameActivityTpl(){
       extra=`<div class="row" style="width:100%;margin:4px 0;gap:6px;flex-wrap:wrap">
         <label style="font-size:calc(var(--fs)*0.8)">计数标签 <input type="text" value="${esc(a.countLabel||'碎片')}" style="width:90px" onchange="gActCountSet('${a.id}','label',this.value)"></label>
         <label style="font-size:calc(var(--fs)*0.8)">目标数量 <input type="number" value="${+a.countTarget||''}" style="width:62px" onchange="gActCountSet('${a.id}','target',+this.value)"></label>
-        <span class="tag">当前 ${+a.countNow||0}</span>
-        <button class="btn ghost sm" onclick="gActCountInc('${a.id}',1)">＋1</button>
-        <button class="btn ghost sm" onclick="gActCountInc('${a.id}',-1)">－1</button>
+        <label style="font-size:calc(var(--fs)*0.8)">当前 <input type="number" value="${+a.countNow||0}" style="width:70px" onchange="gActCountSet('${a.id}','now',+this.value)"></label>
       </div>
       <div class="hint" style="width:100%">累计计数型：活动期间集齐目标数量（如 25 碎片兑换奖励）。下方子任务可给单项设「计数目标」，按周期各自累计。</div>`;
     }
@@ -3681,6 +3697,8 @@ const PLATFORMS=['腾讯','爱奇艺','B站','优酷','芒果TV','抖音','影�
 function migrateMovie(){
   if(!Array.isArray(D.movie))D.movie=[];
   if(!Array.isArray(D.movie.custom))D.movie.custom=['自定义'];
+  /* v75.9.9：系列级元数据（状态 / 重刷轮次），与「每条记录级」的 status 彻底分离 */
+  if(!D.movieSeries||typeof D.movieSeries!=='object'||Array.isArray(D.movieSeries))D.movieSeries={};
   const byName={};D.movie.forEach(it=>{(byName[it.name]=byName[it.name]||[]).push(it);});
   D.movie.forEach(it=>{
     if(it.mode===undefined){const same=byName[it.name]||[];it.mode=same.length>1?'series':'single';it.series=it.mode==='series'?(it.name||''):'';}
@@ -3689,14 +3707,68 @@ function migrateMovie(){
     if(it.src===undefined)it.src='';
     if(it.srcUrl===undefined)it.srcUrl='';
     if(it.status===undefined)it.status='watching'; // 老数据默认「正在看」（置顶活跃区），已明确看完的才会是 done；避免全部挤进「已看完」导致「正在看」空着
+    /* v75.9.9：重刷逐期补记的时间戳（第 1 轮即 it.date，这里只存第 2 轮及以后） */
+    if(!Array.isArray(it.rwLog))it.rwLog=[];
   });
 }
-function movieZoneCards(list){
-  if(!list||!list.length)return '';
-  const groups={};
-  list.forEach(it=>{const gk=it.series||it.name||'未命名';if(!groups[gk])groups[gk]={items:[]};groups[gk].items.push(it);});
-  const groupArr=Object.entries(groups).map(([k,g])=>{const sorted=g.items.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));return {key:k,items:sorted,latest:sorted[0]?sorted[0].date:''};}).sort((a,b)=>(b.latest||'').localeCompare(a.latest||''));
-  return groupArr.map(({key,items})=>{const asSeries=items.length>1||items.some(i=>i.mode==='series');return asSeries?movieSeriesCard(items):movieItem(items[0]);}).join('');
+/* v75.9.9：把「系列级状态」与「单集级状态」彻底分开。
+   - 系列（多期 / mode=series）：默认恒定「正在看」，只有点「完结」才变「已看完」；
+     不再像以前那样取「最新一期」的状态当整部状态（那会导致整部状态来回跳变）。
+   - 单集（独立作品）：仍用记录自身的 status。 */
+function mvGroupList(list){
+  if(!list||!list.length)return [];
+  const g={};
+  list.forEach(it=>{const k=it.series||it.name||'未命名';(g[k]=g[k]||[]).push(it);});
+  return Object.entries(g).map(([k,items])=>{
+    const sorted=items.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const isSeries=items.length>1||items.some(i=>i.mode==='series');
+    const m=(D.movieSeries||{})[k];
+    const status=isSeries?((m&&m.status)||'watching'):((sorted[0]&&sorted[0].status)||'watching');
+    return {key:k,items:sorted,latest:sorted[0]?sorted[0].date:'',isSeries,status};
+  }).sort((a,b)=>(b.latest||'').localeCompare(a.latest||''));
+}
+function mvCards(groups){return (groups||[]).map(g=>g.isSeries?movieSeriesCard(g.items):movieItem(g.items[0])).join('');}
+function movieZoneCards(list){return mvCards(mvGroupList(list));}
+/* 系列元数据（状态 / 重刷轮次） */
+function mvSeriesMeta(name){
+  if(!D.movieSeries||typeof D.movieSeries!=='object')D.movieSeries={};
+  if(!D.movieSeries[name]||typeof D.movieSeries[name]!=='object')D.movieSeries[name]={status:'watching',rounds:[]};
+  const m=D.movieSeries[name];
+  if(!Array.isArray(m.rounds))m.rounds=[];
+  return m;
+}
+/* 当前轮次：第 1 轮是初次观看（各期自己的 date），rounds 里存第 2 轮及以后 */
+function mvRoundOf(name){const m=mvSeriesMeta(name);return m.rounds.length?m.rounds[m.rounds.length-1].n:1;}
+function mvSeriesFinish(name){
+  const m=mvSeriesMeta(name);
+  m.status=(m.status==='done')?'watching':'done';
+  if(m.status==='done'){m.finishedAt=todayStr();movieFold[name]=true;}
+  save();renderMovie();renderNav();
+}
+/* v75.9.9 重刷一轮：只记「本轮开始日期」，绝不批量给每期塞同一个时间 */
+function mvSeriesRewatch(name){
+  const m=mvSeriesMeta(name);
+  const n=m.rounds.length?m.rounds[m.rounds.length-1].n+1:2;
+  m.rounds.push({n,start:todayStr()});
+  m.status='watching';
+  movieFold[name]=false;
+  save();renderMovie();renderNav();
+}
+/* 看到哪期点哪期：给该期在本轮追加真实时间戳（未点的期不会造假数据） */
+function mvEpStamp(id){
+  const it=(D.movie||[]).find(x=>x.id===id);if(!it)return;
+  const round=mvRoundOf(it.series||it.name||'未命名');
+  it.rwLog=Array.isArray(it.rwLog)?it.rwLog:[];
+  const d=new Date(),date=todayStr(),time=d.toTimeString().slice(0,5);
+  const ex=it.rwLog.find(e=>e.round===round);
+  if(ex){ex.date=date;ex.time=time;}else it.rwLog.push({round,date,time});
+  save();renderMovie();
+}
+function mvEpUnstamp(id){
+  const it=(D.movie||[]).find(x=>x.id===id);if(!it||!it.rwLog)return;
+  const round=mvRoundOf(it.series||it.name||'未命名');
+  it.rwLog=it.rwLog.filter(e=>e.round!==round);
+  save();renderMovie();
 }
 function mvStatusPill(s){s=s||'watching';return s==='watching'?'<span class="mv-pill mv-pill-w">🔴 正在看</span>':'<span class="mv-pill mv-pill-d">已追完</span>';}
 function mvMonthOf(x){return String(x.date||'').slice(0,7);}
@@ -3716,31 +3788,37 @@ function renderMovie(){
     <div class="chip ${movieStatus==='done'?'on':''}" onclick="movieStatus='done';movieMonth='';moviePage=1;renderMovie()">已看完</div>
   </div>`;
   let list=D.movie.filter(x=>movieFilter==='全部'||x.category===movieFilter);
-  const watching=list.filter(x=>(x.status||'watching')==='watching');
-  const done=list.filter(x=>(x.status||'watching')==='done');
+  /* v75.9.9：按「组（部 / 系列）」分区，而不是按每条记录——
+     系列是否完结看系列级状态，不再被某一期的状态带跑。标题里同时给出精确条数。 */
+  const groups=mvGroupList(list);
+  const watchingG=groups.filter(g=>g.status!=='done');
+  const doneG=groups.filter(g=>g.status==='done');
+  const wRec=watchingG.reduce((s,g)=>s+g.items.length,0);
+  const dRec=doneG.reduce((s,g)=>s+g.items.length,0);
   const showWatching=movieStatus!=='done';
   const showDone=movieStatus!=='watching';
   if(list.length===0)html+=`<div class="empty"><div class="em">🎬</div>暂无观影记录</div>`;
-  if(showWatching&&watching.length){
-    html+=`<div class="mv-zone-title"><span class="mv-live"></span>正在看 <span class="mv-cnt">· 置顶 · 共 ${watching.length} 部/系列</span></div>`;
+  if(showWatching&&watchingG.length){
+    html+=`<div class="mv-zone-title"><span class="mv-live"></span>正在看 <span class="mv-cnt">· 置顶 · ${watchingG.length} 部 · 共 ${wRec} 条记录</span></div>`;
     /* v75.9.3：包裹进块级容器，避免 .series-card(overflow:hidden) 作为 #content 弹性列的直接子项时
      * 因 flex min-height:auto→0 被压成「一条细线」。done 区本就用 .mv-done-body 包裹，故正常。 */
-    html+=`<div class="mv-watch-body">`+movieZoneCards(watching)+`</div>`;
+    html+=`<div class="mv-watch-body">`+mvCards(watchingG)+`</div>`;
   }
-  if(showDone&&done.length){
+  if(showDone&&doneG.length){
     const folded=(movieStatus==='done')?false:(movieDoneFold===undefined?true:movieDoneFold);
-    html+=`<div class="mv-done-head" onclick="movieDoneFold=!movieDoneFold;renderMovie()"><span class="arr">${folded?'▸':'▾'}</span> 已看完 <span class="mv-cnt">${done.length} 部/系列 · 点开回顾</span></div>`;
+    html+=`<div class="mv-done-head" onclick="movieDoneFold=!movieDoneFold;renderMovie()"><span class="arr">${folded?'▸':'▾'}</span> 已看完 <span class="mv-cnt">${doneG.length} 部 · 共 ${dRec} 条 · 点开回顾</span></div>`;
     html+=`<div class="mv-done-body" style="${folded?'display:none':''}">`;
-    const months=mvMonthKeys(done);
+    const doneRecs=doneG.reduce((a,g)=>a.concat(g.items),[]);
+    const months=mvMonthKeys(doneRecs);
     if(months.length>1){
       html+=`<div class="mv-month-chips">`+months.map(m=>`<div class="chip ${movieMonth===m?'on':''}" onclick="movieMonth='${m}';renderMovie()">${mvMonthLabel(m)}</div>`).join('')+`</div>`;
     }
-    let dd=done;
-    if(movieMonth)dd=done.filter(x=>mvMonthOf(x)===movieMonth);
-    html+=movieZoneCards(dd);
+    let dd=doneG;
+    if(movieMonth)dd=doneG.map(g=>Object.assign({},g,{items:g.items.filter(x=>mvMonthOf(x)===movieMonth)})).filter(g=>g.items.length);
+    html+=mvCards(dd);
     if(movieMonth)html+=`<div class="hint" style="text-align:center;margin:6px 0;cursor:pointer" onclick="movieMonth='';renderMovie()">← 返回全部已看完</div>`;
     html+=`</div>`;
-  }else if(showDone&&!done.length&&list.length){
+  }else if(showDone&&!doneG.length&&list.length){
     html+=`<div class="hint" style="text-align:center;margin:8px 0">「已看完」暂无记录</div>`;
   }
   html+=`<div id="movieFormCard">${movieForm()}</div>`;
@@ -3781,10 +3859,20 @@ function movieSeriesCard(items){
   const folded=(movieFold[name]===undefined)?(items.length>3):movieFold[name];
   const avg=items.length?Math.round(items.reduce((s,x)=>s+(+x.rating||0),0)/items.length*10)/10:0;
   const stars='★'.repeat(Math.round(avg))+'☆'.repeat(5-Math.round(avg));
+  const meta=mvSeriesMeta(name);
+  const status=meta.status||'watching';
+  const round=mvRoundOf(name);
+  const cur=meta.rounds&&meta.rounds.length?meta.rounds[meta.rounds.length-1]:null;
+  const stamped=(round>1)?items.filter(x=>(x.rwLog||[]).some(e=>e.round===round)).length:0;
+  /* 重刷信息：只显示「本轮始于哪天 + 已补记几期」，绝不假装每期都是同一时间 */
+  const roundTxt=(round>1&&cur)?(` · 第 ${round} 轮 · 始于 ${esc(String(cur.start||'').slice(5))}${stamped?(' · 已补记 '+stamped+'/'+items.length+' 期'):''}`):'';
+  const finBtn=`<button class="btn ghost sm" data-series="${esc(name)}" onclick="event.stopPropagation();mvSeriesFinish(this.dataset.series)">${status==='done'?'重新开看':'完结'}</button>`;
+  const rwBtn=`<button class="btn ghost sm" data-series="${esc(name)}" onclick="event.stopPropagation();mvSeriesRewatch(this.dataset.series)">重刷一轮</button>`;
   let h=`<div class="series-card${folded?' folded':''}">
     <div class="series-head" data-series="${esc(name)}" onclick="movieToggleFold(this)">
-      <div class="series-title">${esc(name)} <span class="tag">${esc(head.category)}</span> ${mvStatusPill(head.status)} <span class="arr"></span></div>
-      <div class="series-sub">${head.country?esc(head.country)+' · ':''}${head.director?('导演 '+esc(head.director)):''} · ${stars} · 已看 ${items.length} 期/集</div>
+      <div class="series-title">${esc(name)} <span class="tag">${esc(head.category)}</span> ${mvStatusPill(status)} <span class="arr"></span></div>
+      <div class="series-sub">${head.country?esc(head.country)+' · ':''}${head.director?('导演 '+esc(head.director)):''} · ${stars} · 已看 ${items.length} 期/集${roundTxt}</div>
+      <div class="series-ops">${finBtn}${rwBtn}</div>
     </div>`;
   h+=`<div class="series-eps">`;
   items.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).forEach(it=>{h+=movieEpRow(it);});
@@ -3792,18 +3880,31 @@ function movieSeriesCard(items){
   h+=`</div></div>`;
   return h;
 }
+/* v75.9.9：第一行只放「日期 + 周几」，第二行放「开始观看时间 + 平台 + 地点」。
+   时长不再挤在这一行——芒果TV 显示 h:mm:ss、电影票上是分钟，口径本就不统一，硬塞只会把整行割裂。 */
+function mvDateShort(d){
+  if(!d)return '';
+  const dt=new Date(d);if(isNaN(dt))return esc(d);
+  const wd=['周日','周一','周二','周三','周四','周五','周六'][dt.getDay()];
+  const now=new Date();
+  return (dt.getFullYear()===now.getFullYear()?'':(dt.getFullYear()+'年'))+(dt.getMonth()+1)+'月'+dt.getDate()+'日 '+wd;
+}
+function mvTimeOf(d){const m=String(d||'').match(/T(\d{1,2}:\d{2})/);return m?m[1]:'';}
 function movieEpRow(it){
   const _plat=it.platform?esc(it.platform):'';
   const _loc=it.watchLoc?esc(it.watchLoc):'';
-  let _meta=fmtDate(it.date);
-  if(it.duration)_meta+=' · '+fmtDuration(it.duration);
-  if(_plat)_meta+=' · '+_plat;
-  if(_loc&&_loc!==_plat)_meta+=(_loc.length>6?'<br>':' · ')+_loc;
-  if(it.src)_meta+=' · 推荐:'+esc(it.src);
+  /* 开始观看时间取自已有的「观看时间」字段（本来就是 datetime），无需重新录入、不改数据结构 */
+  const _t=mvTimeOf(it.date);
+  let _line2=_t;
+  if(_plat)_line2+=(_line2?' · ':'')+_plat;
+  if(_loc&&_loc!==_plat)_line2+=(_line2?' · ':'')+_loc;
+  if(it.src)_line2+=(_line2?' · ':'')+'推荐:'+esc(it.src);
+  const rw=(it.rwLog||[]).map(e=>`<span class="mv-rw" title="第 ${+e.round||1} 轮">↻ ${esc(String(e.date||'').slice(5))} ${esc(e.time||'')}</span>`).join('');
+  const _meta=esc(mvDateShort(it.date))+(_line2?'<br><span class="mv-t2">'+_line2+'</span>':'');
   return `<div class="ep-row">
-    <div class="ep-main"><span class="ep-name">${esc(it.ep||'正片')}</span>${it.epKind&&it.epKind!=='正片'?`<span class="ep-kind">${esc(it.epKind)}</span>`:''}</div>
+    <div class="ep-main"><span class="ep-name">${esc(it.ep||'正片')}</span>${it.epKind&&it.epKind!=='正片'?`<span class="ep-kind">${esc(it.epKind)}</span>`:''}${rw}</div>
     <div class="ep-meta">${_meta}</div>
-    <div class="ep-acts"><button class="btn ghost sm" onclick="openEdit('movie','${it.id}')">编辑</button><button class="del" onclick="delItem('movie','${it.id}')">×</button></div>
+    <div class="ep-acts"><button class="btn ghost sm" onclick="mvEpStamp('${it.id}')" title="记下这一期在本次重刷中的观看时间">记此刻</button><button class="btn ghost sm" onclick="openEdit('movie','${it.id}')">编辑</button><button class="del" onclick="delItem('movie','${it.id}')">×</button></div>
   </div>`;
 }
 function moviePlatChg(){const el=document.getElementById('mf_loc');if(!el)return;const pv=(document.getElementById('mf_plat')||{}).value||'';if(!el.value)el.value=(pv==='影院'?'影院':'');el.placeholder=(pv==='影院'?'具体影院名，如：万达影城(朝阳店)':'如：酒店3201房 / 高铁上');}
@@ -5822,7 +5923,7 @@ function applyDual(a,b){
 }
 
 /* ================= 检查更新（只清网页缓存，绝不动数据） ================= */
-const APP_VER='v75.9.8';
+const APP_VER='v75.9.9';
 async function checkUpdate(){
   if(!confirm('检查更新？\n\n只会清理网页缓存并重新加载最新版本。\n你的所有记录都不会被删除。'))return;
   toast('正在获取最新版本…');
