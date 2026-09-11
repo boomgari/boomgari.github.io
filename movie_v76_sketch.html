@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>观影记录优化草图 · v76</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --card:#ffffff; --text:#243640; --muted:#8a98a3;
+    --accent:#4F9C92; --accent-soft:#6FB3A8; --tint:#e8f1ef; --on-tint:#2f6b62;
+    --border:#e2e8ec; --bw:1px; --fs:15px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:var(--fs);line-height:1.55;padding:18px;}
+  h1{font-size:19px;font-weight:400;margin:0 0 4px}      /* 草图内标题也用细字重，呼应"去加粗" */
+  .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+  .sec{background:var(--card);border:var(--bw) solid var(--border);border-radius:14px;padding:16px;margin-bottom:18px}
+  .sec h2{font-size:16px;font-weight:400;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .sec h2 .tag{font-size:11px;background:var(--accent);color:#fff;padding:1px 8px;border-radius:9px;font-weight:400}
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.cmp{grid-template-columns:1fr}}
+  .col h3{font-size:13px;font-weight:400;color:var(--muted);margin:0 0 8px;padding-bottom:6px;border-bottom:2px dashed var(--border)}
+  .col.after h3{color:var(--accent-soft)}
+
+  /* 系列卡片 mock */
+  .scard{border:var(--bw) solid var(--border);border-radius:12px;overflow:hidden;background:#fff}
+  .scard .shead{display:flex;align-items:center;gap:8px;padding:12px;border-bottom:var(--bw) solid var(--border);flex-wrap:wrap}
+  .sname{font-size:15px;font-weight:400}                 /* 综艺名字：细字重 */
+  .pill{font-size:11px;padding:1px 7px;border-radius:9px;background:var(--tint);color:var(--on-tint)}
+  .ops{margin-left:auto;display:flex;gap:6px}
+  .ops .b{font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text)}
+  .ops .b.add{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .ep{display:flex;justify-content:space-between;padding:9px 12px;border-bottom:var(--bw) solid var(--border);font-size:13px}
+  .ep:last-child{border-bottom:none}
+  .ep .t{color:var(--muted);font-size:12px}
+  .addbottom{margin:10px 12px;display:flex}
+  .addbottom .b{font-size:12px;padding:6px 12px;border-radius:8px;background:var(--accent);color:#fff;border:none;width:100%;text-align:center}
+  .note{font-size:12px;color:var(--muted);margin-top:8px;padding:8px 10px;background:var(--tint);border-radius:8px}
+
+  /* 表单 mock */
+  .form{border:var(--bw) solid var(--border);border-radius:12px;padding:12px;background:#fff}
+  .field{margin-bottom:10px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+  .field .inp{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#fafbfc;font-size:14px;color:var(--text)}
+  .row{display:flex;gap:10px}.row .field{flex:1}
+  .seg{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .seg .s{flex:1;text-align:center;padding:7px;font-size:13px;background:#fff;color:var(--muted)}
+  .seg .s.on{background:var(--accent);color:#fff}
+  .fillzone{border:1.5px solid var(--accent-soft);border-radius:10px;padding:10px;margin-bottom:10px;background:#fbfdfc}
+  .fillzone .zh{font-size:12px;color:var(--accent-soft);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+  .collapse{border:1px dashed var(--border);border-radius:10px;padding:8px 10px;background:#fafbfc}
+  .collapse .ch{font-size:12px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:6px}
+  .btn{width:100%;margin-top:8px;padding:10px;border:none;border-radius:9px;background:var(--accent);color:#fff;font-size:14px}
+  .arrow{color:var(--accent-soft);font-weight:400}
+</style>
+</head>
+<body>
+<h1>观影记录 · 优化草图（v76）</h1>
+<div class="sub">左上＝现状，右上＝优化后。草图内所有标题/名字均用细字重（呼应"去掉自行加粗"）。</div>
+
+<!-- ① 系列卡片：添加一期挪到顶栏 -->
+<div class="sec">
+  <h2><span class="tag">改动①</span> 系列卡片：把「＋添加一期」提到顶栏，和「完结 / 重刷一轮」同排</h2>
+  <div class="cmp">
+    <div class="col before">
+      <h3>现状：添加一期在卡片最底部</h3>
+      <div class="scard">
+        <div class="shead">
+          <span class="sname">快乐再出发</span>
+          <span class="pill">综艺</span><span class="pill">🔴 正在看</span>
+          <span class="ops"><span class="b">完结</span><span class="b">重刷一轮</span></span>
+        </div>
+        <div class="ep"><span>第 18 期 · 先导片</span><span class="t">08月10日 周日 · 20:15 · 芒果TV</span></div>
+        <div class="ep"><span>第 17 期</span><span class="t">08月03日 周日 · 21:00 · 芒果TV</span></div>
+        <div class="ep"><span>第 16 期</span><span class="t">07月27日 周日 · 21:00 · 芒果TV</span></div>
+        <div class="addbottom"><span class="b">＋ 添加一期</span></div>
+      </div>
+      <div class="note">动辄十几、二十几期的综艺，要滚到最底才能加新一期，很麻烦。</div>
+    </div>
+    <div class="col after">
+      <h3>优化后：添加一期在顶栏，随手就加</h3>
+      <div class="scard">
+        <div class="shead">
+          <span class="sname">快乐再出发</span>
+          <span class="pill">综艺</span><span class="pill">🔴 正在看</span>
+          <span class="ops"><span class="b">完结</span><span class="b">重刷一轮</span><span class="b add">＋ 添加一期</span></span>
+        </div>
+        <div class="ep"><span>第 18 期 · 先导片</span><span class="t">08月10日 周日 · 20:15 · 芒果TV</span></div>
+        <div class="ep"><span>第 17 期</span><span class="t">08月03日 周日 · 21:00 · 芒果TV</span></div>
+        <div class="ep"><span>第 16 期</span><span class="t">07月27日 周日 · 21:00 · 芒果TV</span></div>
+      </div>
+      <div class="note">点开综艺，顶栏就有「＋添加一期」，不用再往下滑；底部不再重复放按钮。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ② 添加表单：带入系列信息时，把要填的项提到顶部 -->
+<div class="sec">
+  <h2><span class="tag">改动②</span> 添加一期表单（已带入系列首次信息）：把"你每次要填的 4 项"提到最顶</h2>
+  <div class="cmp">
+    <div class="col before">
+      <h3>现状：要填的散落多处，得反复滑</h3>
+      <div class="form">
+        <div class="field"><label>记录类型</label><div class="seg"><div class="s on">分集系列</div><div class="s">独立作品</div></div></div>
+        <div class="field"><label>状态</label><div class="inp">正在看</div></div>
+        <div class="field"><label>系列名称 *</label><div class="inp">快乐再出发（已带入）</div></div>
+        <div class="field"><label>期集标签 *</label><div class="inp">第 19 期</div></div>
+        <div class="row">
+          <div class="field"><label>类别</label><div class="inp">综艺</div></div>
+          <div class="field"><label>国别</label><div class="inp">中国</div></div>
+          <div class="field"><label>导演</label><div class="inp">（已带入）</div></div>
+        </div>
+        <div class="field"><label>主演 / 声优</label><div class="inp">（已带入）</div></div>
+        <div class="row">
+          <div class="field"><label>观看日期</label><div class="inp">2026-08-17</div></div>
+          <div class="field"><label>时间</label><div class="inp">20:15</div></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>时长</label><div class="inp">95</div></div>
+          <div class="field"><label>性质</label><div class="inp">正片</div></div>
+          <div class="field"><label>平台</label><div class="inp">芒果TV</div></div>
+          <div class="field"><label>地点</label><div class="inp">家</div></div>
+        </div>
+        <div class="field"><label>个人标签</label><div class="inp">（已带入）</div></div>
+        <div class="field"><label>短评</label><div class="inp">（已带入）</div></div>
+        <div class="row">
+          <div class="field"><label>评分</label><div class="inp">5</div></div>
+          <div class="field"><label>喜好</label><div class="inp">非常喜欢</div></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>重温次数</label><div class="inp">0</div></div>
+          <div class="field"><label>年度推荐</label><div class="inp">未标记</div></div>
+          <div class="field"><label>链接</label><div class="inp">（空）</div></div>
+        </div>
+        <div class="field"><label>推荐溯源</label><div class="inp">（已带入）</div></div>
+        <button class="btn">记录</button>
+      </div>
+      <div class="note">你每次实际只改：期集标签 / 观看日期 / 时间 / 时长——却分布在第 4、7、8 区，中间夹着一堆已带入、不用动的项。</div>
+    </div>
+    <div class="col after">
+      <h3>优化后：要填的 4 项集中在顶部一个区</h3>
+      <div class="form">
+        <div class="field"><label>记录类型</label><div class="seg"><div class="s on">分集系列</div><div class="s">独立作品</div></div></div>
+
+        <div class="fillzone">
+          <div class="zh">✍️ 本次要填（同系列一般只改这几项）</div>
+          <div class="field"><label>期集标签 *</label><div class="inp">第 19 期</div></div>
+          <div class="row">
+            <div class="field"><label>观看日期</label><div class="inp">2026-08-17</div></div>
+            <div class="field"><label>时间</label><div class="inp">20:15</div></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>时长（分钟 / h:mm:ss）</label><div class="inp">95</div></div>
+            <div class="field"><label>性质</label><div class="inp">正片</div></div>
+          </div>
+          <div class="field"><label>短评 / 感想（可选）</label><div class="inp"></div></div>
+        </div>
+
+        <div class="collapse">
+          <div class="ch">▾ 已带入首次信息（一般不用改，点开可改）</div>
+          <div class="row">
+            <div class="field"><label>系列名称</label><div class="inp">快乐再出发</div></div>
+            <div class="field"><label>类别</label><div class="inp">综艺</div></div>
+            <div class="field"><label>国别</label><div class="inp">中国</div></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>导演</label><div class="inp">（带入）</div></div>
+            <div class="field"><label>主演</label><div class="inp">（带入）</div></div>
+            <div class="field"><label>平台</label><div class="inp">芒果TV</div></div>
+            <div class="field"><label>地点</label><div class="inp">家</div></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>评分</label><div class="inp">5</div></div>
+            <div class="field"><label>喜好</label><div class="inp">非常喜欢</div></div>
+            <div class="field"><label>重温</label><div class="inp">0</div></div>
+            <div class="field"><label>年度推荐</label><div class="inp">未标记</div></div>
+          </div>
+          <div class="field"><label>个人标签 / 推荐溯源 / 链接</label><div class="inp">（带入）</div></div>
+        </div>
+
+        <button class="btn">记录</button>
+      </div>
+      <div class="note">期集标签、日期、时间、时长（＋性质、短评）集中在顶部一个区域内一次填完；其余已带入项折叠在下方，需要才展开。</div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <h2>说明</h2>
+  <div class="note" style="margin-top:0">
+    · 改动①只动系列卡片顶栏的按钮排布，底部不再重复"添加一期"。<br>
+    · 改动②仅在"带入已有系列首次信息"（点开某综艺后加新一期）时生效；新建独立作品 / 新建系列仍用完整表单。<br>
+    · 字重去加粗是另一项全局改动，会按你确认的"方案 A / B"一并落地，草图里的标题/名字已用细字重示意。
+  </div>
+</div>
+</body>
+</html>
